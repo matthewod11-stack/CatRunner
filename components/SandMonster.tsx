@@ -7,9 +7,10 @@ interface SandMonsterProps {
   maxHealth: number;
   isIntro?: boolean;
   facingDirection?: 'left' | 'right'; // Add prop for flip direction
+  isDefeating?: boolean; // When true, boss stays static (no floating)
 }
 
-const SandMonster: React.FC<SandMonsterProps> = ({ health, maxHealth, isIntro = false, facingDirection = 'right' }) => {
+const SandMonster: React.FC<SandMonsterProps> = ({ health, maxHealth, isIntro = false, facingDirection = 'right', isDefeating = false }) => {
   const [isHit, setIsHit] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
   const [processedImageUrl, setProcessedImageUrl] = useState<string | null>(null);
@@ -116,9 +117,9 @@ const SandMonster: React.FC<SandMonsterProps> = ({ health, maxHealth, isIntro = 
       {/* Shadow under boss */}
       <div className="absolute bottom-0 w-3/4 h-4 bg-black/20 rounded-full blur-md animate-[shadowPulse_4s_ease-in-out_infinite]" />
 
-      {/* Boss Image with flip animation */}
-      <div 
-        className={`relative w-full h-full animate-[bossFloat_4s_ease-in-out_infinite] transition-transform duration-500 ${isFlipped ? 'scale-x-[-1]' : 'scale-x-[1]'}`}
+      {/* Boss Image with flip animation - static when defeating */}
+      <div
+        className={`relative w-full h-full ${isDefeating ? '' : 'animate-[bossFloat_4s_ease-in-out_infinite]'} transition-transform duration-500 ${isFlipped ? 'scale-x-[-1]' : 'scale-x-[1]'}`}
         style={{ transformOrigin: 'center' }}
       >
         {processedImageUrl ? (

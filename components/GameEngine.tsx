@@ -943,9 +943,9 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
 
     // Bullets handled by Canvas now
 
-    // Calculate kitty size based on SUPER_SIZE power-up
+    // Calculate kitty size based on SUPER_SIZE power-up (base size is 2x for bigger character)
     const isSuperSized = activePowerUpRef.current?.type === 'SUPER_SIZE';
-    const baseKittyW = 80, baseKittyH = playerRef.current.isDucking ? 45 : 100;
+    const baseKittyW = 160, baseKittyH = playerRef.current.isDucking ? 90 : 200;
     const kittyW = isSuperSized ? baseKittyW * 3 : baseKittyW;
     const kittyH = isSuperSized ? baseKittyH * 3 : baseKittyH;
     const kittyL = 100 + 24 - (isSuperSized ? baseKittyW : 0); // Adjust left position for centered scaling
@@ -1105,23 +1105,54 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
         }
         const isLanding = playerRef.current.vy < 0 && (kRect.b >= oRect.t - 30);
         if (isLanding) {
-          if (obs.type === 'CRAB') { playSound('boing'); spawnBopParticles(obs.x + obs.width/2, oRect.t, '#ef4444'); playerRef.current.vy = 8; playerRef.current.jumpCount = 0; obs.isCollected = true; continue; }
-          else if (obs.type === 'BEACHBALL') { playSound('boing'); spawnBopParticles(obs.x + obs.width/2, oRect.t, '#fde047'); playerRef.current.vy = BOUNCE_FORCE; playerRef.current.jumpCount = 0; obs.isPassed = true; continue; }
-          else if (obs.type === 'SEAGULL' && obs.seagullType === 'dive') { 
-            playSound('boing'); 
-            spawnBopParticles(obs.x + obs.width/2, oRect.t, '#ffffff'); 
-            playerRef.current.vy = 8; 
-            playerRef.current.jumpCount = 1; 
-            obs.isCollected = true; 
-            continue; 
+          const BOUNCE_POINTS = 10; // Points awarded for stomping enemies
+          if (obs.type === 'CRAB') {
+            playSound('boing');
+            spawnBopParticles(obs.x + obs.width/2, oRect.t, '#ef4444');
+            playerRef.current.vy = 8;
+            playerRef.current.jumpCount = 0;
+            scoreRef.current += BOUNCE_POINTS;
+            const scoreId = Date.now() + Math.random();
+            setFloatingScores(prev => [...prev, { id: scoreId, x: obs.x + obs.width/2, y: oRect.t, value: BOUNCE_POINTS }]);
+            setTimeout(() => setFloatingScores(prev => prev.filter(s => s.id !== scoreId)), 1500);
+            obs.isCollected = true;
+            continue;
           }
-          else if (obs.type === 'SAND_PROJECTILE') { 
-            playSound('boing'); 
-            spawnBopParticles(obs.x + obs.width/2, oRect.t, '#ffffff'); 
-            playerRef.current.vy = 8; 
-            playerRef.current.jumpCount = 1; 
-            obs.isCollected = true; 
-            continue; 
+          else if (obs.type === 'BEACHBALL') {
+            playSound('boing');
+            spawnBopParticles(obs.x + obs.width/2, oRect.t, '#fde047');
+            playerRef.current.vy = BOUNCE_FORCE;
+            playerRef.current.jumpCount = 0;
+            scoreRef.current += BOUNCE_POINTS;
+            const scoreId = Date.now() + Math.random();
+            setFloatingScores(prev => [...prev, { id: scoreId, x: obs.x + obs.width/2, y: oRect.t, value: BOUNCE_POINTS }]);
+            setTimeout(() => setFloatingScores(prev => prev.filter(s => s.id !== scoreId)), 1500);
+            obs.isPassed = true;
+            continue;
+          }
+          else if (obs.type === 'SEAGULL' && obs.seagullType === 'dive') {
+            playSound('boing');
+            spawnBopParticles(obs.x + obs.width/2, oRect.t, '#ffffff');
+            playerRef.current.vy = 8;
+            playerRef.current.jumpCount = 1;
+            scoreRef.current += BOUNCE_POINTS;
+            const scoreId = Date.now() + Math.random();
+            setFloatingScores(prev => [...prev, { id: scoreId, x: obs.x + obs.width/2, y: oRect.t, value: BOUNCE_POINTS }]);
+            setTimeout(() => setFloatingScores(prev => prev.filter(s => s.id !== scoreId)), 1500);
+            obs.isCollected = true;
+            continue;
+          }
+          else if (obs.type === 'SAND_PROJECTILE') {
+            playSound('boing');
+            spawnBopParticles(obs.x + obs.width/2, oRect.t, '#ffffff');
+            playerRef.current.vy = 8;
+            playerRef.current.jumpCount = 1;
+            scoreRef.current += BOUNCE_POINTS;
+            const scoreId = Date.now() + Math.random();
+            setFloatingScores(prev => [...prev, { id: scoreId, x: obs.x + obs.width/2, y: oRect.t, value: BOUNCE_POINTS }]);
+            setTimeout(() => setFloatingScores(prev => prev.filter(s => s.id !== scoreId)), 1500);
+            obs.isCollected = true;
+            continue;
           }
         } else if (obs.type === 'SANDCASTLE' && !isCurrentlyHurt) {
           // Sand castle slows the player down instead of taking a life
@@ -1519,7 +1550,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
 
         {/* Boss */}
         {boss && (
-          <div className="absolute" style={{ left: boss.x, bottom: boss.y, width: boss.width, height: boss.height }}>
+          <div className="absolute" style={{ left: boss.x, bottom: boss.y, width: boss.width, height: boss.height, zIndex: 20 }}>
             {/* During defeat animation, clip boss to only show head */}
             <div
               className="relative w-full h-full"
@@ -1528,7 +1559,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
                 transition: 'clip-path 0.5s ease-out'
               } : {}}
             >
-              <SandMonster health={boss.health || 0} maxHealth={boss.maxHealth || 100} facingDirection={bossFacingDirection} />
+              <SandMonster health={boss.health || 0} maxHealth={boss.maxHealth || 100} facingDirection={bossFacingDirection} isDefeating={bossDefeating} />
             </div>
           </div>
         )}
@@ -1582,15 +1613,16 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
         )}
 
         {/* Player */}
-        <div 
+        <div
           className="absolute transition-transform duration-75"
-          style={{ 
+          style={{
             left: activePowerUp?.type === 'SUPER_SIZE' ? '40px' : '100px', // Adjust left for centered scaling
             bottom: `${GROUND_Y + player.y}px`,
             filter: player.isHurt ? 'opacity(0.5) sepia(1) saturate(5) hue-rotate(-50deg)' : 'none',
             transform: activePowerUp?.type === 'SUPER_SIZE' ? 'scale(3)' : 'scale(1)',
             transformOrigin: 'center bottom',
-            transition: 'transform 0.3s ease-out, left 0.3s ease-out'
+            transition: 'transform 0.3s ease-out, left 0.3s ease-out',
+            zIndex: 10 // Ensure player appears in front of background entities (boats, etc.)
           }}
         >
           <Kitty

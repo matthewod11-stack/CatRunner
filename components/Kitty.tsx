@@ -43,7 +43,8 @@ const Kitty: React.FC<KittyProps> = ({ isJumping, isDucking, customUrl, velocity
 
   const { scaleX, scaleY } = getSquashStretch();
 
-  // Process the image to remove the white background using a canvas
+  // Process the image to remove the white background using adjacency detection
+  // This preserves white pixels that are part of the character (e.g., white cat fur)
   useEffect(() => {
     if (!customUrl) {
       setProcessedUrl(null);
@@ -64,20 +65,54 @@ const Kitty: React.FC<KittyProps> = ({ isJumping, isDucking, customUrl, velocity
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
 
-      // Aggressive background stripping
+      // Two-pass algorithm: identify white pixels that are part of the character
+      // by checking if they're adjacent to non-white pixels
+      const isCharacterPixel = new Array(data.length / 4).fill(false);
+
+      // First pass: mark non-white pixels and their neighbors as character pixels
       for (let i = 0; i < data.length; i += 4) {
         const r = data[i];
         const g = data[i + 1];
         const b = data[i + 2];
-        
-        // Slightly lower threshold to catch "near-white" compression artifacts
-        if (r > 220 && g > 220 && b > 220) {
-          data[i + 3] = 0; 
+        const isWhite = r > 230 && g > 230 && b > 230;
+
+        if (!isWhite) {
+          // Mark this pixel and its neighbors as character pixels
+          const pixelIndex = i / 4;
+          const x = pixelIndex % canvas.width;
+          const y = Math.floor(pixelIndex / canvas.width);
+
+          // Mark current pixel and surrounding pixels (3x3 area) as character
+          for (let dy = -2; dy <= 2; dy++) {
+            for (let dx = -2; dx <= 2; dx++) {
+              const nx = x + dx;
+              const ny = y + dy;
+              if (nx >= 0 && nx < canvas.width && ny >= 0 && ny < canvas.height) {
+                const neighborIndex = ny * canvas.width + nx;
+                isCharacterPixel[neighborIndex] = true;
+              }
+            }
+          }
+        }
+      }
+
+      // Second pass: remove white background but preserve white character pixels
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const pixelIndex = i / 4;
+        const isWhite = r > 230 && g > 230 && b > 230;
+
+        if (isWhite && !isCharacterPixel[pixelIndex]) {
+          // This is background white - make it transparent
+          data[i + 3] = 0;
         } else {
-          // Boost contrast slightly for the character itself
-          data[i] = Math.min(255, r * 1.1);
-          data[i+1] = Math.min(255, g * 1.1);
-          data[i+2] = Math.min(255, b * 1.1);
+          // This is part of the character - preserve it with slight contrast boost
+          data[i] = Math.min(255, r * 1.05);
+          data[i + 1] = Math.min(255, g * 1.05);
+          data[i + 2] = Math.min(255, b * 1.05);
+          data[i + 3] = 255; // Ensure full opacity for character pixels
         }
       }
 
@@ -94,7 +129,7 @@ const Kitty: React.FC<KittyProps> = ({ isJumping, isDucking, customUrl, velocity
 
   return (
     <div
-      className={`relative w-32 h-32 origin-bottom flex items-center justify-center`}
+      className={`relative w-64 h-64 origin-bottom flex items-center justify-center`}
       style={{
         transform: `scaleX(${scaleX}) scaleY(${scaleY})`,
         transition: isLanding ? 'transform 0.1s ease-out' : 'transform 0.15s ease-out',
