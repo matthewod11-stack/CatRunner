@@ -75,6 +75,22 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
   const [isFrozen, setIsFrozen] = useState(false);
   const freezeUntilRef = useRef<number>(0);
   const [hitFlash, setHitFlash] = useState(false);
+
+  // Boss defeat animation state
+  const [bossDefeating, setBossDefeating] = useState(false);
+  const [defeatPoops, setDefeatPoops] = useState<Array<{
+    id: number;
+    x: number;
+    y: number;
+    targetX: number;
+    targetY: number;
+    vy: number;
+    size: number;
+    landed: boolean;
+    rotation: number;
+  }>>([]);
+  const defeatAnimationStartRef = useRef<number>(0);
+  const defeatPoopsSpawnedRef = useRef<number>(0);
   
   const requestRef = useRef<number | null>(null);
   const scoreRef = useRef(0);
@@ -777,20 +793,133 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
                 triggerFreezeFrame(40); // Brief freeze on boss hit
                 playSound('boss_hit');
 
-                if (bossHealthRef.current <= 0) {
+                if (bossHealthRef.current <= 0 && !bossDefeating) {
                     playSound('mult');
                     triggerScreenShake(15); // Big shake on defeat
                     triggerFreezeFrame(200); // Longer freeze on boss defeat
-                    coinsRef.current = 0; 
-                    setStatus(GameStatus.VICTORY);
-                    onStatusChange?.(GameStatus.VICTORY); 
-                    setBoss(null); 
+                    coinsRef.current = 0;
                     multiplierRef.current += 3;
+
+                    // Start the defeat animation instead of immediate victory
+                    setBossDefeating(true);
+                    defeatAnimationStartRef.current = Date.now();
+                    defeatPoopsSpawnedRef.current = 0;
+                    setDefeatPoops([]);
+
+                    // Clear all projectiles
+                    obstaclesRef.current = obstaclesRef.current.filter(obs => obs.type !== 'SAND_PROJECTILE');
                 }
                 return false;
             }
             return true;
         });
+    }
+
+    // Boss defeat animation - poop pyramid burial
+    if (bossDefeating && boss) {
+      const now = Date.now();
+      const animationElapsed = now - defeatAnimationStartRef.current;
+
+      // Pyramid configuration: 10 rows for 60 poops - MASSIVE pyramid!
+      const POOP_SIZE = 45;
+      const TOTAL_POOPS = 60; // Quadruple the original!
+      const SPAWN_INTERVAL = 45; // Rapid fire spawns
+      const SPAWN_DURATION = TOTAL_POOPS * SPAWN_INTERVAL;
+
+      // Spawn poops progressively
+      const poopsToSpawn = Math.min(TOTAL_POOPS, Math.floor(animationElapsed / SPAWN_INTERVAL));
+
+      if (defeatPoopsSpawnedRef.current < poopsToSpawn) {
+        const bossCenter = boss.x + boss.width / 2;
+        const bossBottom = boss.y;
+
+        // Calculate pyramid position for this poop
+        const poopIndex = defeatPoopsSpawnedRef.current;
+
+        // Determine which row and position in row (supports up to 11 rows for 60+ poops)
+        let row = 0;
+        let posInRow = 0;
+        let countInPrevRows = 0;
+        const MAX_ROWS = 11;
+        for (let r = 0; r < MAX_ROWS; r++) {
+          const rowSize = r + 1;
+          if (poopIndex < countInPrevRows + rowSize) {
+            row = r;
+            posInRow = poopIndex - countInPrevRows;
+            break;
+          }
+          countInPrevRows += rowSize;
+        }
+
+        // Calculate target position (pyramid stacking from bottom)
+        const rowSize = row + 1;
+        const rowWidth = rowSize * POOP_SIZE * 0.85;
+        const startX = bossCenter - rowWidth / 2;
+        const targetX = startX + posInRow * POOP_SIZE * 0.85 + POOP_SIZE / 2;
+        const targetY = bossBottom + (MAX_ROWS - 1 - row) * POOP_SIZE * 0.6; // Stack from bottom up
+
+        // Spawn from random position above
+        const spawnX = bossCenter + (Math.random() - 0.5) * 300;
+        const spawnY = 600 + Math.random() * 200; // Start high above
+
+        const newPoop = {
+          id: now + defeatPoopsSpawnedRef.current,
+          x: spawnX,
+          y: spawnY,
+          targetX,
+          targetY,
+          vy: 0,
+          size: POOP_SIZE + Math.random() * 10,
+          landed: false,
+          rotation: Math.random() * 360
+        };
+
+        setDefeatPoops(prev => [...prev, newPoop]);
+        defeatPoopsSpawnedRef.current++;
+
+        // Play a thump sound for each poop
+        if (defeatPoopsSpawnedRef.current % 3 === 0) {
+          playSound('poop_launch');
+        }
+      }
+
+      // Update poop positions
+      setDefeatPoops(prev => prev.map(poop => {
+        if (poop.landed) return poop;
+
+        const gravity = 0.6; // Slower fall for dramatic effect
+        const newVy = poop.vy + gravity;
+        let newY = poop.y - newVy; // Moving down (decreasing y in this coordinate system)
+        let newX = poop.x + (poop.targetX - poop.x) * 0.05; // Slower ease toward target X
+
+        // Check if landed
+        if (newY <= poop.targetY) {
+          newY = poop.targetY;
+          triggerScreenShake(3); // Small shake on land
+          return { ...poop, x: poop.targetX, y: newY, vy: 0, landed: true };
+        }
+
+        return {
+          ...poop,
+          x: newX,
+          y: newY,
+          vy: newVy,
+          rotation: poop.rotation + 4 // Slower spin
+        };
+      }));
+
+      // Check if animation is complete
+      const allLanded = defeatPoops.length === TOTAL_POOPS && defeatPoops.every(p => p.landed);
+      const minAnimationTime = SPAWN_DURATION + 8500; // Bask in the glory! (3.5s + 5s extra)
+
+      if (allLanded && animationElapsed > minAnimationTime) {
+        // Transition to victory
+        setStatus(GameStatus.VICTORY);
+        onStatusChange?.(GameStatus.VICTORY);
+        setBoss(null);
+        setBossDefeating(false);
+        setDefeatPoops([]);
+      }
     }
 
     // Bullets handled by Canvas now
@@ -1016,7 +1145,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
       }
     }
     setObstacles([...obstaclesRef.current]);
-  }, [status, onGameOver, onScoreUpdate, onStatusChange, playSound, spawnBackgroundDeco, spawnBopParticles, spawnSandParticles, spawnEntity, triggerBossFight, isPaused]);
+  }, [status, onGameOver, onScoreUpdate, onStatusChange, playSound, spawnBackgroundDeco, spawnBopParticles, spawnSandParticles, spawnEntity, triggerBossFight, isPaused, bossDefeating, defeatPoops, triggerScreenShake]);
 
   useEffect(() => {
     const loop = (time: number) => {
@@ -1359,7 +1488,64 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
         {/* Boss */}
         {boss && (
           <div className="absolute" style={{ left: boss.x, bottom: boss.y, width: boss.width, height: boss.height }}>
-            <SandMonster health={boss.health || 0} maxHealth={boss.maxHealth || 100} facingDirection={bossFacingDirection} />
+            {/* During defeat animation, clip boss to only show head */}
+            <div
+              className="relative w-full h-full"
+              style={bossDefeating ? {
+                clipPath: 'inset(0 0 60% 0)', // Show only top 40% (head area)
+                transition: 'clip-path 0.5s ease-out'
+              } : {}}
+            >
+              <SandMonster health={boss.health || 0} maxHealth={boss.maxHealth || 100} facingDirection={bossFacingDirection} />
+            </div>
+          </div>
+        )}
+
+        {/* Defeat Animation - Poop Pyramid */}
+        {bossDefeating && defeatPoops.map(poop => (
+          <div
+            key={poop.id}
+            className="absolute pointer-events-none"
+            style={{
+              left: poop.x - poop.size / 2,
+              bottom: poop.y - poop.size / 2,
+              width: poop.size,
+              height: poop.size,
+              transform: `rotate(${poop.rotation}deg)`,
+              transition: poop.landed ? 'none' : 'transform 0.05s linear',
+              zIndex: 50
+            }}
+          >
+            {/* Poop ball SVG */}
+            <svg viewBox="0 0 60 60" className="w-full h-full drop-shadow-lg">
+              {/* Main poop body */}
+              <ellipse cx="30" cy="35" rx="22" ry="18" fill="#8B4513" />
+              <ellipse cx="30" cy="32" rx="18" ry="14" fill="#A0522D" />
+              <ellipse cx="30" cy="28" rx="14" ry="10" fill="#8B4513" />
+              <ellipse cx="30" cy="24" rx="10" ry="7" fill="#A0522D" />
+              {/* Swirl on top */}
+              <ellipse cx="30" cy="18" rx="6" ry="5" fill="#8B4513" />
+              <ellipse cx="30" cy="15" rx="3" ry="3" fill="#A0522D" />
+              {/* Highlight */}
+              <ellipse cx="22" cy="26" rx="4" ry="3" fill="#CD853F" opacity="0.5" />
+              {/* Stink lines when landed */}
+              {poop.landed && (
+                <>
+                  <path d="M15 10 Q 12 5 15 0" stroke="#90EE90" strokeWidth="2" fill="none" opacity="0.6" className="animate-[stinkWave_1s_ease-in-out_infinite]" />
+                  <path d="M30 8 Q 28 3 30 -2" stroke="#90EE90" strokeWidth="2" fill="none" opacity="0.6" className="animate-[stinkWave_1s_ease-in-out_infinite]" style={{ animationDelay: '0.3s' }} />
+                  <path d="M45 10 Q 48 5 45 0" stroke="#90EE90" strokeWidth="2" fill="none" opacity="0.6" className="animate-[stinkWave_1s_ease-in-out_infinite]" style={{ animationDelay: '0.6s' }} />
+                </>
+              )}
+            </svg>
+          </div>
+        ))}
+
+        {/* Defeat text overlay */}
+        {bossDefeating && defeatPoops.length > 10 && (
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 z-[100] animate-[bounceIn_0.5s_ease-out]">
+            <h2 className="text-7xl font-black text-amber-900 uppercase italic drop-shadow-[0_8px_0_rgba(255,255,255,0.8)] animate-pulse">
+              BURIED!
+            </h2>
           </div>
         )}
 
@@ -1458,6 +1644,16 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
         @keyframes flashFade {
           0% { opacity: 1; }
           100% { opacity: 0; }
+        }
+        @keyframes stinkWave {
+          0%, 100% { transform: translateY(0) scaleY(1); opacity: 0.6; }
+          50% { transform: translateY(-5px) scaleY(1.2); opacity: 0.3; }
+        }
+        @keyframes bounceIn {
+          0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+          50% { transform: translate(-50%, -50%) scale(1.05); }
+          70% { transform: translate(-50%, -50%) scale(0.9); }
+          100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
       `}</style>
 
