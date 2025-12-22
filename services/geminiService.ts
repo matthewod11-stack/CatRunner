@@ -18,7 +18,7 @@ export async function getCatWisdom(score: number): Promise<string> {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `The player just scored ${score} points in 'Beach Cat Runner'. Generate exactly one short, sassy, or wise one-liner from the perspective of a white beach kitty. Keep it under 15 words.`,
+      contents: `The player just scored ${score} points in 'Beach Kitty'. Generate exactly one short, sassy, or wise one-liner from the perspective of a white beach kitty. Keep it under 15 words.`,
       config: {
         temperature: 0.8,
         topP: 0.95,
@@ -41,7 +41,7 @@ export async function getDeathMessage(score: number): Promise<string> {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `The player died in 'Beach Cat Runner' with a score of ${score}. Write exactly one funny or encouraging "Game Over" message from a sarcastic white kitty. No lists, no options, just the final message.`,
+      contents: `The player died in 'Beach Kitty' with a score of ${score}. Write exactly one funny or encouraging "Game Over" message from a sarcastic white kitty. No lists, no options, just the final message.`,
       config: {
         temperature: 0.9,
         responseMimeType: "application/json",

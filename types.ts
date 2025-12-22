@@ -7,10 +7,11 @@ export enum GameStatus {
   BOSS_FIGHT = 'BOSS_FIGHT',
   GAMEOVER = 'GAMEOVER',
   CUSTOMIZE = 'CUSTOMIZE',
-  PAUSED = 'PAUSED'
+  PAUSED = 'PAUSED',
+  VICTORY = 'VICTORY'
 }
 
-export type LevelId = 'BEACH' | 'DUNGEON' | 'FOOTBALL' | 'CITY';
+export type LevelId = 'BEACH';
 
 export interface LevelDef {
   id: LevelId;
@@ -21,11 +22,10 @@ export interface LevelDef {
 }
 
 export type ObstacleType = 
-  | 'CRAB' | 'BEACHBALL' | 'SEAGULL' | 'SANDCASTLE' | 'SAND_PROJECTILE' | 'TIDEPOOL' 
-  | 'FOOTBALL_PLAYER' | 'FLYING_FOOTBALL' | 'REFEREE' | 'WATER_COOLER';
+  | 'CRAB' | 'BEACHBALL' | 'SEAGULL' | 'SANDCASTLE' | 'SAND_PROJECTILE' | 'TIDEPOOL' | 'PALM_TREE';
 
-export type PowerUpType = 'SPEED' | 'MAGNET';
-export type EntityType = ObstacleType | 'COIN' | PowerUpType | 'BOSS';
+export type PowerUpType = 'SPEED' | 'MAGNET' | 'SUPER_SIZE';
+export type EntityType = ObstacleType | 'COIN' | 'SHELL' | PowerUpType | 'BOSS';
 
 export interface WorldEntity {
   id: number;
@@ -33,7 +33,10 @@ export interface WorldEntity {
   x: number;
   y?: number;
   vy?: number;
+  vx?: number; // Horizontal velocity for projectiles
   isSwooping?: boolean;
+  seagullType?: 'dive' | 'poop'; // Seagull behavior type
+  lastPoopTime?: number; // For tracking poop drops
   width: number;
   height: number;
   speed: number;
@@ -41,6 +44,7 @@ export interface WorldEntity {
   isCollected?: boolean;
   health?: number;
   maxHealth?: number;
+  rotation?: number; // Rotation angle for projectiles
 }
 
 export interface Bullet {
@@ -65,7 +69,7 @@ export interface Particle {
   color?: string;
 }
 
-export type BackgroundEntityType = 'BOAT' | 'SURFER' | 'AIRPLANE' | 'STADIUM_LIGHT' | 'GOAL_POST';
+export type BackgroundEntityType = 'BOAT' | 'SURFER' | 'AIRPLANE' | 'CLOUD' | 'JETSKI' | 'BOAT_SINKING' | 'AIRPLANE_FIRE';
 export interface BackgroundEntity {
   id: number;
   type: BackgroundEntityType;
@@ -75,6 +79,8 @@ export interface BackgroundEntity {
   width: number;
   height: number;
   bannerText?: string;
+  depth?: 'far' | 'mid' | 'near'; // for parallax
+  isChaos?: boolean; // For boss fight chaos variants
 }
 
 export interface PlayerState {
@@ -98,13 +104,14 @@ export interface GameScore {
   multiplier: number;
   streak: number;
   lives: number;
-  yards?: number;
 }
 
 export interface HighScoreEntry {
   name: string;
   score: number;
   date: number;
+  catUrl?: string; // Optional custom kitty image URL
+  isVictory?: boolean; // True if player defeated the boss
 }
 
 export interface Outfit {

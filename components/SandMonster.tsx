@@ -1,15 +1,90 @@
 
 import React, { useEffect, useState } from 'react';
+import bossImage from '../Generated Image December 21, 2025 - 4_59PM.jpeg';
 
 interface SandMonsterProps {
   health: number;
   maxHealth: number;
   isIntro?: boolean;
+  facingDirection?: 'left' | 'right'; // Add prop for flip direction
 }
 
-const SandMonster: React.FC<SandMonsterProps> = ({ health, maxHealth, isIntro = false }) => {
+const SandMonster: React.FC<SandMonsterProps> = ({ health, maxHealth, isIntro = false, facingDirection = 'right' }) => {
   const [isHit, setIsHit] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [processedImageUrl, setProcessedImageUrl] = useState<string | null>(null);
   const healthWidth = (health / maxHealth) * 100;
+
+  // Process image to remove white background
+  useEffect(() => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = bossImage;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+
+      // First pass: identify which white pixels are likely part of the character
+      // by checking if they're adjacent to non-white pixels
+      const isCharacterPixel = new Array(data.length / 4).fill(false);
+      
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const isWhite = r > 220 && g > 220 && b > 220;
+        
+        if (!isWhite) {
+          // Mark this pixel and its neighbors as character pixels
+          const pixelIndex = i / 4;
+          const x = pixelIndex % canvas.width;
+          const y = Math.floor(pixelIndex / canvas.width);
+          
+          // Mark current pixel and 8 surrounding pixels as character
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              const nx = x + dx;
+              const ny = y + dy;
+              if (nx >= 0 && nx < canvas.width && ny >= 0 && ny < canvas.height) {
+                const neighborIndex = ny * canvas.width + nx;
+                isCharacterPixel[neighborIndex] = true;
+              }
+            }
+          }
+        }
+      }
+
+      // Second pass: remove white background but preserve white character pixels
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const pixelIndex = i / 4;
+        const isWhite = r > 220 && g > 220 && b > 220;
+        
+        if (isWhite && !isCharacterPixel[pixelIndex]) {
+          // This is background white - make it transparent
+          data[i + 3] = 0; 
+        } else {
+          // This is part of the character - preserve it and ensure full opacity
+          data[i] = Math.min(255, r * 1.05);
+          data[i+1] = Math.min(255, g * 1.05);
+          data[i+2] = Math.min(255, b * 1.05);
+          data[i+3] = 255; // Ensure full opacity for character pixels
+        }
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+      setProcessedImageUrl(canvas.toDataURL());
+    };
+  }, []);
 
   // Flash when health changes
   useEffect(() => {
@@ -19,6 +94,11 @@ const SandMonster: React.FC<SandMonsterProps> = ({ health, maxHealth, isIntro = 
       return () => clearTimeout(timer);
     }
   }, [health, maxHealth]);
+
+  // Handle flip direction
+  useEffect(() => {
+    setIsFlipped(facingDirection === 'left');
+  }, [facingDirection]);
 
   return (
     <div className={`relative w-full h-full flex flex-col items-center transition-all duration-75 ${isHit ? 'brightness-150 scale-105' : ''}`}>
@@ -33,56 +113,46 @@ const SandMonster: React.FC<SandMonsterProps> = ({ health, maxHealth, isIntro = 
         </div>
       )}
 
-      <svg viewBox="0 0 240 240" className="w-full h-full drop-shadow-2xl overflow-visible translate-y-4">
-        {/* Background Sand Mound Base */}
-        <path 
-          d="M20 220 Q 120 180 220 220 L 210 235 Q 120 210 30 235 Z" 
-          fill={isHit ? "#ef4444" : "#c4a484"} 
-          opacity="0.6"
-        />
+      {/* Shadow under boss */}
+      <div className="absolute bottom-0 w-3/4 h-4 bg-black/20 rounded-full blur-md animate-[shadowPulse_4s_ease-in-out_infinite]" />
 
-        {/* Arms - Bulky and Dripping */}
-        <g className="animate-[bounce_3s_ease-in-out_infinite]">
-          {/* Left Large Claw/Arm */}
-          <g>
-            <path 
-              d="M60 160 C 20 160 10 120 15 90 C 18 60 45 65 55 85 C 65 105 75 140 80 160" 
-              fill={isHit ? "#f87171" : "#d97706"} 
-              stroke="#92400e" 
-              strokeWidth="2"
+      {/* Boss Image with flip animation */}
+      <div 
+        className={`relative w-full h-full animate-[bossFloat_4s_ease-in-out_infinite] transition-transform duration-500 ${isFlipped ? 'scale-x-[-1]' : 'scale-x-[1]'}`}
+        style={{ transformOrigin: 'center' }}
+      >
+        {processedImageUrl ? (
+          <img 
+            src={processedImageUrl} 
+            alt="Boss" 
+            className="w-full h-full object-contain drop-shadow-2xl"
+            style={{ imageRendering: 'auto' }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <img 
+              src={bossImage} 
+              alt="Boss" 
+              className="w-full h-full object-contain drop-shadow-2xl opacity-50"
+              style={{ imageRendering: 'auto' }}
             />
-          </g>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          </div>
+        )}
+      </div>
 
-          {/* Right Large Claw/Arm */}
-          <g>
-            <path 
-              d="M180 160 C 220 160 230 120 225 90 C 222 60 195 65 185 85 C 175 105 165 140 160 160" 
-              fill={isHit ? "#f87171" : "#d97706"} 
-              stroke="#92400e" 
-              strokeWidth="2"
-            />
-          </g>
-        </g>
-
-        {/* Lumpy Body Shape */}
-        <path 
-          d="M50 210 Q 60 130 120 70 Q 180 130 190 210 Q 120 230 50 210" 
-          fill={isHit ? "#ef4444" : "#d97706"} 
-          stroke="#92400e" 
-          strokeWidth="3"
-        />
-
-        {/* Eyes */}
-        <g transform="translate(120, 125)">
-          <circle cx="-25" cy="-5" r="22" fill={isHit ? "#fee2e2" : "white"} stroke="#451a03" strokeWidth="3" />
-          <circle cx="25" cy="-5" r="22" fill={isHit ? "#fee2e2" : "white"} stroke="#451a03" strokeWidth="3" />
-          <circle cx="-18" cy="-5" r="6" fill={isHit ? "#991b1b" : "#1e293b"} />
-          <circle cx="18" cy="-5" r="6" fill={isHit ? "#991b1b" : "#1e293b"} />
-        </g>
-
-        {/* Mischievous Grin */}
-        <path d="M85 155 Q 120 185 155 155" fill="none" stroke="#451a03" strokeWidth="4" strokeLinecap="round" />
-      </svg>
+      <style>{`
+        @keyframes bossFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-15px); }
+        }
+        @keyframes shadowPulse {
+          0%, 100% { transform: scaleX(1); opacity: 0.2; }
+          50% { transform: scaleX(1.1); opacity: 0.3; }
+        }
+      `}</style>
     </div>
   );
 };

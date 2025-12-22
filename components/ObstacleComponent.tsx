@@ -12,7 +12,8 @@ const ObstacleComponent: React.FC<ObstacleComponentProps> = ({ obstacle, groundY
     switch (obstacle.type) {
       case 'CRAB':
         return (
-          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
+          <div className="w-full h-full animate-[crabSway_2s_ease-in-out_infinite]">
+            <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
             {/* Legs */}
             <g stroke="#ea580c" strokeWidth="6" strokeLinecap="round" fill="none">
               {/* Left legs */}
@@ -58,6 +59,13 @@ const ObstacleComponent: React.FC<ObstacleComponentProps> = ({ obstacle, groundY
             {/* Smile */}
             <path d="M38 68 Q 50 82 62 68" fill="none" stroke="#9a3412" strokeWidth="3" strokeLinecap="round" />
           </svg>
+          <style>{`
+            @keyframes crabSway {
+              0%, 100% { transform: translateX(0); }
+              50% { transform: translateX(3px); }
+            }
+          `}</style>
+        </div>
         );
       case 'BEACHBALL':
         return (
@@ -126,8 +134,8 @@ const ObstacleComponent: React.FC<ObstacleComponentProps> = ({ obstacle, groundY
               {/* Main Body */}
               <path d="M30 65 Q 45 75 70 65 Q 65 50 40 60 Z" fill="white" stroke="#1e293b" strokeWidth="1" />
 
-              {/* Wing Back (Black Tip) */}
-              <g>
+              {/* Wing Back (Black Tip) - with flap animation */}
+              <g className="animate-[wingFlap_0.4s_ease-in-out_infinite]">
                 <path d="M45 58 L 75 25 Q 85 20 80 35 L 55 60 Z" fill="white" stroke="#1e293b" strokeWidth="1" />
                 <path d="M70 30 L 75 25 Q 85 20 80 35 L 75 35 Z" fill="#1e293b" />
               </g>
@@ -141,22 +149,45 @@ const ObstacleComponent: React.FC<ObstacleComponentProps> = ({ obstacle, groundY
               {/* Beak */}
               <path d="M25 62 L 15 65 Q 10 68 15 70 L 25 68 Z" fill="#f97316" stroke="#c2410c" strokeWidth="1" />
               
-              {/* Wing Front (Black Tip) */}
-              <g className="animate-[pulse_1s_ease-in-out_infinite]">
+              {/* Wing Front (Black Tip) - with faster flap animation for swooping */}
+              <g className={obstacle.isSwooping ? "animate-[wingFlapFast_0.2s_ease-in-out_infinite]" : "animate-[wingFlap_0.4s_ease-in-out_infinite]"}>
                 <path d="M40 62 L 10 55 Q 0 50 15 50 L 45 58 Z" fill="white" stroke="#1e293b" strokeWidth="1" />
                 <path d="M20 52 L 10 55 Q 0 50 15 50 L 18 52 Z" fill="#1e293b" />
               </g>
 
-              {/* Swooping indicator */}
+              {/* Enhanced Swooping indicator - more visible */}
               {obstacle.isSwooping && (
-                <path d="M30 80 Q 45 85 60 80" stroke="#ef4444" strokeWidth="2" strokeDasharray="4 2" fill="none" opacity="0.6" />
+                <g>
+                  <path d="M25 85 Q 50 90 75 85" stroke="#ef4444" strokeWidth="3" strokeDasharray="6 3" fill="none" opacity="0.8" className="animate-pulse" />
+                  <path d="M30 88 Q 50 93 70 88" stroke="#fbbf24" strokeWidth="2" strokeDasharray="4 4" fill="none" opacity="0.6" />
+                </g>
               )}
             </g>
+            <style>{`
+              @keyframes wingFlap {
+                0%, 100% { transform: translateY(0) rotate(0deg); transform-origin: 45px 58px; }
+                50% { transform: translateY(-2px) rotate(-5deg); transform-origin: 45px 58px; }
+              }
+              @keyframes wingFlapFast {
+                0%, 100% { transform: translateY(0) rotate(0deg); transform-origin: 40px 62px; }
+                50% { transform: translateY(-4px) rotate(-8deg); transform-origin: 40px 62px; }
+              }
+            `}</style>
           </svg>
         );
       case 'SANDCASTLE':
         return (
-          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-sm">
+          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' }}>
+            <defs>
+              <filter id="sandcastleGlow">
+                <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+            
             {/* Color Palette */}
             {/* Sand: #ffedd5 (extra light), #fed7aa (light), #fdba74 (mid), #fb923c (shade) */}
             
@@ -165,7 +196,7 @@ const ObstacleComponent: React.FC<ObstacleComponentProps> = ({ obstacle, groundY
             <path d="M42 88 L 58 88 L 60 92 L 40 92 Z" fill="#fdba74" />
 
             {/* Central Tower */}
-            <path d="M38 85 L 35 45 Q 50 35 65 45 L 62 85 Z" fill="#fed7aa" />
+            <path d="M38 85 L 35 45 Q 50 35 65 45 L 62 85 Z" fill="#fed7aa" filter="url(#sandcastleGlow)" />
             <path d="M40 40 L 40 32 L 45 32 L 45 35 L 50 35 L 50 32 L 55 32 L 55 35 L 60 35 L 60 32 L 60 40 Z" fill="#fdba74" />
             
             {/* Arched Doorway */}
@@ -196,9 +227,14 @@ const ObstacleComponent: React.FC<ObstacleComponentProps> = ({ obstacle, groundY
             <path d="M60 95 L 65 65 Q 75 60 85 65 L 90 95 Z" fill="#ffedd5" />
             <path d="M65 65 L 65 58 L 70 58 L 70 62 L 75 62 L 75 58 L 80 58 L 80 62 L 85 62 L 85 65 Z" fill="#fed7aa" />
 
-            {/* Flag on top */}
+            {/* Flag pole */}
             <line x1="50" y1="20" x2="50" y2="35" stroke="#451a03" strokeWidth="2" />
-            <path d="M50 20 L 65 25 L 50 30 Z" fill="#ef4444" />
+            
+            {/* Animated flag on top */}
+            <g className="animate-[flagWave_2s_ease-in-out_infinite]" style={{ transformOrigin: '50px 20px' }}>
+              <path d="M50 20 L 65 25 L 50 30 Z" fill="#ef4444" stroke="#dc2626" strokeWidth="0.5" />
+              <path d="M50 22 L 62 26 L 50 28 Z" fill="#fca5a5" opacity="0.6" />
+            </g>
 
             {/* Sand Grain Details (Dots) */}
             <g fill="#fb923c" opacity="0.4">
@@ -210,65 +246,110 @@ const ObstacleComponent: React.FC<ObstacleComponentProps> = ({ obstacle, groundY
               <circle cx="32" cy="70" r="0.6" />
               <circle cx="68" cy="70" r="0.6" />
             </g>
-          </svg>
-        );
-      case 'FOOTBALL_PLAYER':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <rect x="30" y="50" width="40" height="40" rx="10" fill="#1e40af" />
-            <circle cx="50" cy="40" r="20" fill="#f8fafc" stroke="#1e293b" strokeWidth="2" />
-            <rect x="35" y="40" width="30" height="5" fill="#1e293b" />
-            <path d="M25 60 Q 15 80 25 90" stroke="#1e40af" strokeWidth="8" fill="none" />
-            <path d="M75 60 Q 85 80 75 90" stroke="#1e40af" strokeWidth="8" fill="none" />
-          </svg>
-        );
-      case 'FLYING_FOOTBALL':
-        return (
-          <svg viewBox="0 0 100 60" className="w-full h-full animate-spin">
-            <ellipse cx="50" cy="30" rx="45" ry="25" fill="#78350f" stroke="#451a03" strokeWidth="2" />
-            <rect x="30" y="27" width="40" height="2" fill="white" />
-            <rect x="35" y="22" width="2" height="12" fill="white" />
-            <rect x="45" y="22" width="2" height="12" fill="white" />
-            <rect x="55" y="22" width="2" height="12" fill="white" />
-            <rect x="65" y="22" width="2" height="12" fill="white" />
-          </svg>
-        );
-      case 'REFEREE':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <rect x="35" y="40" width="30" height="50" fill="white" />
-            <rect x="35" y="40" width="5" height="50" fill="black" />
-            <rect x="45" y="40" width="5" height="50" fill="black" />
-            <rect x="55" y="40" width="5" height="50" fill="black" />
-            <circle cx="50" cy="30" r="15" fill="#fecaca" />
-            <rect x="45" y="15" width="10" height="5" fill="black" />
-            <path d="M30 60 L 10 40" stroke="black" strokeWidth="6" />
-            <path d="M70 60 L 90 40" stroke="black" strokeWidth="6" />
-          </svg>
-        );
-      case 'WATER_COOLER':
-        return (
-          <svg viewBox="0 0 100 120" className="w-full h-full">
-            <rect x="20" y="60" width="60" height="50" fill="#d1d5db" />
-            <rect x="25" y="10" width="50" height="50" fill="#60a5fa" rx="5" />
-            <rect x="45" y="75" width="10" height="15" fill="#1e3a8a" />
-            <circle cx="50" cy="95" r="5" fill="#93c5fd" />
+            
+            <style>{`
+              @keyframes flagWave {
+                0%, 100% { transform: translateX(0) rotate(0deg); }
+                25% { transform: translateX(1px) rotate(2deg); }
+                50% { transform: translateX(0) rotate(0deg); }
+                75% { transform: translateX(-1px) rotate(-2deg); }
+              }
+            `}</style>
           </svg>
         );
       case 'TIDEPOOL':
         return (
-            <svg viewBox="0 0 100 40" className="w-full h-full">
-                <ellipse cx="50" cy="20" rx="45" ry="15" fill="#60a5fa" opacity="0.8" />
-                <circle cx="20" cy="15" r="5" fill="#94a3b8" />
-                <circle cx="80" cy="25" r="4" fill="#94a3b8" />
+            <svg viewBox="0 0 100 40" className="w-full h-full drop-shadow-md">
+              <defs>
+                <radialGradient id="tidepoolGrad">
+                  <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.9" />
+                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.7" />
+                </radialGradient>
+              </defs>
+              
+              {/* Base water pool */}
+              <ellipse cx="50" cy="20" rx="45" ry="15" fill="url(#tidepoolGrad)" opacity="0.85" />
+              
+              {/* Animated ripples */}
+              <ellipse cx="50" cy="20" rx="35" ry="12" fill="none" stroke="#bfdbfe" strokeWidth="1.5" opacity="0.6" className="animate-[ripple_2s_ease-in-out_infinite]" />
+              <ellipse cx="50" cy="20" rx="40" ry="13" fill="none" stroke="#93c5fd" strokeWidth="1" opacity="0.4" className="animate-[ripple2_2.5s_ease-in-out_infinite]" style={{ animationDelay: '0.5s' }} />
+              
+              {/* Shells/stones */}
+              <circle cx="20" cy="15" r="4" fill="#cbd5e1" opacity="0.8" />
+              <circle cx="80" cy="25" r="3.5" fill="#94a3b8" opacity="0.8" />
+              <ellipse cx="30" cy="22" rx="2" ry="3" fill="#e2e8f0" opacity="0.7" />
+              <ellipse cx="70" cy="18" rx="2.5" ry="2" fill="#cbd5e1" opacity="0.7" />
+              
+              {/* Small bubbles */}
+              <circle cx="35" cy="18" r="1" fill="white" opacity="0.5" className="animate-[bubble_3s_ease-in-out_infinite]" />
+              <circle cx="65" cy="20" r="1.2" fill="white" opacity="0.5" className="animate-[bubble_3.5s_ease-in-out_infinite]" style={{ animationDelay: '1s' }} />
+              
+              <style>{`
+                @keyframes ripple {
+                  0%, 100% { transform: scale(1); opacity: 0.6; }
+                  50% { transform: scale(1.15); opacity: 0.3; }
+                }
+                @keyframes ripple2 {
+                  0%, 100% { transform: scale(1); opacity: 0.4; }
+                  50% { transform: scale(1.2); opacity: 0.1; }
+                }
+                @keyframes bubble {
+                  0%, 100% { transform: translateY(0); opacity: 0.5; }
+                  50% { transform: translateY(-3px); opacity: 0.8; }
+                }
+              `}</style>
             </svg>
         );
       case 'COIN':
         return (
-          <div className="w-full h-full animate-[bounce_1s_infinite]">
-            <svg viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="40" fill="#facc15" stroke="#a16207" strokeWidth="4" />
-              <text x="50" y="65" fontSize="40" fontWeight="bold" textAnchor="middle" fill="#a16207">★</text>
+          <div className="w-full h-full animate-[coinFloat_0.8s_ease-in-out_infinite] relative">
+            {/* Glow effect */}
+            <div className="absolute inset-0 rounded-full bg-yellow-400/30 blur-md animate-pulse" />
+            <svg viewBox="0 0 100 100" className="relative z-10 drop-shadow-lg">
+              <defs>
+                <radialGradient id="coinGradient" cx="30%" cy="30%">
+                  <stop offset="0%" stopColor="#fef08a" />
+                  <stop offset="50%" stopColor="#facc15" />
+                  <stop offset="100%" stopColor="#ca8a04" />
+                </radialGradient>
+              </defs>
+              <circle cx="50" cy="50" r="40" fill="url(#coinGradient)" stroke="#a16207" strokeWidth="3" />
+              <circle cx="50" cy="50" r="32" fill="none" stroke="#fef08a" strokeWidth="2" opacity="0.5" />
+              <text x="50" y="62" fontSize="36" fontWeight="bold" textAnchor="middle" fill="#92400e">★</text>
+              {/* Sparkle */}
+              <circle cx="35" cy="35" r="4" fill="white" opacity="0.8" className="animate-pulse" />
+            </svg>
+            <style>{`
+              @keyframes coinFloat {
+                0%, 100% { transform: translateY(0) rotate(-5deg); }
+                50% { transform: translateY(-6px) rotate(5deg); }
+              }
+            `}</style>
+          </div>
+        );
+      case 'SHELL':
+        return (
+          <div className="w-full h-full animate-[bounce_1.2s_infinite]">
+            <svg viewBox="0 0 100 100" className="drop-shadow-md">
+              <defs>
+                <linearGradient id="shellGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
+                  <stop offset="50%" stopColor="#fde68a" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#f59e0b" stopOpacity="1" />
+                </linearGradient>
+              </defs>
+              {/* Shell body */}
+              <ellipse cx="50" cy="55" rx="35" ry="40" fill="url(#shellGrad)" stroke="#d97706" strokeWidth="2" />
+              {/* Shell ridges */}
+              <path d="M30 50 Q 50 35 70 50" fill="none" stroke="#f59e0b" strokeWidth="2" opacity="0.6" />
+              <path d="M25 60 Q 50 45 75 60" fill="none" stroke="#f59e0b" strokeWidth="2" opacity="0.6" />
+              <path d="M20 70 Q 50 55 80 70" fill="none" stroke="#f59e0b" strokeWidth="2" opacity="0.6" />
+              {/* Inner spiral */}
+              <path d="M50 30 Q 60 40 55 50 Q 50 60 45 50 Q 40 40 50 30" fill="none" stroke="#d97706" strokeWidth="2" opacity="0.8" />
+              {/* Highlight */}
+              <ellipse cx="45" cy="40" rx="12" ry="15" fill="white" opacity="0.3" />
+              {/* Sparkle effect */}
+              <circle cx="65" cy="35" r="3" fill="white" opacity="0.8" className="animate-pulse" />
             </svg>
           </div>
         );
@@ -283,6 +364,81 @@ const ObstacleComponent: React.FC<ObstacleComponentProps> = ({ obstacle, groundY
           <div className="bg-yellow-500 rounded-lg p-2 border-2 border-white shadow-lg animate-pulse h-full w-full flex items-center justify-center">
              <span className="text-red-600 font-black text-2xl italic">U</span>
           </div>
+        );
+      case 'SUPER_SIZE':
+        return (
+          <div className="bg-purple-500 rounded-lg p-2 border-2 border-white shadow-lg animate-pulse h-full w-full flex items-center justify-center relative">
+             <span className="text-white font-black text-2xl italic">S</span>
+             <div className="absolute inset-0 bg-purple-300 rounded-lg animate-ping opacity-75" />
+          </div>
+        );
+      case 'SAND_PROJECTILE':
+        // Get rotation angle from obstacle if available (for physics-based rotation)
+        const rotation = obstacle.rotation || 0;
+        return (
+          <div 
+            className="w-full h-full relative"
+            style={{ 
+              transform: `rotate(${rotation}deg)`,
+              transformOrigin: 'center center'
+            }}
+          >
+            {/* Poop trail particles */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="absolute w-2 h-2 bg-amber-400/60 rounded-full blur-sm animate-[trailPulse_0.3s_ease-out_infinite]" style={{ left: '10%', top: '20%' }} />
+              <div className="absolute w-1.5 h-1.5 bg-amber-500/60 rounded-full blur-sm animate-[trailPulse_0.4s_ease-out_infinite]" style={{ left: '15%', top: '30%', animationDelay: '0.1s' }} />
+              <div className="absolute w-2 h-2 bg-amber-300/60 rounded-full blur-sm animate-[trailPulse_0.35s_ease-out_infinite]" style={{ left: '8%', top: '40%', animationDelay: '0.2s' }} />
+            </div>
+            
+            <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg animate-[poopSpin_0.5s_linear_infinite]">
+              {/* Main poop shape */}
+              <path 
+                d="M50 10 C 60 10 70 20 70 35 C 70 50 85 50 85 70 C 85 90 15 90 15 70 C 15 50 30 50 30 35 C 30 20 40 10 50 10 Z" 
+                fill="#d97706" 
+                stroke="#92400e" 
+                strokeWidth="2.5" 
+              />
+              {/* Textured lines */}
+              <path d="M35 70 Q 50 60 65 70" fill="none" stroke="#92400e" strokeWidth="2" opacity="0.5" />
+              <path d="M40 50 Q 50 40 60 50" fill="none" stroke="#92400e" strokeWidth="2" opacity="0.5" />
+              <path d="M25 85 Q 50 75 75 85" fill="none" stroke="#92400e" strokeWidth="1.5" opacity="0.4" />
+              {/* Flies buzzing around */}
+              <circle cx="20" cy="30" r="2.5" fill="#111" className="animate-pulse" />
+              <circle cx="80" cy="40" r="2" fill="#111" className="animate-pulse" style={{ animationDelay: '0.3s' }} />
+              <circle cx="30" cy="60" r="1.5" fill="#111" className="animate-pulse" style={{ animationDelay: '0.6s' }} />
+              <circle cx="70" cy="55" r="2" fill="#111" className="animate-pulse" style={{ animationDelay: '0.2s' }} />
+              {/* Highlight */}
+              <ellipse cx="40" cy="35" rx="8" ry="12" fill="#fb923c" opacity="0.3" />
+            </svg>
+            
+            <style>{`
+              @keyframes poopSpin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+              @keyframes trailPulse {
+                0% { opacity: 0.6; transform: scale(1); }
+                100% { opacity: 0; transform: scale(1.5); }
+              }
+            `}</style>
+          </div>
+        );
+      case 'PALM_TREE':
+        return (
+          <svg viewBox="0 0 100 120" className="w-full h-full drop-shadow-lg">
+            <g className="animate-[palmSway_4s_ease-in-out_infinite]" style={{ transformOrigin: '50px 110px' }}>
+              <path d="M45 110 Q 48 60 42 10 L 58 10 Q 52 60 55 110 Z" fill="#92400e" stroke="#451a03" strokeWidth="1" />
+              {[0, 45, 90, 135, 180, 225, 270, 315].map(deg => (
+                <path key={deg} d="M50 20 Q 80 0 110 30" fill="none" stroke="#166534" strokeWidth="12" strokeLinecap="round" transform={`rotate(${deg}, 50, 20)`} />
+              ))}
+            </g>
+            <style>{`
+              @keyframes palmSway {
+                0%, 100% { transform: rotate(-2deg); }
+                50% { transform: rotate(2deg); }
+              }
+            `}</style>
+          </svg>
         );
       default:
         return null;
