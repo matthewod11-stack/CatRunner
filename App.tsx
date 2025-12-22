@@ -190,7 +190,7 @@ const App: React.FC = () => {
 
   return (
     <div 
-      className={`relative w-full h-screen flex flex-col items-center justify-center overflow-hidden font-sans transition-all duration-2000 ${
+      className={`relative w-full h-screen-safe flex flex-col items-center justify-center overflow-hidden font-sans transition-all duration-2000 ${
         isBossMoment ? 'bg-orange-300' : 
         status === GameStatus.LEVEL_SELECTION ? 'bg-amber-50' : 
         status === GameStatus.CUSTOMIZE ? 'bg-amber-100' : 
