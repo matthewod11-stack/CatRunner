@@ -509,7 +509,10 @@ const App: React.FC = () => {
       )}
 
       {(status === GameStatus.PLAYING || status === GameStatus.BOSS_INTRO || status === GameStatus.BOSS_FIGHT) && (
-        <div className="absolute top-6 left-6 z-20 flex flex-col gap-4 pointer-events-none animate-[slideDown_0.3s_ease-out]">
+        <div
+          className="absolute top-6 left-6 z-20 flex flex-col gap-4 pointer-events-none animate-[slideDown_0.3s_ease-out]"
+          style={{ marginTop: 'env(safe-area-inset-top)', marginLeft: 'env(safe-area-inset-left)' }}
+        >
           <div className="bg-white/90 backdrop-blur-md px-6 py-4 rounded-3xl border-2 border-white shadow-xl flex items-center gap-6">
             <div className="flex flex-col">
               <span className="text-[10px] uppercase font-black text-amber-800/60">SCORE</span>

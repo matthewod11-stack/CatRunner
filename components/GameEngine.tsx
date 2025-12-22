@@ -1203,7 +1203,10 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
       }}
     >
       {/* HUD - Pause Button */}
-      <div className="absolute top-6 right-6 z-[60] pointer-events-auto">
+      <div
+        className="absolute top-6 right-6 z-[60] pointer-events-auto"
+        style={{ marginTop: 'env(safe-area-inset-top)', marginRight: 'env(safe-area-inset-right)' }}
+      >
         <button 
           onClick={() => setIsPaused(p => !p)}
           className="bg-white/90 hover:bg-white backdrop-blur-md w-14 h-14 rounded-full border-2 border-white shadow-xl flex items-center justify-center transition-transform active:scale-90"
