@@ -331,6 +331,25 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     if (e.code === 'ArrowDown') performDuck(false);
   }, [performDuck]);
 
+  // Touch handlers for mobile/tablet
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    if (isPaused) return;
+    e.preventDefault();
+
+    const touch = e.touches[0];
+    const screenMidpoint = window.innerWidth / 2;
+
+    if (touch.clientX < screenMidpoint) {
+      performJump();
+    } else {
+      performDuck(true);
+    }
+  }, [isPaused, performJump, performDuck]);
+
+  const handleTouchEnd = useCallback((e: TouchEvent) => {
+    performDuck(false);
+  }, [performDuck]);
+
   const spawnEntity = useCallback((typeOverride?: EntityType, yOverride?: number) => {
     if (status !== GameStatus.PLAYING && !typeOverride) {
       if (status === GameStatus.BOSS_FIGHT && boss) {
@@ -1164,6 +1183,16 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, [handleKeyDown, handleKeyUp]);
+
+  // Touch controls for mobile/tablet
+  useEffect(() => {
+    window.addEventListener('touchstart', handleTouchStart, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd, { passive: false });
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [handleTouchStart, handleTouchEnd]);
 
   return (
     <div 
