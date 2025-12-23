@@ -110,37 +110,98 @@ const ObstacleComponent: React.FC<ObstacleComponentProps> = memo(({ obstacle, gr
       case 'SANDCASTLE':
         return (
           <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg">
-            {/* Steps */}
-            <path d="M40 85 L 60 85 L 62 92 L 38 92 Z" fill="#fb923c" />
-            <path d="M42 88 L 58 88 L 60 92 L 40 92 Z" fill="#fdba74" />
-            {/* Central Tower */}
-            <path d="M38 85 L 35 45 Q 50 35 65 45 L 62 85 Z" fill="#fed7aa" />
-            <path d="M40 40 L 40 32 L 45 32 L 45 35 L 50 35 L 50 32 L 55 32 L 55 35 L 60 35 L 60 32 L 60 40 Z" fill="#fdba74" />
-            {/* Doorway */}
-            <path d="M43 85 Q 43 55 50 55 Q 57 55 57 85 Z" fill="#fb923c" />
-            {/* Windows */}
-            <path d="M40 50 Q 40 42 44 42 Q 48 42 48 50 Z" fill="#fb923c" />
-            <path d="M52 50 Q 52 42 56 42 Q 60 42 60 50 Z" fill="#fb923c" />
-            {/* Left Tower */}
-            <path d="M20 85 L 22 55 Q 30 48 38 55 L 40 85 Z" fill="#ffedd5" />
-            <path d="M23 55 L 23 50 Q 30 45 37 50 L 37 55 Z" fill="#fed7aa" />
-            <rect x="25" y="60" width="4" height="6" fill="#fb923c" />
-            <rect x="25" y="70" width="4" height="6" fill="#fb923c" />
-            {/* Right Tower */}
-            <path d="M60 85 L 62 55 Q 70 48 78 55 L 80 85 Z" fill="#ffedd5" />
-            <path d="M63 55 L 63 50 Q 70 45 77 50 L 77 55 Z" fill="#fed7aa" />
-            <rect x="71" y="60" width="4" height="6" fill="#fb923c" />
-            <rect x="71" y="70" width="4" height="6" fill="#fb923c" />
-            {/* Front Walls */}
-            <path d="M10 95 L 15 65 Q 25 60 35 65 L 40 95 Z" fill="#ffedd5" />
-            <path d="M15 65 L 15 58 L 20 58 L 20 62 L 25 62 L 25 58 L 30 58 L 30 62 L 35 62 L 35 65 Z" fill="#fed7aa" />
-            <path d="M60 95 L 65 65 Q 75 60 85 65 L 90 95 Z" fill="#ffedd5" />
-            <path d="M65 65 L 65 58 L 70 58 L 70 62 L 75 62 L 75 58 L 80 58 L 80 62 L 85 62 L 85 65 Z" fill="#fed7aa" />
-            {/* Flag */}
-            <line x1="50" y1="20" x2="50" y2="35" stroke="#451a03" strokeWidth="2" />
-            <g className="anim-flag-wave" style={{ transformOrigin: '50px 20px' }}>
-              <path d="M50 20 L 65 25 L 50 30 Z" fill="#ef4444" stroke="#dc2626" strokeWidth="0.5" />
+            <defs>
+              <linearGradient id="sandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#fbbf24" />
+                <stop offset="50%" stopColor="#f59e0b" />
+                <stop offset="100%" stopColor="#d97706" />
+              </linearGradient>
+              <linearGradient id="sandLight" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#fde68a" />
+                <stop offset="100%" stopColor="#fbbf24" />
+              </linearGradient>
+              <linearGradient id="sandDark" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#f59e0b" />
+                <stop offset="100%" stopColor="#d97706" />
+              </linearGradient>
+            </defs>
+            
+            {/* Sand mound base */}
+            <path d="M5 95 Q 10 75 20 70 Q 30 65 40 68 Q 50 70 60 68 Q 70 65 80 70 Q 90 75 95 95 Z" fill="url(#sandGrad)" />
+            <path d="M8 95 Q 12 78 22 73 Q 32 68 42 70 Q 52 72 58 70 Q 68 67 78 73 Q 88 78 92 95 Z" fill="url(#sandLight)" opacity="0.6" />
+            
+            {/* Pebbles scattered on ground */}
+            <circle cx="8" cy="96" r="1.5" fill="#a8a29e" />
+            <circle cx="15" cy="97" r="1" fill="#78716c" />
+            <circle cx="22" cy="96" r="1.2" fill="#a8a29e" />
+            <circle cx="78" cy="97" r="1.1" fill="#78716c" />
+            <circle cx="85" cy="96" r="1.3" fill="#a8a29e" />
+            <circle cx="92" cy="97" r="0.9" fill="#78716c" />
+            <circle cx="12" cy="98" r="0.8" fill="#d6d3d1" />
+            <circle cx="88" cy="98" r="1" fill="#d6d3d1" />
+            
+            {/* Blue shovel on left */}
+            <g transform="translate(5, 75)">
+              {/* Shovel handle */}
+              <line x1="0" y1="0" x2="8" y2="-20" stroke="#1e40af" strokeWidth="2.5" strokeLinecap="round" />
+              {/* Shovel scoop */}
+              <path d="M-3 18 Q -3 12 2 12 Q 7 12 7 18 Q 7 22 2 22 Q -3 22 -3 18 Z" fill="#3b82f6" stroke="#1e40af" strokeWidth="1" />
+              <path d="M-2 18 Q -2 13 2 13 Q 6 13 6 18 Q 6 21 2 21 Q -2 21 -2 18 Z" fill="#60a5fa" />
             </g>
+            
+            {/* Left side wall/rampart */}
+            <path d="M15 95 L 18 72 Q 25 68 32 72 L 35 95 Z" fill="url(#sandLight)" />
+            <path d="M16 72 L 16 68 L 20 66 L 24 68 L 28 66 L 32 68 L 32 72 Z" fill="url(#sandDark)" opacity="0.7" />
+            
+            {/* Right side wall/rampart */}
+            <path d="M65 95 L 68 72 Q 75 68 82 72 L 85 95 Z" fill="url(#sandLight)" />
+            <path d="M66 72 L 66 68 L 70 66 L 74 68 L 78 66 L 82 68 L 82 72 Z" fill="url(#sandDark)" opacity="0.7" />
+            
+            {/* Left Tower */}
+            <path d="M25 95 L 28 50 Q 35 42 42 50 L 45 95 Z" fill="url(#sandLight)" />
+            <path d="M26 50 L 26 42 L 30 40 L 34 42 L 38 40 L 42 42 L 42 50 Z" fill="url(#sandDark)" opacity="0.8" />
+            {/* Left tower windows */}
+            <rect x="29" y="60" width="3" height="4" fill="#d97706" rx="0.5" />
+            <rect x="29" y="70" width="3" height="4" fill="#d97706" rx="0.5" />
+            <rect x="36" y="60" width="3" height="4" fill="#d97706" rx="0.5" />
+            <rect x="36" y="70" width="3" height="4" fill="#d97706" rx="0.5" />
+            {/* Left tower flag - blue */}
+            <line x1="35" y1="42" x2="35" y2="50" stroke="#1e293b" strokeWidth="1.5" />
+            <g className="anim-flag-wave" style={{ transformOrigin: '35px 42px' }}>
+              <path d="M35 42 L 42 45 L 35 48 Z" fill="#3b82f6" stroke="#1e40af" strokeWidth="0.5" />
+            </g>
+            
+            {/* Central Keep */}
+            <path d="M38 95 L 40 40 Q 50 30 60 40 L 62 95 Z" fill="url(#sandLight)" />
+            <path d="M39 40 L 39 30 L 44 28 L 48 30 L 52 28 L 56 30 L 60 28 L 61 30 L 61 40 Z" fill="url(#sandDark)" opacity="0.8" />
+            {/* Central doorway */}
+            <path d="M45 95 Q 45 60 50 60 Q 55 60 55 95 Z" fill="#d97706" />
+            <path d="M46 95 Q 46 62 50 62 Q 54 62 54 95 Z" fill="#92400e" />
+            {/* Central windows */}
+            <path d="M42 50 Q 42 46 45 46 Q 48 46 48 50 Z" fill="#d97706" />
+            <path d="M52 50 Q 52 46 55 46 Q 58 46 58 50 Z" fill="#d97706" />
+            
+            {/* Right Tower */}
+            <path d="M55 95 L 58 50 Q 65 42 72 50 L 75 95 Z" fill="url(#sandLight)" />
+            <path d="M56 50 L 56 42 L 60 40 L 64 42 L 68 40 L 72 42 L 72 50 Z" fill="url(#sandDark)" opacity="0.8" />
+            {/* Right tower windows */}
+            <rect x="59" y="60" width="3" height="4" fill="#d97706" rx="0.5" />
+            <rect x="59" y="70" width="3" height="4" fill="#d97706" rx="0.5" />
+            <rect x="66" y="60" width="3" height="4" fill="#d97706" rx="0.5" />
+            <rect x="66" y="70" width="3" height="4" fill="#d97706" rx="0.5" />
+            {/* Right tower flag - red */}
+            <line x1="65" y1="42" x2="65" y2="50" stroke="#1e293b" strokeWidth="1.5" />
+            <g className="anim-flag-wave" style={{ transformOrigin: '65px 42px' }}>
+              <path d="M65 42 L 72 45 L 65 48 Z" fill="#ef4444" stroke="#dc2626" strokeWidth="0.5" />
+            </g>
+            
+            {/* Additional small turrets on central keep */}
+            <path d="M42 40 L 43 35 Q 46 32 49 35 L 50 40 Z" fill="url(#sandDark)" opacity="0.6" />
+            <path d="M50 40 L 51 35 Q 54 32 57 35 L 58 40 Z" fill="url(#sandDark)" opacity="0.6" />
+            
+            {/* Texture/shadow details on sand mound */}
+            <ellipse cx="30" cy="85" rx="8" ry="3" fill="url(#sandDark)" opacity="0.3" />
+            <ellipse cx="70" cy="85" rx="8" ry="3" fill="url(#sandDark)" opacity="0.3" />
           </svg>
         );
       case 'TIDEPOOL':
@@ -185,19 +246,81 @@ const ObstacleComponent: React.FC<ObstacleComponentProps> = memo(({ obstacle, gr
           <div className="w-full h-full animate-bounce">
             <svg viewBox="0 0 100 100" className="drop-shadow-md">
               <defs>
-                <linearGradient id="shellGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <linearGradient id="shellPeach" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#fef3c7" />
                   <stop offset="50%" stopColor="#fde68a" />
-                  <stop offset="100%" stopColor="#f59e0b" />
+                  <stop offset="100%" stopColor="#fbbf24" />
+                </linearGradient>
+                <linearGradient id="shellPink" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#fce7f3" />
+                  <stop offset="50%" stopColor="#f9a8d4" />
+                  <stop offset="100%" stopColor="#f472b6" />
+                </linearGradient>
+                <radialGradient id="shellInterior" cx="70%" cy="50%">
+                  <stop offset="0%" stopColor="#fda4af" stopOpacity="0.9" />
+                  <stop offset="50%" stopColor="#fb7185" stopOpacity="0.7" />
+                  <stop offset="100%" stopColor="#f43f5e" stopOpacity="0.5" />
+                </radialGradient>
+                <linearGradient id="shellBeige" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#fef3c7" />
+                  <stop offset="100%" stopColor="#fde68a" />
                 </linearGradient>
               </defs>
-              <ellipse cx="50" cy="55" rx="35" ry="40" fill="url(#shellGrad)" stroke="#d97706" strokeWidth="2" />
-              <path d="M30 50 Q 50 35 70 50" fill="none" stroke="#f59e0b" strokeWidth="2" opacity="0.6" />
-              <path d="M25 60 Q 50 45 75 60" fill="none" stroke="#f59e0b" strokeWidth="2" opacity="0.6" />
-              <path d="M20 70 Q 50 55 80 70" fill="none" stroke="#f59e0b" strokeWidth="2" opacity="0.6" />
-              <path d="M50 30 Q 60 40 55 50 Q 50 60 45 50 Q 40 40 50 30" fill="none" stroke="#d97706" strokeWidth="2" opacity="0.8" />
-              <ellipse cx="45" cy="40" rx="12" ry="15" fill="white" opacity="0.3" />
-              <circle cx="65" cy="35" r="3" fill="white" opacity="0.8" className="animate-pulse" />
+              
+              {/* Main shell body - organic curved shape */}
+              <path d="M25 75 Q 20 60 25 45 Q 30 30 40 25 Q 50 20 60 25 Q 70 30 75 40 Q 80 50 78 65 Q 75 80 65 85 Q 50 90 35 85 Q 25 80 25 75 Z" 
+                    fill="url(#shellPeach)" 
+                    stroke="#1e293b" 
+                    strokeWidth="1.5" />
+              
+              {/* Spiral top section - layered folds */}
+              <path d="M30 45 Q 28 38 32 32 Q 36 28 42 30 Q 38 35 35 40 Q 32 45 30 45 Z" 
+                    fill="url(#shellBeige)" 
+                    stroke="#1e293b" 
+                    strokeWidth="1" />
+              <path d="M35 40 Q 33 33 37 27 Q 41 23 47 25 Q 43 30 40 35 Q 37 40 35 40 Z" 
+                    fill="#fef3c7" 
+                    stroke="#1e293b" 
+                    strokeWidth="1" />
+              <path d="M40 35 Q 38 28 42 22 Q 46 18 52 20 Q 48 25 45 30 Q 42 35 40 35 Z" 
+                    fill="url(#shellPeach)" 
+                    stroke="#1e293b" 
+                    strokeWidth="1" />
+              
+              {/* Flared opening on right - wide aperture */}
+              <path d="M65 50 Q 72 48 78 55 Q 80 62 75 70 Q 70 75 65 72 Q 60 68 58 62 Q 60 55 65 50 Z" 
+                    fill="url(#shellInterior)" 
+                    stroke="#1e293b" 
+                    strokeWidth="1.5" />
+              
+              {/* Inner depth of opening - darker gradient */}
+              <path d="M65 55 Q 70 53 74 58 Q 75 63 72 68 Q 68 71 65 68 Q 62 65 61 60 Q 62 57 65 55 Z" 
+                    fill="#f43f5e" 
+                    stroke="#1e293b" 
+                    strokeWidth="1" 
+                    opacity="0.8" />
+              
+              {/* Spiral lines indicating shell structure */}
+              <path d="M30 50 Q 35 40 42 35 Q 50 32 58 38" 
+                    fill="none" 
+                    stroke="#d97706" 
+                    strokeWidth="1" 
+                    opacity="0.4" />
+              <path d="M35 60 Q 40 50 47 45 Q 55 42 63 48" 
+                    fill="none" 
+                    stroke="#d97706" 
+                    strokeWidth="1" 
+                    opacity="0.4" />
+              
+              {/* Additional texture lines on main body */}
+              <path d="M40 70 Q 45 65 50 60 Q 55 55 60 60" 
+                    fill="none" 
+                    stroke="#f59e0b" 
+                    strokeWidth="0.8" 
+                    opacity="0.3" />
+              
+              {/* Highlight on main body */}
+              <ellipse cx="45" cy="50" rx="12" ry="18" fill="white" opacity="0.2" />
             </svg>
           </div>
         );

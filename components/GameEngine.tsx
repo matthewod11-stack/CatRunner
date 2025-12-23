@@ -153,7 +153,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
 
   // Preload audio files on mount
   useEffect(() => {
-    const sounds = ['meow', 'hiss', 'jump'];
+    const sounds = ['meow', 'hiss', 'cartoon-jump-6462', 'boing-boing-bounce-454474', 'cartoon-splat-310479', 'fart-4-228244'];
     sounds.forEach(sound => {
       const audio = new Audio(`/sounds/${sound}.mp3`);
       audio.preload = 'auto';
@@ -164,14 +164,26 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
 
   const playSound = useCallback((type: string) => {
     try {
-      // File-based sounds (cat sounds)
-      const fileSounds = ['meow', 'hiss', 'jump'];
+      // File-based sounds (cat sounds and effect sounds)
+      const fileSounds = ['meow', 'hiss', 'cartoon-jump-6462', 'boing-boing-bounce-454474', 'cartoon-splat-310479', 'fart-4-228244'];
       if (fileSounds.includes(type)) {
         const cached = audioCache.current[type];
         if (cached) {
           // Clone the audio to allow overlapping playback
           const audio = cached.cloneNode() as HTMLAudioElement;
-          audio.volume = type === 'meow' ? 0.4 : type === 'hiss' ? 0.5 : 0.3;
+          if (type === 'meow') {
+            audio.volume = 0.4;
+          } else if (type === 'hiss') {
+            audio.volume = 0.5;
+          } else if (type === 'cartoon-jump-6462') {
+            audio.volume = 0.5;
+          } else if (type === 'boing-boing-bounce-454474') {
+            audio.volume = 0.5;
+          } else if (type === 'cartoon-splat-310479') {
+            audio.volume = 0.5;
+          } else if (type === 'fart-4-228244') {
+            audio.volume = 0.5;
+          }
           audio.play().catch(() => {}); // Ignore autoplay errors
         }
         return;
@@ -326,14 +338,14 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
   const shootPoop = useCallback(() => {
     const now = Date.now();
     if (now - lastShotTime.current < 150) return; 
-    playSound('shoot');
+    playSound('fart-4-228244');
     bulletsRef.current = [...bulletsRef.current, { id: now, x: 100 + 100, y: GROUND_Y + playerRef.current.y + 50, speed: 18, size: 28 }];
     lastShotTime.current = now;
   }, [playSound]);
 
   const performJump = useCallback(() => {
     if (playerRef.current.jumpCount < 2) {
-      playSound('jump'); spawnFartTrail();
+      playSound('cartoon-jump-6462'); spawnFartTrail();
       const catFeetX = 100 + 64;
       spawnSandParticles(catFeetX, playerRef.current.y, 0.8);
       playerRef.current = { ...playerRef.current, vy: JUMP_FORCE, jumpCount: playerRef.current.jumpCount + 1, isJumping: true, isDucking: false };
@@ -447,12 +459,12 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
       return;
     }
 
-    const beachTypes: ObstacleType[] = ['CRAB', 'CRAB', 'CRAB', 'BEACHBALL', 'SEAGULL', 'SANDCASTLE', 'TIDEPOOL', 'PALM_TREE'];
+    const beachTypes: ObstacleType[] = ['CRAB', 'CRAB', 'BEACHBALL', 'BEACHBALL', 'SEAGULL', 'SANDCASTLE', 'TIDEPOOL', 'PALM_TREE'];
     
-    let isCoin = Math.random() < 0.85; // Increased for more frequent stars
+    let isCoin = Math.random() < 0.75; // 75% chance of coin (reduced from 85% to allow more shells)
     let isShell = false;
-    if (!isCoin && Math.random() < 0.15) {
-      // 15% chance of shell when not spawning coin
+    if (!isCoin && Math.random() < 0.4) {
+      // 40% chance of shell when not spawning coin (increased from 15%)
       isShell = true;
     }
     if (consecutiveHarmfulRef.current >= 2) { isCoin = true; isShell = false; }
@@ -470,11 +482,11 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
       const seagullType = Math.random() < 0.5 ? 'dive' : 'poop';
       if (seagullType === 'dive') {
         isSwooping = Math.random() < 0.6;
-        if (yOverride === undefined) y = isSwooping ? 350 : 220;
+        if (yOverride === undefined) y = isSwooping ? 280 : 220; // Start at mid height (280px) for swooping, or 220 for non-swooping
       } else {
-        // 'poop' type - higher altitude, no swooping
+        // 'poop' type - higher altitude, no swooping (much higher so poops fall down)
         isSwooping = false;
-        if (yOverride === undefined) y = 350 + Math.random() * 50; // 350-400px range
+        if (yOverride === undefined) y = 500 + Math.random() * 100; // 500-600px range (high in sky)
       }
       obstaclesRef.current.push({ 
         id: Date.now() + Math.random(), 
@@ -592,6 +604,11 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
 
   const update = useCallback((time: number) => {
     if (isPaused) return;
+    
+    // Stop processing game logic when game is over or victory achieved
+    if (status === GameStatus.VICTORY || status === GameStatus.GAMEOVER) {
+      return;
+    }
 
     const now = Date.now();
 
@@ -869,7 +886,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     }
 
     // Boss defeat animation - poop pyramid burial
-    if (bossDefeating && boss) {
+    if (bossDefeating && boss && status !== GameStatus.VICTORY && status !== GameStatus.GAMEOVER) {
       const now = Date.now();
       const animationElapsed = now - defeatAnimationStartRef.current;
 
@@ -966,12 +983,24 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
       const minAnimationTime = SPAWN_DURATION + 8500; // Bask in the glory! (3.5s + 5s extra)
 
       if (allLanded && animationElapsed > minAnimationTime) {
-        // Transition to victory
-        setStatus(GameStatus.VICTORY);
-        onStatusChange?.(GameStatus.VICTORY);
+        // Transition to victory - clear boss state immediately
         setBoss(null);
         setBossDefeating(false);
         setDefeatPoops([]);
+        // Stop boss music and reset to normal
+        setBossMode(false);
+        // Transition to victory
+        setStatus(GameStatus.VICTORY);
+        onStatusChange?.(GameStatus.VICTORY);
+        // Final score update
+        onScoreUpdate({ 
+          current: Math.floor(scoreRef.current / 10), 
+          high: 0, 
+          coins: coinsRef.current, 
+          multiplier: multiplierRef.current, 
+          streak: streakRef.current, 
+          lives: livesRef.current
+        });
       }
     }
 
@@ -1028,10 +1057,10 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
           const prog = Math.min(distFromCenter / maxDist, 1);
           // Use ease-in-out cubic function for smoother motion
           const easedProg = prog < 0.5 ? 4 * prog * prog * prog : 1 - Math.pow(-2 * prog + 2, 3) / 2;
-          // Swoop from high (350) down to low (120) then back up slightly
-          const swoopStartY = 350;
-          const swoopLowY = 120;
-          const swoopEndY = 180;
+          // Swoop from mid height (280) down to lower 3rd (150) then back up slightly
+          const swoopStartY = 280; // Mid height
+          const swoopLowY = 150; // Lower 3rd of screen
+          const swoopEndY = 200; // Slight recovery
           if (newX > centerX) {
             // Approaching center - swooping down
             newY = swoopStartY + (swoopLowY - swoopStartY) * easedProg;
@@ -1054,7 +1083,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
 
     for (const obs of obstaclesRef.current) {
       if (obs.isCollected) continue;
-      const oY = obs.y ?? (obs.type === 'SEAGULL' ? (obs.seagullType === 'poop' ? 350 : 220) : GROUND_Y);
+      const oY = obs.y ?? (obs.type === 'SEAGULL' ? (obs.seagullType === 'poop' ? 550 : 220) : GROUND_Y);
       const hPadding = 10, vPadding = 5;
       const oRect = { l: obs.x + hPadding, r: obs.x + obs.width - hPadding, b: oY + vPadding, t: oY + obs.height - vPadding };
       let overlaps = (kRect.r > oRect.l && kRect.l < oRect.r && kRect.t > oRect.b && kRect.b < oRect.t);
@@ -1142,6 +1171,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
           const BOUNCE_POINTS = 10; // Points awarded for stomping enemies
           if (obs.type === 'CRAB') {
             playSound('meow');
+            playSound('cartoon-splat-310479');
             spawnBopParticles(obs.x + obs.width/2, oRect.t, '#ef4444');
             playerRef.current.vy = 8;
             playerRef.current.jumpCount = 0;
@@ -1154,6 +1184,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
           }
           else if (obs.type === 'BEACHBALL') {
             playSound('meow');
+            playSound('boing-boing-bounce-454474');
             spawnBopParticles(obs.x + obs.width/2, oRect.t, '#fde047');
             playerRef.current.vy = BOUNCE_FORCE;
             playerRef.current.jumpCount = 0;
@@ -1166,6 +1197,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
           }
           else if (obs.type === 'SEAGULL' && obs.seagullType === 'dive') {
             playSound('meow');
+            playSound('cartoon-splat-310479');
             spawnBopParticles(obs.x + obs.width/2, oRect.t, '#ffffff');
             playerRef.current.vy = 8;
             playerRef.current.jumpCount = 1;
@@ -1584,22 +1616,26 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
 
         {/* Boss */}
         {boss && (
-          <div className="absolute" style={{ left: boss.x, bottom: boss.y, width: boss.width, height: boss.height, zIndex: 20 }}>
-            {/* During defeat animation, clip boss to only show head */}
-            <div
-              className="relative w-full h-full"
-              style={bossDefeating ? {
-                clipPath: 'inset(0 0 60% 0)', // Show only top 40% (head area)
-                transition: 'clip-path 0.5s ease-out'
-              } : {}}
-            >
-              <SandMonster health={boss.health || 0} maxHealth={boss.maxHealth || 100} facingDirection={bossFacingDirection} isDefeating={bossDefeating} />
-            </div>
+          <div className="absolute" style={{ left: boss.x, bottom: boss.y, width: boss.width, height: boss.height, zIndex: 30 }}>
+            <SandMonster health={boss.health || 0} maxHealth={boss.maxHealth || 100} facingDirection={bossFacingDirection} isDefeating={bossDefeating} />
           </div>
         )}
 
         {/* Defeat Animation - Poop Pyramid */}
-        {bossDefeating && defeatPoops.map(poop => (
+        {bossDefeating && defeatPoops.map(poop => {
+          // Calculate if poop is above or below the boss body
+          // Boss uses bottom positioning: boss.y is distance from bottom, boss.y + boss.height is top
+          // Poop also uses bottom positioning: poop.y is center, so bottom is poop.y - poop.size/2
+          const bossBottom = boss.y;
+          const bossTop = boss.y + boss.height;
+          const bossMidpoint = boss.y + boss.height * 0.5; // Middle of boss body
+          const poopCenterY = poop.y;
+          // Poops below the boss midpoint should render behind the boss body
+          // Poops above the boss midpoint should render in front (covering the boss)
+          const isAboveBossMidpoint = poopCenterY > bossMidpoint;
+          const poopZIndex = isAboveBossMidpoint ? 40 : 25; // Behind boss (25) if below midpoint, in front (40) if above
+          
+          return (
           <div
             key={poop.id}
             className="absolute pointer-events-none"
@@ -1610,7 +1646,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
               height: poop.size,
               transform: `rotate(${poop.rotation}deg)`,
               transition: poop.landed ? 'none' : 'transform 0.05s linear',
-              zIndex: 50
+              zIndex: poopZIndex
             }}
           >
             {/* Poop ball SVG */}
@@ -1635,7 +1671,8 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
               )}
             </svg>
           </div>
-        ))}
+          );
+        })}
 
         {/* Defeat text overlay */}
         {bossDefeating && defeatPoops.length > 10 && (
