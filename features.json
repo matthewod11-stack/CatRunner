@@ -5,18 +5,18 @@
     "lastUpdated": "2025-12-23",
     "planFile": "~/.claude/plans/compressed-gathering-kite.md",
     "totalPhases": 8,
-    "completedPhases": 0
+    "completedPhases": 1
   },
   "phase-1": {
     "description": "Session Protocol Infrastructure",
-    "status": "in-progress",
+    "status": "pass",
     "tasks": {
       "docs-roadmap": { "status": "pass", "notes": "Created with plan reference" },
       "docs-progress": { "status": "pass", "notes": "Created with session template" },
       "docs-known-issues": { "status": "pass", "notes": "Created with deferred decisions" },
       "features-json": { "status": "pass", "notes": "This file" },
       "dev-init-script": { "status": "pass", "notes": "Created and tested" },
-      "commit": { "status": "not-started", "notes": "Commit all infrastructure files" }
+      "commit": { "status": "pass", "notes": "Committed as c944986" }
     }
   },
   "phase-2": {

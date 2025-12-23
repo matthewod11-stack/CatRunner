@@ -50,7 +50,7 @@ Most recent session should be first.
 ### Verified
 - [x] dev-init.sh runs successfully
 - [x] All docs accessible
-- [ ] Commit completed
+- [x] Commit completed (c944986)
 
 ### Notes
 - Full implementation plan is at: `~/.claude/plans/compressed-gathering-kite.md`
