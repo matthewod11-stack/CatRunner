@@ -148,24 +148,51 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     };
   }, [status, isPaused]);
 
+  // Audio file cache for cat sounds
+  const audioCache = useRef<Record<string, HTMLAudioElement>>({});
+
+  // Preload audio files on mount
+  useEffect(() => {
+    const sounds = ['meow', 'hiss', 'jump'];
+    sounds.forEach(sound => {
+      const audio = new Audio(`/sounds/${sound}.mp3`);
+      audio.preload = 'auto';
+      audio.volume = 0.5;
+      audioCache.current[sound] = audio;
+    });
+  }, []);
+
   const playSound = useCallback((type: string) => {
     try {
+      // File-based sounds (cat sounds)
+      const fileSounds = ['meow', 'hiss', 'jump'];
+      if (fileSounds.includes(type)) {
+        const cached = audioCache.current[type];
+        if (cached) {
+          // Clone the audio to allow overlapping playback
+          const audio = cached.cloneNode() as HTMLAudioElement;
+          audio.volume = type === 'meow' ? 0.4 : type === 'hiss' ? 0.5 : 0.3;
+          audio.play().catch(() => {}); // Ignore autoplay errors
+        }
+        return;
+      }
+
+      // Oscillator-based sounds (retro game sounds)
       const AudioContext = (window as any).AudioContext || (window as any).webkitAudioContext;
       if (!AudioContext) return;
       const audioCtx = new AudioContext();
       const osc = audioCtx.createOscillator();
       const windowGain = audioCtx.createGain();
       const isBossFight = status === GameStatus.BOSS_FIGHT;
-      
-      if (type === 'fart') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(110, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.2); windowGain.gain.setValueAtTime(0.1, audioCtx.currentTime); }
-      else if (type === 'coin') { osc.type = 'sine'; osc.frequency.setValueAtTime(880, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(1320, audioCtx.currentTime + 0.1); windowGain.gain.setValueAtTime(0.05, audioCtx.currentTime); }
+
+      if (type === 'coin') { osc.type = 'sine'; osc.frequency.setValueAtTime(880, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(1320, audioCtx.currentTime + 0.1); windowGain.gain.setValueAtTime(0.05, audioCtx.currentTime); }
       else if (type === 'mult') { osc.type = 'triangle'; osc.frequency.setValueAtTime(440, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3); windowGain.gain.setValueAtTime(0.2, audioCtx.currentTime); }
-      else if (type === 'hit') { 
-        // Enhanced hit sound for boss fight
+      else if (type === 'hit') {
+        // Enhanced hit sound for boss fight - fallback if hiss not loaded
         if (isBossFight) {
-          osc.type = 'square'; 
-          osc.frequency.setValueAtTime(80, audioCtx.currentTime); 
-          osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.3); 
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(80, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.3);
           windowGain.gain.setValueAtTime(0.3, audioCtx.currentTime);
         } else {
           osc.type = 'square'; osc.frequency.setValueAtTime(100, audioCtx.currentTime); windowGain.gain.setValueAtTime(0.2, audioCtx.currentTime);
@@ -174,27 +201,34 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
       else if (type === 'boing') { osc.type = 'sine'; osc.frequency.setValueAtTime(400, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.2); windowGain.gain.setValueAtTime(0.2, audioCtx.currentTime); }
       else if (type === 'shoot') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.2); windowGain.gain.setValueAtTime(0.1, audioCtx.currentTime); }
       else if (type === 'boss_alert') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(300, audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(150, audioCtx.currentTime + 0.5); windowGain.gain.setValueAtTime(0.2, audioCtx.currentTime); }
-      else if (type === 'poop_launch') { 
+      else if (type === 'poop_launch') {
         // Lower pitch thump for poop launch
-        osc.type = 'sawtooth'; 
-        osc.frequency.setValueAtTime(60, audioCtx.currentTime); 
-        osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.15); 
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(60, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.15);
         windowGain.gain.setValueAtTime(0.25, audioCtx.currentTime);
       }
-      else if (type === 'boss_hit') { 
+      else if (type === 'boss_hit') {
         // Bigger impact sound for boss hits
-        osc.type = 'square'; 
-        osc.frequency.setValueAtTime(50, audioCtx.currentTime); 
-        osc.frequency.exponentialRampToValueAtTime(25, audioCtx.currentTime + 0.4); 
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(50, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(25, audioCtx.currentTime + 0.4);
         windowGain.gain.setValueAtTime(0.4, audioCtx.currentTime);
       }
-      else if (type === 'boss_rumble') { 
+      else if (type === 'boss_rumble') {
         // Subtle rumble for boss movement
-        osc.type = 'sawtooth'; 
-        osc.frequency.setValueAtTime(45, audioCtx.currentTime); 
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(45, audioCtx.currentTime);
         windowGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
       }
-      
+      else if (type === 'powerup') {
+        // Rising arpeggio for power-up collection
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15);
+        windowGain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      }
+
       const duration = type === 'boss_hit' ? 0.5 : (type === 'poop_launch' ? 0.3 : 0.2);
       windowGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
       osc.connect(windowGain); windowGain.connect(audioCtx.destination);
@@ -299,7 +333,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
 
   const performJump = useCallback(() => {
     if (playerRef.current.jumpCount < 2) {
-      playSound('fart'); spawnFartTrail();
+      playSound('jump'); spawnFartTrail();
       const catFeetX = 100 + 64;
       spawnSandParticles(catFeetX, playerRef.current.y, 0.8);
       playerRef.current = { ...playerRef.current, vy: JUMP_FORCE, jumpCount: playerRef.current.jumpCount + 1, isJumping: true, isDucking: false };
@@ -1107,7 +1141,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
         if (isLanding) {
           const BOUNCE_POINTS = 10; // Points awarded for stomping enemies
           if (obs.type === 'CRAB') {
-            playSound('boing');
+            playSound('meow');
             spawnBopParticles(obs.x + obs.width/2, oRect.t, '#ef4444');
             playerRef.current.vy = 8;
             playerRef.current.jumpCount = 0;
@@ -1119,7 +1153,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
             continue;
           }
           else if (obs.type === 'BEACHBALL') {
-            playSound('boing');
+            playSound('meow');
             spawnBopParticles(obs.x + obs.width/2, oRect.t, '#fde047');
             playerRef.current.vy = BOUNCE_FORCE;
             playerRef.current.jumpCount = 0;
@@ -1131,7 +1165,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
             continue;
           }
           else if (obs.type === 'SEAGULL' && obs.seagullType === 'dive') {
-            playSound('boing');
+            playSound('meow');
             spawnBopParticles(obs.x + obs.width/2, oRect.t, '#ffffff');
             playerRef.current.vy = 8;
             playerRef.current.jumpCount = 1;
@@ -1143,7 +1177,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
             continue;
           }
           else if (obs.type === 'SAND_PROJECTILE') {
-            playSound('boing');
+            playSound('meow');
             spawnBopParticles(obs.x + obs.width/2, oRect.t, '#ffffff');
             playerRef.current.vy = 8;
             playerRef.current.jumpCount = 1;
@@ -1170,7 +1204,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
           // Skip damage if SUPER_SIZE power-up is active (invincible)
           livesRef.current--;
           invincibilityUntilRef.current = now + INVINCIBILITY_DURATION;
-          playSound('hit');
+          playSound('hiss'); // Cat hiss when hurt!
           streakRef.current = 0;
           triggerFreezeFrame(80); // Brief freeze on hit for dramatic effect
           triggerScreenShake(12); // Add screen shake on player hit
