@@ -1,0 +1,93 @@
+{
+  "$schema": "./features.schema.json",
+  "_meta": {
+    "description": "Multi-level system feature tracking. Status: not-started | in-progress | pass | fail | blocked",
+    "lastUpdated": "2025-12-23",
+    "planFile": "~/.claude/plans/compressed-gathering-kite.md",
+    "totalPhases": 8,
+    "completedPhases": 0
+  },
+  "phase-1": {
+    "description": "Session Protocol Infrastructure",
+    "status": "in-progress",
+    "tasks": {
+      "docs-roadmap": { "status": "pass", "notes": "Created with plan reference" },
+      "docs-progress": { "status": "pass", "notes": "Created with session template" },
+      "docs-known-issues": { "status": "pass", "notes": "Created with deferred decisions" },
+      "features-json": { "status": "pass", "notes": "This file" },
+      "dev-init-script": { "status": "pass", "notes": "Created and tested" },
+      "commit": { "status": "not-started", "notes": "Commit all infrastructure files" }
+    }
+  },
+  "phase-2": {
+    "description": "Type System Foundation",
+    "status": "not-started",
+    "tasks": {
+      "level-id-extension": { "status": "not-started", "notes": "Extend LevelId union" },
+      "behavior-type": { "status": "not-started", "notes": "Add BehaviorType union" },
+      "obstacle-definition": { "status": "not-started", "notes": "Add ObstacleDefinition interface" },
+      "level-config": { "status": "not-started", "notes": "Add LevelConfig interface" },
+      "theme-config": { "status": "not-started", "notes": "Add ThemeConfig interface" },
+      "verification": { "status": "not-started", "notes": "TypeScript compiles, game unchanged" }
+    }
+  },
+  "phase-3": {
+    "description": "Behavior System Library",
+    "status": "not-started",
+    "tasks": {
+      "behaviors-ts": { "status": "not-started", "notes": "Create systems/behaviors.ts" },
+      "swoop-behavior": { "status": "not-started", "notes": "Extract seagull swoop" },
+      "drop-projectile": { "status": "not-started", "notes": "Extract seagull poop" },
+      "bounceable": { "status": "not-started", "notes": "Extract beachball bounce" },
+      "slow-on-contact": { "status": "not-started", "notes": "Extract sandcastle/tidepool" },
+      "collision-handlers": { "status": "not-started", "notes": "Create collision system" }
+    }
+  },
+  "phase-4": {
+    "description": "Level Configuration Structure",
+    "status": "not-started",
+    "tasks": {
+      "levels-directory": { "status": "not-started", "notes": "Create levels/ structure" },
+      "beach-config": { "status": "not-started", "notes": "Create levels/beach/config.ts" },
+      "beach-patterns": { "status": "not-started", "notes": "Move BEACH_PATTERNS" },
+      "level-registry": { "status": "not-started", "notes": "Create levels/index.ts" }
+    }
+  },
+  "phase-5": {
+    "description": "Obstacle Component Refactor",
+    "status": "not-started",
+    "tasks": {
+      "beach-obstacles": { "status": "not-started", "notes": "Extract Beach SVGs" },
+      "level-context": { "status": "not-started", "notes": "Create LevelContext" },
+      "obstacle-component": { "status": "not-started", "notes": "Refactor to use context" }
+    }
+  },
+  "phase-6": {
+    "description": "GameEngine Abstraction",
+    "status": "not-started",
+    "tasks": {
+      "session-6a": { "status": "not-started", "notes": "Extract level-specific state" },
+      "session-6b": { "status": "not-started", "notes": "Integrate behavior system" },
+      "session-6c": { "status": "not-started", "notes": "Abstract boss system" }
+    }
+  },
+  "phase-7": {
+    "description": "Level Selection UI",
+    "status": "not-started",
+    "tasks": {
+      "level-state": { "status": "not-started", "notes": "Add selectedLevel, defeatedBosses" },
+      "selection-component": { "status": "not-started", "notes": "Create LevelSelection" },
+      "context-provider": { "status": "not-started", "notes": "Wrap GameEngine" },
+      "unlock-logic": { "status": "not-started", "notes": "Victory unlocks next level" }
+    }
+  },
+  "phase-8": {
+    "description": "Documentation & Polish",
+    "status": "not-started",
+    "tasks": {
+      "level-dev-guide": { "status": "not-started", "notes": "docs/LEVEL_DEVELOPMENT.md" },
+      "behavior-docs": { "status": "not-started", "notes": "docs/BEHAVIOR_SYSTEM.md" },
+      "claude-md-update": { "status": "not-started", "notes": "Update architecture docs" }
+    }
+  }
+}
