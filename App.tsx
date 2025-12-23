@@ -90,6 +90,15 @@ const App: React.FC = () => {
       .slice(0, 5);
     setHighScores(newHighScores);
     localStorage.setItem('beach-cat-scores-v2', JSON.stringify(newHighScores));
+
+    // Reset lives to max for next run (victory = fresh start)
+    localStorage.setItem('beach-cat-lives', MAX_LIVES.toString());
+    setScore(prev => ({
+      ...prev,
+      current: finalScore,
+      high: Math.max(prev.high, finalScore),
+      lives: MAX_LIVES
+    }));
   }, [highScores, kittyName, customCatUrl]);
 
   const startGame = (bossMode: boolean = false) => {
@@ -484,8 +493,8 @@ const App: React.FC = () => {
           </div>
           
           <div className="flex flex-col gap-4 relative z-10">
-            <button 
-              onClick={() => { setStatus(GameStatus.LEVEL_SELECTION); setScore(prev => ({ ...prev, lives: MAX_LIVES })); }}
+            <button
+              onClick={() => setStatus(GameStatus.LEVEL_SELECTION)}
               className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-black py-6 px-8 rounded-3xl text-3xl transform transition active:scale-95 shadow-[0_10px_0_rgb(217,119,6)] hover:shadow-[0_8px_0_rgb(217,119,6)]"
             >
               CONTINUE
