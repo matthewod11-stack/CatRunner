@@ -414,10 +414,11 @@ const App: React.FC = () => {
       )}
 
       {(status === GameStatus.PLAYING || status === GameStatus.BOSS_INTRO || status === GameStatus.BOSS_FIGHT) && (
-        <GameEngine 
+        <GameEngine
           initialLives={score.lives}
           levelId="BEACH"
           startAtBoss={startAtBoss}
+          customCatUrl={customCatUrl}
           onGameOver={handleGameOver}
           onScoreUpdate={handleScoreUpdate}
           onStatusChange={handleStatusChange}

@@ -11,6 +11,7 @@ interface GameEngineProps {
   initialLives: number;
   levelId: LevelId;
   startAtBoss?: boolean;
+  customCatUrl?: string | null;
   onGameOver: (score: number) => void;
   onScoreUpdate: (score: GameScore) => void;
   onStatusChange?: (status: GameStatus) => void;
@@ -56,7 +57,7 @@ const BEACH_PATTERNS: PatternStep[][] = [
 ];
 
 
-const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtBoss = false, onGameOver, onScoreUpdate, onStatusChange }) => {
+const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtBoss = false, customCatUrl, onGameOver, onScoreUpdate, onStatusChange }) => {
   const [status, setStatus] = useState<GameStatus>(GameStatus.PLAYING);
   const [isPaused, setIsPaused] = useState(false);
   const [player, setPlayer] = useState<PlayerState>({
@@ -68,7 +69,6 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
   const [activePowerUp, setActivePowerUp] = useState<ActivePowerUp | null>(null);
   const [boss, setBoss] = useState<Obstacle | null>(null);
   const [multFeedback, setMultFeedback] = useState<string | null>(null);
-  const [customCatUrl, setCustomCatUrl] = useState<string | null>(null);
   const [floatingScores, setFloatingScores] = useState<Array<{ id: number; x: number; y: number; value: number }>>([]);
   const [screenShake, setScreenShake] = useState<{ x: number; y: number; intensity: number }>({ x: 0, y: 0, intensity: 0 });
   const [bossFacingDirection, setBossFacingDirection] = useState<'left' | 'right'>('right');
