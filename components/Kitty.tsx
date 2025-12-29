@@ -67,16 +67,17 @@ const Kitty: React.FC<KittyProps> = ({ isJumping, isDucking, customUrl, velocity
       const width = canvas.width;
       const height = canvas.height;
 
-      // Check if a pixel is "background-like" (white, light gray, or magenta)
+      // Check if a pixel is "background-like" (white, light gray, or pink/magenta)
       const isBackground = (i: number) => {
         const r = data[i];
         const g = data[i + 1];
         const b = data[i + 2];
         // White/light gray background
         const isLight = r > 230 && g > 230 && b > 230;
-        // Magenta background (in case AI follows the prompt)
-        const isMagenta = r > 200 && g < 100 && b > 200;
-        return isLight || isMagenta;
+        // Pink/magenta backgrounds - high red, lower green, medium-high blue
+        // Covers hot pink, magenta, fuchsia variants
+        const isPink = r > 180 && g < 150 && b > 100 && (r - g) > 50;
+        return isLight || isPink;
       };
 
       // Flood fill from corners to mark background pixels
