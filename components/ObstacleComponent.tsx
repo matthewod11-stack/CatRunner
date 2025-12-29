@@ -1,11 +1,90 @@
 
-import React, { memo } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { Obstacle } from '../types';
+
+// Seagull images
+import seagullNormal from '../assets/seagull-normal.png';
+import seagullSwoop from '../assets/seagull-swoop.png';
+import seagullPoop from '../assets/seagull-poop.png';
 
 interface ObstacleComponentProps {
   obstacle: Obstacle;
   groundY: number;
 }
+
+// Helper component to process images and remove magenta/white backgrounds
+const ProcessedSprite: React.FC<{ src: string; className?: string }> = ({ src, className }) => {
+  const [processedUrl, setProcessedUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = src;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      const width = canvas.width;
+      const height = canvas.height;
+
+      // Check if a pixel is "background-like" (white, light gray, or pink/magenta)
+      const isBackground = (i: number) => {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const isLight = r > 230 && g > 230 && b > 230;
+        const isPink = r > 180 && g < 150 && b > 100 && (r - g) > 50;
+        return isLight || isPink;
+      };
+
+      // Flood fill from edges
+      const visited = new Set<number>();
+      const toRemove = new Set<number>();
+      const queue: number[] = [];
+
+      for (let x = 0; x < width; x++) {
+        queue.push(x);
+        queue.push((height - 1) * width + x);
+      }
+      for (let y = 0; y < height; y++) {
+        queue.push(y * width);
+        queue.push(y * width + (width - 1));
+      }
+
+      while (queue.length > 0) {
+        const pixelIndex = queue.shift()!;
+        if (visited.has(pixelIndex)) continue;
+        if (pixelIndex < 0 || pixelIndex >= width * height) continue;
+        visited.add(pixelIndex);
+        const i = pixelIndex * 4;
+        if (!isBackground(i)) continue;
+        toRemove.add(pixelIndex);
+        const x = pixelIndex % width;
+        const y = Math.floor(pixelIndex / width);
+        if (x > 0) queue.push(pixelIndex - 1);
+        if (x < width - 1) queue.push(pixelIndex + 1);
+        if (y > 0) queue.push(pixelIndex - width);
+        if (y < height - 1) queue.push(pixelIndex + width);
+      }
+
+      for (const pixelIndex of toRemove) {
+        data[pixelIndex * 4 + 3] = 0;
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+      setProcessedUrl(canvas.toDataURL());
+    };
+  }, [src]);
+
+  if (!processedUrl) return <div className={className} />;
+  return <img src={processedUrl} alt="" className={className} />;
+};
 
 // Memoized to prevent re-renders when props haven't changed
 const ObstacleComponent: React.FC<ObstacleComponentProps> = memo(({ obstacle, groundY }) => {
@@ -74,38 +153,26 @@ const ObstacleComponent: React.FC<ObstacleComponentProps> = memo(({ obstacle, gr
           </svg>
         );
       case 'SEAGULL':
+        // Select image based on seagull type and swooping state
+        const seagullImage = obstacle.seagullType === 'poop'
+          ? seagullPoop
+          : obstacle.isSwooping
+            ? seagullSwoop
+            : seagullNormal;
+
         return (
-          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
-            <g className="animate-bounce">
-              {/* Legs */}
-              <path d="M65 65 L 75 70 M 70 65 L 80 68" stroke="#f97316" strokeWidth="3" strokeLinecap="round" />
-              <path d="M75 70 L 82 72 M 80 68 L 87 70" stroke="#f97316" strokeWidth="3" strokeLinecap="round" />
-              {/* Tail */}
-              <path d="M60 55 L 85 55 Q 90 55 90 60 L 70 65 Z" fill="white" stroke="#1e293b" strokeWidth="1" />
-              <path d="M82 55 L 90 55 Q 90 58 90 60 L 85 58 Z" fill="#1e293b" />
-              {/* Body */}
-              <path d="M30 65 Q 45 75 70 65 Q 65 50 40 60 Z" fill="white" stroke="#1e293b" strokeWidth="1" />
-              {/* Wing Back */}
-              <g className="anim-wing-flap">
-                <path d="M45 58 L 75 25 Q 85 20 80 35 L 55 60 Z" fill="white" stroke="#1e293b" strokeWidth="1" />
-                <path d="M70 30 L 75 25 Q 85 20 80 35 L 75 35 Z" fill="#1e293b" />
-              </g>
-              {/* Head */}
-              <circle cx="35" cy="62" r="12" fill="white" stroke="#1e293b" strokeWidth="1" />
-              <circle cx="32" cy="60" r="1.5" fill="black" />
-              {/* Beak */}
-              <path d="M25 62 L 15 65 Q 10 68 15 70 L 25 68 Z" fill="#f97316" stroke="#c2410c" strokeWidth="1" />
-              {/* Wing Front */}
-              <g className={obstacle.isSwooping ? "anim-wing-flap-fast" : "anim-wing-flap"}>
-                <path d="M40 62 L 10 55 Q 0 50 15 50 L 45 58 Z" fill="white" stroke="#1e293b" strokeWidth="1" />
-                <path d="M20 52 L 10 55 Q 0 50 15 50 L 18 52 Z" fill="#1e293b" />
-              </g>
-              {/* Swooping indicator */}
-              {obstacle.isSwooping && (
-                <path d="M25 85 Q 50 90 75 85" stroke="#ef4444" strokeWidth="3" strokeDasharray="6 3" fill="none" opacity="0.8" className="animate-pulse" />
-              )}
-            </g>
-          </svg>
+          <div className={`w-full h-full drop-shadow-md ${obstacle.isSwooping ? '' : 'animate-bounce'}`}>
+            <ProcessedSprite
+              src={seagullImage}
+              className={`w-full h-full object-contain ${obstacle.isSwooping ? 'anim-wing-flap-fast' : ''}`}
+            />
+            {/* Swooping indicator */}
+            {obstacle.isSwooping && (
+              <svg viewBox="0 0 100 20" className="absolute bottom-0 left-0 w-full h-6">
+                <path d="M10 10 Q 50 18 90 10" stroke="#ef4444" strokeWidth="3" strokeDasharray="6 3" fill="none" opacity="0.8" className="animate-pulse" />
+              </svg>
+            )}
+          </div>
         );
       case 'SANDCASTLE':
         return (
