@@ -43,8 +43,8 @@ const Kitty: React.FC<KittyProps> = ({ isJumping, isDucking, customUrl, velocity
 
   const { scaleX, scaleY } = getSquashStretch();
 
-  // Process the image to remove the magenta background (chroma key)
-  // Magenta (#FF00FF) is used as the background color to avoid conflicts with white fur/teeth
+  // Process the image to remove background using flood fill from corners
+  // This preserves interior white pixels (fur, teeth) while removing edge-connected background
   useEffect(() => {
     if (!customUrl) {
       setProcessedUrl(null);
@@ -64,25 +64,63 @@ const Kitty: React.FC<KittyProps> = ({ isJumping, isDucking, customUrl, velocity
       ctx.drawImage(img, 0, 0);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
+      const width = canvas.width;
+      const height = canvas.height;
 
-      // Simple chroma key: remove magenta/hot pink background
-      // Magenta = high red, low green, high blue
-      for (let i = 0; i < data.length; i += 4) {
+      // Check if a pixel is "background-like" (white, light gray, or magenta)
+      const isBackground = (i: number) => {
         const r = data[i];
         const g = data[i + 1];
         const b = data[i + 2];
-
-        // Check if pixel is magenta-ish (high R, low G, high B)
-        // Allow some tolerance for anti-aliasing
+        // White/light gray background
+        const isLight = r > 230 && g > 230 && b > 230;
+        // Magenta background (in case AI follows the prompt)
         const isMagenta = r > 200 && g < 100 && b > 200;
+        return isLight || isMagenta;
+      };
 
-        // Also check for pink variants the AI might produce
-        const isHotPink = r > 220 && g < 120 && b > 180;
+      // Flood fill from corners to mark background pixels
+      const visited = new Set<number>();
+      const toRemove = new Set<number>();
+      const queue: number[] = [];
 
-        if (isMagenta || isHotPink) {
-          // Make magenta background transparent
-          data[i + 3] = 0;
-        }
+      // Start flood fill from all four corners and edges
+      for (let x = 0; x < width; x++) {
+        queue.push(x); // Top edge
+        queue.push((height - 1) * width + x); // Bottom edge
+      }
+      for (let y = 0; y < height; y++) {
+        queue.push(y * width); // Left edge
+        queue.push(y * width + (width - 1)); // Right edge
+      }
+
+      // BFS flood fill
+      while (queue.length > 0) {
+        const pixelIndex = queue.shift()!;
+        if (visited.has(pixelIndex)) continue;
+        if (pixelIndex < 0 || pixelIndex >= width * height) continue;
+
+        visited.add(pixelIndex);
+        const i = pixelIndex * 4;
+
+        if (!isBackground(i)) continue;
+
+        // Mark for removal
+        toRemove.add(pixelIndex);
+
+        // Add neighbors (4-connected)
+        const x = pixelIndex % width;
+        const y = Math.floor(pixelIndex / width);
+
+        if (x > 0) queue.push(pixelIndex - 1);
+        if (x < width - 1) queue.push(pixelIndex + 1);
+        if (y > 0) queue.push(pixelIndex - width);
+        if (y < height - 1) queue.push(pixelIndex + width);
+      }
+
+      // Remove background pixels
+      for (const pixelIndex of toRemove) {
+        data[pixelIndex * 4 + 3] = 0; // Set alpha to 0
       }
 
       ctx.putImageData(imageData, 0, 0);
