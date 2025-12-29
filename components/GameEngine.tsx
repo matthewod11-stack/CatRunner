@@ -121,11 +121,6 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
   const prevVyRef = useRef<number>(0);
   const prevLivesRef = useRef(initialLives);
 
-  useEffect(() => {
-    const savedLook = localStorage.getItem('beach-cat-look');
-    setCustomCatUrl(savedLook);
-  }, []);
-
   // Music lifecycle management
   useEffect(() => {
     if (isPaused) {
