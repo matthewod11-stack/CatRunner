@@ -43,8 +43,8 @@ const Kitty: React.FC<KittyProps> = ({ isJumping, isDucking, customUrl, velocity
 
   const { scaleX, scaleY } = getSquashStretch();
 
-  // Process the image to remove the white background using adjacency detection
-  // This preserves white pixels that are part of the character (e.g., white cat fur)
+  // Process the image to remove the magenta background (chroma key)
+  // Magenta (#FF00FF) is used as the background color to avoid conflicts with white fur/teeth
   useEffect(() => {
     if (!customUrl) {
       setProcessedUrl(null);
@@ -65,54 +65,23 @@ const Kitty: React.FC<KittyProps> = ({ isJumping, isDucking, customUrl, velocity
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
 
-      // Two-pass algorithm: identify white pixels that are part of the character
-      // by checking if they're adjacent to non-white pixels
-      const isCharacterPixel = new Array(data.length / 4).fill(false);
-
-      // First pass: mark non-white pixels and their neighbors as character pixels
+      // Simple chroma key: remove magenta/hot pink background
+      // Magenta = high red, low green, high blue
       for (let i = 0; i < data.length; i += 4) {
         const r = data[i];
         const g = data[i + 1];
         const b = data[i + 2];
-        const isWhite = r > 230 && g > 230 && b > 230;
 
-        if (!isWhite) {
-          // Mark this pixel and its neighbors as character pixels
-          const pixelIndex = i / 4;
-          const x = pixelIndex % canvas.width;
-          const y = Math.floor(pixelIndex / canvas.width);
+        // Check if pixel is magenta-ish (high R, low G, high B)
+        // Allow some tolerance for anti-aliasing
+        const isMagenta = r > 200 && g < 100 && b > 200;
 
-          // Mark current pixel and surrounding pixels (3x3 area) as character
-          for (let dy = -2; dy <= 2; dy++) {
-            for (let dx = -2; dx <= 2; dx++) {
-              const nx = x + dx;
-              const ny = y + dy;
-              if (nx >= 0 && nx < canvas.width && ny >= 0 && ny < canvas.height) {
-                const neighborIndex = ny * canvas.width + nx;
-                isCharacterPixel[neighborIndex] = true;
-              }
-            }
-          }
-        }
-      }
+        // Also check for pink variants the AI might produce
+        const isHotPink = r > 220 && g < 120 && b > 180;
 
-      // Second pass: remove white background but preserve white character pixels
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        const pixelIndex = i / 4;
-        const isWhite = r > 230 && g > 230 && b > 230;
-
-        if (isWhite && !isCharacterPixel[pixelIndex]) {
-          // This is background white - make it transparent
+        if (isMagenta || isHotPink) {
+          // Make magenta background transparent
           data[i + 3] = 0;
-        } else {
-          // This is part of the character - preserve it with slight contrast boost
-          data[i] = Math.min(255, r * 1.05);
-          data[i + 1] = Math.min(255, g * 1.05);
-          data[i + 2] = Math.min(255, b * 1.05);
-          data[i + 3] = 255; // Ensure full opacity for character pixels
         }
       }
 

@@ -61,11 +61,12 @@ export async function generateCustomCat(description: string): Promise<string | n
   try {
     // Instantiate ai inside the function to use the most recent process.env.API_KEY
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const prompt = `A side-view full body character sprite of a kitty cat for a game. 
-    The cat is ${description}. 
-    Style: Bright 2D flat cartoon, high contrast, thick black outlines, facing right. 
-    Crucial: Must be isolated on a plain, solid, pure #FFFFFF white background. 
-    No shadows on the floor, no grass, just the character. 
+    const prompt = `A side-view full body character sprite of a kitty cat for a game.
+    The cat is ${description}.
+    Style: Bright 2D flat cartoon, high contrast, thick black outlines, facing right.
+    CRITICAL BACKGROUND REQUIREMENT: The background MUST be solid bright magenta/pink color (hex #FF00FF or similar hot pink).
+    This magenta background is essential - do not use white, gray, or any other background color.
+    No shadows on the floor, no grass, just the character on solid magenta/hot pink.
     Center the character and ensure it fills the frame.`;
 
     const response = await ai.models.generateContent({
