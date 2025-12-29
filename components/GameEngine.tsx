@@ -739,7 +739,13 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
             consecutiveHarmfulRef.current = 0; // Reset harmful counter at pattern start
           }
           else {
-            if (coinCounterRef.current >= POWERUP_THRESHOLD) { spawnEntity(Math.random() > 0.5 ? 'SPEED' : 'MAGNET'); coinCounterRef.current = 0; }
+            if (coinCounterRef.current >= POWERUP_THRESHOLD) {
+              // Spawn powerup: 40% SPEED, 40% MAGNET, 20% SUPER_SIZE (rarer because more powerful)
+              const roll = Math.random();
+              const powerupType = roll < 0.4 ? 'SPEED' : roll < 0.8 ? 'MAGNET' : 'SUPER_SIZE';
+              spawnEntity(powerupType);
+              coinCounterRef.current = 0;
+            }
             else { spawnEntity(); }
             nextSpawnTime.current = now + (1200 - Math.min(speedRef.current * 45, 800) + (Math.random() - 0.5) * 400) / speedMultiplier;
           }
