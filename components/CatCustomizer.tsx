@@ -190,7 +190,14 @@ const CatCustomizer: React.FC<CatCustomizerProps> = ({ onSave, onCancel, current
           Discard Changes
         </button>
         <button
-          onClick={() => onSave(name.trim(), previewUrl, outfits)}
+          onClick={() => {
+            console.log('[Kitty Closet] Equip & Exit clicked:', {
+              name: name.trim(),
+              previewUrl: previewUrl?.substring(0, 50),
+              outfitsCount: outfits?.length
+            });
+            onSave(name.trim(), previewUrl, outfits);
+          }}
           className="flex-grow bg-green-500 hover:bg-green-600 text-white font-black py-4 rounded-2xl uppercase tracking-widest transition-all shadow-lg shadow-green-200"
         >
           Equip & Exit

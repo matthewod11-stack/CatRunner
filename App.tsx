@@ -129,15 +129,33 @@ const App: React.FC = () => {
   };
 
   const saveCustomLook = (name: string, url: string | null, updatedOutfits: Outfit[]) => {
-    setKittyName(name);
-    setCustomCatUrl(url);
-    setOutfits(updatedOutfits);
-    
-    localStorage.setItem('beach-cat-name', name);
-    if (url) localStorage.setItem('beach-cat-look', url);
-    else localStorage.removeItem('beach-cat-look');
-    localStorage.setItem('beach-cat-outfits', JSON.stringify(updatedOutfits));
-    
+    console.log('[Kitty Closet] Saving:', { name, url: url?.substring(0, 50), outfitsCount: updatedOutfits?.length });
+
+    try {
+      // Update React state first
+      const safeName = name || kittyName || 'Beach Kitty';
+      setKittyName(safeName);
+      setCustomCatUrl(url);
+      setOutfits(updatedOutfits || []);
+
+      // Then persist to localStorage (wrapped in try-catch to prevent blocking)
+      try {
+        localStorage.setItem('beach-cat-name', safeName);
+        if (url) {
+          localStorage.setItem('beach-cat-look', url);
+        } else {
+          localStorage.removeItem('beach-cat-look');
+        }
+        localStorage.setItem('beach-cat-outfits', JSON.stringify(updatedOutfits || []));
+      } catch (storageError) {
+        console.warn('[Kitty Closet] localStorage save failed:', storageError);
+        // Continue anyway - state is updated even if localStorage fails
+      }
+    } catch (error) {
+      console.error('[Kitty Closet] Save error:', error);
+    }
+
+    // ALWAYS navigate back to level selection, even if save had issues
     setStatus(GameStatus.LEVEL_SELECTION);
   };
 
