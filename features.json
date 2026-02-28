@@ -2,9 +2,9 @@
   "$schema": "./features.schema.json",
   "_meta": {
     "description": "Multi-level system feature tracking. Status: not-started | in-progress | pass | fail | blocked",
-    "lastUpdated": "2025-12-23",
+    "lastUpdated": "2026-02-28",
     "planFile": "~/.claude/plans/compressed-gathering-kite.md",
-    "totalPhases": 8,
+    "totalPhases": 9,
     "completedPhases": 1
   },
   "phase-1": {
@@ -88,6 +88,18 @@
       "level-dev-guide": { "status": "not-started", "notes": "docs/LEVEL_DEVELOPMENT.md" },
       "behavior-docs": { "status": "not-started", "notes": "docs/BEHAVIOR_SYSTEM.md" },
       "claude-md-update": { "status": "not-started", "notes": "Update architecture docs" }
+    }
+  },
+  "phase-9": {
+    "description": "Live Balancing + Telemetry",
+    "status": "not-started",
+    "tasks": {
+      "dev-balance-panel": { "status": "not-started", "notes": "Runtime tuning UI (dev-only)" },
+      "tuning-presets": { "status": "not-started", "notes": "Persist settings to localStorage" },
+      "hit-death-logging": { "status": "not-started", "notes": "Structured telemetry events during runs" },
+      "run-summary": { "status": "not-started", "notes": "Session summary at game over/victory" },
+      "telemetry-export": { "status": "not-started", "notes": "Download telemetry JSON for analysis" },
+      "verification": { "status": "not-started", "notes": "Default gameplay unchanged when panel disabled" }
     }
   }
 }

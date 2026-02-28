@@ -1,5 +1,4 @@
-const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY;
-const UNSPLASH_API_URL = 'https://api.unsplash.com';
+const UNSPLASH_API_URL = '/api/unsplash';
 
 export interface UnsplashImage {
   id: string;
@@ -34,13 +33,9 @@ export async function searchUnsplashImages(
   page: number = 1,
   perPage: number = 20
 ): Promise<UnsplashSearchResponse> {
-  if (!UNSPLASH_ACCESS_KEY) {
-    throw new Error('Unsplash Access Key is not configured');
-  }
-
   try {
     const response = await fetch(
-      `${UNSPLASH_API_URL}/search/photos?query=${encodeURIComponent(query)}&page=${page}&per_page=${Math.min(perPage, 30)}&client_id=${UNSPLASH_ACCESS_KEY}`
+      `${UNSPLASH_API_URL}/search?query=${encodeURIComponent(query)}&page=${page}&per_page=${Math.min(perPage, 30)}`
     );
 
     if (!response.ok) {
@@ -68,7 +63,6 @@ export async function getRandomUnsplashImage(query: string): Promise<UnsplashIma
     return null;
   }
 }
-
 
 
 

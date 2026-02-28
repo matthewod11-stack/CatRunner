@@ -12,20 +12,29 @@ interface ObstacleComponentProps {
   groundY: number;
 }
 
-// Helper component to process images and remove magenta/white backgrounds
-const ProcessedSprite: React.FC<{ src: string; className?: string }> = ({ src, className }) => {
-  const [processedUrl, setProcessedUrl] = useState<string | null>(null);
+const processedSpriteCache = new Map<string, string>();
+const spriteProcessingCache = new Map<string, Promise<string>>();
 
-  useEffect(() => {
+function processSprite(src: string): Promise<string> {
+  const cached = processedSpriteCache.get(src);
+  if (cached) return Promise.resolve(cached);
+
+  const inFlight = spriteProcessingCache.get(src);
+  if (inFlight) return inFlight;
+
+  const processingPromise = new Promise<string>((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = "anonymous";
+    img.crossOrigin = 'anonymous';
     img.src = src;
     img.onload = () => {
       const canvas = document.createElement('canvas');
       canvas.width = img.width;
       canvas.height = img.height;
       const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) {
+        reject(new Error('Canvas context not available'));
+        return;
+      }
 
       ctx.drawImage(img, 0, 0);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -33,7 +42,6 @@ const ProcessedSprite: React.FC<{ src: string; className?: string }> = ({ src, c
       const width = canvas.width;
       const height = canvas.height;
 
-      // Check if a pixel is "background-like" (white, light gray, or pink/magenta)
       const isBackground = (i: number) => {
         const r = data[i];
         const g = data[i + 1];
@@ -43,7 +51,6 @@ const ProcessedSprite: React.FC<{ src: string; className?: string }> = ({ src, c
         return isLight || isPink;
       };
 
-      // Flood fill from edges
       const visited = new Set<number>();
       const toRemove = new Set<number>();
       const queue: number[] = [];
@@ -78,7 +85,36 @@ const ProcessedSprite: React.FC<{ src: string; className?: string }> = ({ src, c
       }
 
       ctx.putImageData(imageData, 0, 0);
-      setProcessedUrl(canvas.toDataURL());
+      const result = canvas.toDataURL();
+      processedSpriteCache.set(src, result);
+      spriteProcessingCache.delete(src);
+      resolve(result);
+    };
+    img.onerror = () => {
+      spriteProcessingCache.delete(src);
+      reject(new Error('Failed to load sprite image'));
+    };
+  });
+
+  spriteProcessingCache.set(src, processingPromise);
+  return processingPromise;
+}
+
+// Helper component to process images and remove magenta/white backgrounds
+const ProcessedSprite: React.FC<{ src: string; className?: string }> = ({ src, className }) => {
+  const [processedUrl, setProcessedUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    processSprite(src)
+      .then((url) => {
+        if (mounted) setProcessedUrl(url);
+      })
+      .catch(() => {
+        if (mounted) setProcessedUrl(null);
+      });
+    return () => {
+      mounted = false;
     };
   }, [src]);
 

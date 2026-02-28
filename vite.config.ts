@@ -1,24 +1,32 @@
 import path from 'path';
-import { defineConfig, loadEnv } from 'vite';
+import type { Plugin } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { createDevApiMiddleware } from './server/devApiMiddleware';
 
-export default defineConfig(({ mode }) => {
-    const env = loadEnv(mode, '.', '');
-    return {
-      server: {
-        port: 3000,
-        host: '0.0.0.0',
+function localApiPlugin(): Plugin {
+  return {
+    name: 'local-gemini-api',
+    configureServer(server) {
+      server.middlewares.use(createDevApiMiddleware());
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(createDevApiMiddleware());
+    },
+  };
+}
+
+export default defineConfig(() => {
+  return {
+    server: {
+      port: 3000,
+      host: '0.0.0.0',
+    },
+    plugins: [react(), localApiPlugin()],
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, '.'),
       },
-      plugins: [react()],
-      define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.UNSPLASH_ACCESS_KEY': JSON.stringify(env.UNSPLASH_ACCESS_KEY)
-      },
-      resolve: {
-        alias: {
-          '@': path.resolve(__dirname, '.'),
-        }
-      }
-    };
+    },
+  };
 });

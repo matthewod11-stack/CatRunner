@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { GameStatus, GameScore, LevelId, LevelDef, HighScoreEntry, Outfit } from './types';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { GameStatus, GameScore, HighScoreEntry, Outfit } from './types';
 import GameEngine from './components/GameEngine';
 import CatCustomizer from './components/CatCustomizer';
 import AnimatedWater from './components/AnimatedWater';
@@ -20,6 +20,17 @@ const App: React.FC = () => {
   const [kittyName, setKittyName] = useState<string>("Beach Kitty");
   const [customCatUrl, setCustomCatUrl] = useState<string | null>(null);
   const [outfits, setOutfits] = useState<Outfit[]>([]);
+  const victoryConfetti = useMemo(
+    () =>
+      Array.from({ length: 20 }, (_, index) => ({
+        id: index,
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`,
+        color: ['#fbbf24', '#f59e0b', '#ef4444', '#f97316', '#facc15'][Math.floor(Math.random() * 5)],
+        animationDelay: `${Math.random() * 2}s`,
+      })),
+    []
+  );
 
   // Load persistence
   useEffect(() => {
@@ -164,27 +175,6 @@ const App: React.FC = () => {
   }, [status]);
 
   const isBossMoment = status === GameStatus.BOSS_INTRO || status === GameStatus.BOSS_FIGHT;
-
-  // Calculate sky color based on score for time-of-day progression
-  const getSkyGradient = () => {
-    if (status === GameStatus.LEVEL_SELECTION || status === GameStatus.CUSTOMIZE) {
-      return 'bg-sky-300';
-    }
-    
-    const scoreProgress = Math.min(score.current / 500, 1); // Progress from 0 to 500 score
-    // Interpolate from bright blue (0) -> golden hour (0.5) -> sunset (1)
-    
-    if (scoreProgress < 0.5) {
-      // Bright blue to golden hour (yellow-orange sky)
-      const t = scoreProgress * 2; // 0 to 1 over first half
-      // Interpolate between sky-300 and orange-200
-      return `bg-gradient-to-b from-sky-${300 - Math.floor(t * 200)} to-orange-${200 + Math.floor(t * 100)}`;
-    } else {
-      // Golden hour to sunset (orange-red sky)
-      const t = (scoreProgress - 0.5) * 2; // 0 to 1 over second half
-      return `bg-gradient-to-b from-orange-${300 + Math.floor(t * 100)} to-red-${400 + Math.floor(t * 100)}`;
-    }
-  };
 
   // Day/night cycle aligned with star collection progress (0 to 50 stars = dawn to sunset)
   const getSkyStyle = () => {
@@ -464,15 +454,15 @@ const App: React.FC = () => {
         <div className="z-10 bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 p-12 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] text-center max-w-2xl border-4 border-yellow-400 animate-[bounceIn_0.5s_ease-out] relative overflow-hidden">
           {/* Confetti/Sparkle effects */}
           <div className="absolute inset-0 pointer-events-none">
-            {[...Array(20)].map((_, i) => (
+            {victoryConfetti.map((particle) => (
               <div
-                key={i}
+                key={particle.id}
                 className="absolute w-2 h-2 rounded-full animate-[confetti_3s_ease-out_infinite]"
                 style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                  backgroundColor: ['#fbbf24', '#f59e0b', '#ef4444', '#f97316', '#facc15'][Math.floor(Math.random() * 5)],
-                  animationDelay: `${Math.random() * 2}s`
+                  left: particle.left,
+                  top: particle.top,
+                  backgroundColor: particle.color,
+                  animationDelay: particle.animationDelay
                 }}
               />
             ))}

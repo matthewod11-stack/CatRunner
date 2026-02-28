@@ -1,11 +1,25 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 interface AnimatedWaterProps {
   isBossMoment?: boolean;
 }
 
 const AnimatedWater: React.FC<AnimatedWaterProps> = ({ isBossMoment = false }) => {
+  const sparkleParticles = useMemo(
+    () =>
+      Array.from({ length: 8 }, (_, index) => ({
+        id: index,
+        left: `${Math.random() * 100}%`,
+        bottom: `${10 + Math.random() * 20}%`,
+        width: `${2 + Math.random() * 3}px`,
+        height: `${2 + Math.random() * 3}px`,
+        animationDelay: `${Math.random() * 3}s`,
+        animationDuration: `${2 + Math.random() * 2}s`,
+      })),
+    []
+  );
+
   return (
     <div className={`absolute bottom-0 w-full h-1/2 overflow-hidden ${isBossMoment ? 'opacity-90' : 'opacity-80'}`}>
       {/* Base water gradient */}
@@ -73,18 +87,18 @@ const AnimatedWater: React.FC<AnimatedWaterProps> = ({ isBossMoment = false }) =
 
       {/* Sparkle particles on surface */}
       <div className="absolute bottom-1/4 w-full h-full pointer-events-none">
-        {[...Array(8)].map((_, i) => (
+        {sparkleParticles.map((particle) => (
           <div
-            key={i}
+            key={particle.id}
             className="absolute bg-white rounded-full animate-pulse"
             style={{
-              left: `${Math.random() * 100}%`,
-              bottom: `${10 + Math.random() * 20}%`,
-              width: `${2 + Math.random() * 3}px`,
-              height: `${2 + Math.random() * 3}px`,
+              left: particle.left,
+              bottom: particle.bottom,
+              width: particle.width,
+              height: particle.height,
               opacity: 0.6,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${2 + Math.random() * 2}s`,
+              animationDelay: particle.animationDelay,
+              animationDuration: particle.animationDuration,
             }}
           />
         ))}
@@ -117,4 +131,3 @@ const AnimatedWater: React.FC<AnimatedWaterProps> = ({ isBossMoment = false }) =
 };
 
 export default AnimatedWater;
-

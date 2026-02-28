@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Beach Kitty is an endless runner game built with React 19 + TypeScript + Vite. A cat runs along a beach dodging obstacles, collecting coins/shells, and fighting a boss (Sand Monster). The game uses the Gemini AI API for generating custom cat sprites and in-game messages.
+Beach Kitty is an endless runner game built with React 19 + TypeScript + Vite. A cat runs along a beach dodging obstacles, collecting coins/shells, and fighting a boss (Sand Monster). Gemini AI requests are proxied through server-side API routes for key safety.
 
 ## Development Commands
 
@@ -17,7 +17,7 @@ npm run preview      # Preview production build
 
 ## Environment Setup
 
-Set `GEMINI_API_KEY` in `.env.local` for AI features (custom cat generation, wisdom quotes, death messages).
+Set `GEMINI_API_KEY` in `.env.local` for AI features (custom cat generation, wisdom quotes, death messages). In production, configure `GEMINI_API_KEY` on the server environment.
 
 ## Architecture
 
@@ -39,7 +39,9 @@ Set `GEMINI_API_KEY` in `.env.local` for AI features (custom cat generation, wis
 - **CatCustomizer.tsx** - "Kitty Closet" UI for generating/saving custom cat appearances via Gemini AI.
 - **AnimatedWater.tsx** - Decorative animated water background element.
 
-### AI Integration (services/geminiService.ts)
+### AI Integration (services/geminiService.ts + api/cat/*)
+- Frontend calls same-origin endpoints at `/api/cat/*`
+- Server handlers use Gemini with `GEMINI_API_KEY`
 - `getCatWisdom(score)` - Generates sassy one-liners for level selection screen
 - `getDeathMessage(score)` - Generates game over messages
 - `generateCustomCat(description)` - Uses `gemini-2.5-flash-image` to create custom cat sprites from text descriptions

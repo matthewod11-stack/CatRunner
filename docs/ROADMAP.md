@@ -1,4 +1,4 @@
-# Beach Kitty Multi-Level System — Implementation Roadmap
+# Beach Kitty Multi-Level System + Gameplay Tooling — Implementation Roadmap
 
 > **Purpose:** Actionable checklist for implementing the multi-level template system.
 > **Related Docs:** [PROGRESS.md](./PROGRESS.md) | [KNOWN_ISSUES.md](./KNOWN_ISSUES.md)
@@ -11,12 +11,14 @@
 ~/.claude/plans/compressed-gathering-kite.md
 ```
 
-This plan file contains the complete 8-phase implementation details including:
+This plan file contains the complete 8-phase multi-level implementation details including:
 - Type system design with full interface definitions
 - Behavior system architecture
 - Level configuration structure
 - GameEngine abstraction strategy
 - Session handoff notes
+
+This roadmap now includes an additional **Phase 9** for short-term gameplay tuning tooling.
 
 **Read the plan file at the start of each session for full context.**
 
@@ -44,6 +46,21 @@ Transform Beach Kitty from a single-level game into a modular multi-level archit
 
 ---
 
+## Current Priority Track (2026-02-28)
+
+Execution order requested and implemented:
+1. Security hardening
+2. Performance pass
+3. Gameplay balancing pass
+
+Immediate next work:
+4. Dev Balance Panel
+5. Death/Run Telemetry
+
+This is tracked as **Phase 9** below and is intended to be completed before resuming Phase 2+ multi-level architecture work.
+
+---
+
 ## Phase Overview
 
 | Phase | Focus | Sessions | Status |
@@ -56,6 +73,7 @@ Transform Beach Kitty from a single-level game into a modular multi-level archit
 | 6 | GameEngine Abstraction | 2-3 | Not Started |
 | 7 | Level Selection UI | 1 | Not Started |
 | 8 | Documentation & Polish | 1 | Not Started |
+| 9 | Live Balancing + Telemetry | 1-2 | Not Started |
 
 ---
 
@@ -223,6 +241,39 @@ components/ObstacleComponent.tsx
 
 ---
 
+## Phase 9: Live Balancing + Telemetry
+
+**Goal:** Improve tuning velocity and difficulty quality with in-game controls and structured data.
+
+### Tasks
+- [ ] Create dev-only balance panel (toggle via query param or keybind)
+- [ ] Expose key tuning controls:
+  - [ ] Spawn interval base/min/jitter
+  - [ ] Pattern chance scaling
+  - [ ] Boss projectile rate/speed
+  - [ ] Low-lives assist multipliers
+  - [ ] Power-up threshold
+- [ ] Persist tuning profile to `localStorage`
+- [ ] Add reset-to-default control
+- [ ] Add telemetry event logging for:
+  - [ ] damage taken (obstacle type, speed, lives, timestamp)
+  - [ ] deaths (context snapshot)
+  - [ ] run summary (duration, score, coins, boss reached/defeated)
+- [ ] Add export action for telemetry JSON
+- [ ] Add optional import action for replaying telemetry data in analysis
+- [ ] Verify no gameplay behavior change when panel is disabled
+- [ ] Document usage in `README.md` (dev section)
+
+### Suggested Files
+```
+components/dev/BalancePanel.tsx
+systems/tuning/defaultTuning.ts
+systems/tuning/useTuningStore.ts
+systems/telemetry/runTelemetry.ts
+```
+
+---
+
 ## Linear Checklist (Quick Copy)
 
 ```
@@ -267,4 +318,11 @@ PHASE 7 - LEVEL SELECTION
 PHASE 8 - DOCUMENTATION
 [ ] Create level dev guide
 [ ] Update CLAUDE.md
+
+PHASE 9 - BALANCE + TELEMETRY
+[ ] Add dev balance panel
+[ ] Add localStorage tuning profiles
+[ ] Add hit/death/run telemetry logging
+[ ] Add telemetry JSON export
+[ ] Verify default gameplay unchanged
 ```

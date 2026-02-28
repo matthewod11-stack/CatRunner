@@ -34,6 +34,48 @@ cat ~/.claude/plans/compressed-gathering-kite.md
 Most recent session should be first.
 -->
 
+## Session 2026-02-28 (Stabilization + Roadmap Extension)
+
+**Phase:** Pre-Phase 2 Stabilization + Phase 9 planning
+**Focus:** Security hardening, performance improvements, gameplay balancing, and next-session roadmap updates
+
+### Completed
+- [x] Moved Gemini usage behind server-side API endpoints (`/api/cat/*`)
+- [x] Removed client-side Gemini key injection from Vite define config
+- [x] Added local dev API middleware and Vercel API handlers
+- [x] Added performance improvements:
+  - [x] Shared SFX AudioContext reuse
+  - [x] Stable memoized visual randomness (confetti/water/speed-lines)
+  - [x] Memoized non-mutating background sort
+  - [x] Sprite processing cache for processed seagull images
+- [x] Added gameplay balancing pass:
+  - [x] Safer spawn grace windows
+  - [x] Controls hint overlay
+  - [x] Low-lives assist scaling
+  - [x] Boss intro pressure ramp
+  - [x] Smoothed spawn pacing and poop cooldown tuning
+- [x] Extended roadmap with **Phase 9: Live Balancing + Telemetry**
+- [x] Updated `features.json` with Phase 9 tracking
+
+### Verified
+- [x] `npm run build` succeeds after each pass
+- [x] Frontend now calls `/api/cat/*` instead of direct Gemini SDK
+- [x] Build bundle no longer contains client-side Gemini usage paths
+
+### Notes
+- Existing 8-phase multi-level architecture plan remains the long-term track.
+- Phase 9 is intentionally inserted as a short-term quality/tooling track before resuming Phase 2.
+- Security posture improved by ensuring `GEMINI_API_KEY` is server-only.
+
+### Next Session Should
+- **Start with:** Phase 9A - build a dev-only balance panel
+  - Add runtime sliders/toggles for spawn rates, boss pressure, and assist values
+  - Save and load tuning presets from `localStorage`
+- **Then:** Phase 9B - add run/death telemetry capture + export
+  - Log every hit/death with gameplay context
+  - Add JSON export UI action for balancing analysis
+- **Verify:** gameplay is unchanged when dev panel is disabled
+
 ## Session 2025-12-23 (Phase 1: Infrastructure)
 
 **Phase:** 1 - Session Protocol Infrastructure

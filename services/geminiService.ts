@@ -1,94 +1,51 @@
+interface MessageApiResponse {
+  message?: string;
+}
 
-import { GoogleGenAI, Type } from "@google/genai";
+interface ImageApiResponse {
+  imageDataUrl?: string | null;
+}
 
-const messageSchema = {
-  type: Type.OBJECT,
-  properties: {
-    message: {
-      type: Type.STRING,
-      description: "A single, short string containing the cat's message.",
-    },
-  },
-  required: ["message"],
-};
+async function postJson<T>(path: string, payload: unknown): Promise<T> {
+  const response = await fetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return (await response.json()) as T;
+}
 
 export async function getCatWisdom(score: number): Promise<string> {
   try {
-    // Instantiate ai inside the function to use the most recent process.env.API_KEY
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: `The player just scored ${score} points in 'Beach Kitty'. Generate exactly one short, sassy, or wise one-liner from the perspective of a white beach kitty. Keep it under 15 words.`,
-      config: {
-        temperature: 0.8,
-        topP: 0.95,
-        responseMimeType: "application/json",
-        responseSchema: messageSchema,
-      },
-    });
-    
-    const result = JSON.parse(response.text || "{}");
-    return result.message || "Stay pawsome!";
+    const result = await postJson<MessageApiResponse>('/api/cat/wisdom', { score });
+    return result.message?.trim() || 'Stay pawsome!';
   } catch (error) {
-    console.error("Gemini Error:", error);
+    console.error('Gemini API Error (wisdom):', error);
     return "Meow! Life's a beach.";
   }
 }
 
 export async function getDeathMessage(score: number): Promise<string> {
   try {
-    // Instantiate ai inside the function to use the most recent process.env.API_KEY
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: `The player died in 'Beach Kitty' with a score of ${score}. Write exactly one funny or encouraging "Game Over" message from a sarcastic white kitty. No lists, no options, just the final message.`,
-      config: {
-        temperature: 0.9,
-        responseMimeType: "application/json",
-        responseSchema: messageSchema,
-      },
-    });
-
-    const result = JSON.parse(response.text || "{}");
-    return result.message || "Curiosity didn't kill the cat, that obstacle did!";
+    const result = await postJson<MessageApiResponse>('/api/cat/death-message', { score });
+    return result.message?.trim() || 'Curiosity did not kill the cat, that obstacle did.';
   } catch (error) {
-    console.error("Gemini Error:", error);
-    return "Ouch! Back to the litter box.";
+    console.error('Gemini API Error (death message):', error);
+    return 'Ouch! Back to the litter box.';
   }
 }
 
 export async function generateCustomCat(description: string): Promise<string | null> {
   try {
-    // Instantiate ai inside the function to use the most recent process.env.API_KEY
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const prompt = `A side-view full body character sprite of a kitty cat for a game.
-    The cat is ${description}.
-    Style: Bright 2D flat cartoon, high contrast, thick black outlines, facing right.
-    CRITICAL BACKGROUND REQUIREMENT: The background MUST be solid bright magenta/pink color (hex #FF00FF or similar hot pink).
-    This magenta background is essential - do not use white, gray, or any other background color.
-    No shadows on the floor, no grass, just the character on solid magenta/hot pink.
-    Center the character and ensure it fills the frame.`;
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
-      contents: {
-        parts: [{ text: prompt }],
-      },
-      config: {
-        imageConfig: {
-          aspectRatio: "1:1"
-        }
-      }
-    });
-
-    for (const part of response.candidates?.[0]?.content?.parts || []) {
-      if (part.inlineData) {
-        return `data:image/png;base64,${part.inlineData.data}`;
-      }
-    }
-    return null;
+    const result = await postJson<ImageApiResponse>('/api/cat/generate', { description });
+    return result.imageDataUrl || null;
   } catch (error) {
-    console.error("Image Generation Error:", error);
+    console.error('Gemini API Error (image generation):', error);
     return null;
   }
 }

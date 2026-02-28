@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Obstacle, PlayerState, ObstacleType, Particle, ActivePowerUp, PowerUpType, GameScore, GameStatus, Bullet, EntityType, BackgroundEntity, BackgroundEntityType, LevelId } from '../types';
 import Kitty from './Kitty';
 import ObstacleComponent from './ObstacleComponent';
@@ -29,6 +29,15 @@ const STREAK_REQUIRED = 5;
 const INVINCIBILITY_DURATION = 2000;
 const PATTERN_END_GAP = 600; // Minimum ms gap after pattern completes
 const HARMFUL_COOLDOWN = 400; // Minimum ms between harmful spawns (for poop stacking)
+const START_SPAWN_GRACE_MS = 1800;
+const HIT_SPAWN_GRACE_MS = 900;
+const CONTROLS_HINT_DURATION_MS = 6000;
+const LOW_LIVES_THRESHOLD = 2;
+const CRITICAL_LIVES_THRESHOLD = 1;
+const BOSS_INTRO_EASE_MS = 12000;
+const PLAYING_SPAWN_BASE_MS = 1225;
+const PLAYING_SPAWN_MIN_MS = 520;
+const PLAYING_SPAWN_JITTER_MS = 320;
 
 interface PatternStep {
   type: EntityType;
@@ -37,6 +46,8 @@ interface PatternStep {
 }
 
 const HARMFUL_TYPES: EntityType[] = ['CRAB', 'BEACHBALL', 'SAND_PROJECTILE', 'PALM_TREE'];
+const BACKGROUND_DEPTH_ORDER: Record<'far' | 'mid' | 'near', number> = { far: 0, mid: 1, near: 2 };
+const BACKGROUND_Z_INDEX: Record<'far' | 'mid' | 'near', number> = { far: 1, mid: 2, near: 3 };
 
 const BEACH_PATTERNS: PatternStep[][] = [
   // Easy: Single obstacle + coin
@@ -69,6 +80,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
   const [activePowerUp, setActivePowerUp] = useState<ActivePowerUp | null>(null);
   const [boss, setBoss] = useState<Obstacle | null>(null);
   const [multFeedback, setMultFeedback] = useState<string | null>(null);
+  const [showControlsHint, setShowControlsHint] = useState(true);
   const [floatingScores, setFloatingScores] = useState<Array<{ id: number; x: number; y: number; value: number }>>([]);
   const [screenShake, setScreenShake] = useState<{ x: number; y: number; intensity: number }>({ x: 0, y: 0, intensity: 0 });
   const [bossFacingDirection, setBossFacingDirection] = useState<'left' | 'right'>('right');
@@ -120,6 +132,9 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
   const patternEndTime = useRef<number>(0); // For mandatory gap after patterns
   const prevVyRef = useRef<number>(0);
   const prevLivesRef = useRef(initialLives);
+  const sfxAudioContextRef = useRef<AudioContext | null>(null);
+  const safeSpawnUntilRef = useRef<number>(Date.now() + START_SPAWN_GRACE_MS);
+  const bossFightStartTimeRef = useRef<number>(0);
 
   // Music lifecycle management
   useEffect(() => {
@@ -157,6 +172,35 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     });
   }, []);
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => setShowControlsHint(false), CONTROLS_HINT_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const getSfxAudioContext = useCallback((): AudioContext | null => {
+    const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return null;
+
+    if (!sfxAudioContextRef.current || sfxAudioContextRef.current.state === 'closed') {
+      sfxAudioContextRef.current = new AudioContextClass();
+    }
+
+    if (sfxAudioContextRef.current.state === 'suspended') {
+      void sfxAudioContextRef.current.resume().catch(() => {});
+    }
+
+    return sfxAudioContextRef.current;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (sfxAudioContextRef.current && sfxAudioContextRef.current.state !== 'closed') {
+        void sfxAudioContextRef.current.close().catch(() => {});
+      }
+      sfxAudioContextRef.current = null;
+    };
+  }, []);
+
   const playSound = useCallback((type: string) => {
     try {
       // File-based sounds (cat sounds and effect sounds)
@@ -185,9 +229,8 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
       }
 
       // Oscillator-based sounds (retro game sounds)
-      const AudioContext = (window as any).AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContext) return;
-      const audioCtx = new AudioContext();
+      const audioCtx = getSfxAudioContext();
+      if (!audioCtx) return;
       const osc = audioCtx.createOscillator();
       const windowGain = audioCtx.createGain();
       const isBossFight = status === GameStatus.BOSS_FIGHT;
@@ -241,7 +284,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
       osc.connect(windowGain); windowGain.connect(audioCtx.destination);
       osc.start(); osc.stop(audioCtx.currentTime + duration + 0.1);
     } catch (error) {}
-  }, [status]);
+  }, [getSfxAudioContext, status]);
 
   const spawnBopParticles = useCallback((x: number, y: number, color: string = '#ffffff', count?: number, isBoss?: boolean) => {
     const numParticles = isBoss ? (count || 20) : (count || 8);
@@ -395,8 +438,15 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     if (status !== GameStatus.PLAYING && !typeOverride) {
       if (status === GameStatus.BOSS_FIGHT && boss) {
         // Enhanced projectile spawning - varies based on boss health
-        const healthPercent = (bossHealthRef.current / 100);
-        const spawnRate = healthPercent < 0.3 ? 0.65 : (healthPercent < 0.6 ? 0.5 : 0.4); // Faster when low health
+        const healthPercent = bossHealthRef.current / 100;
+        const lives = livesRef.current;
+        const lowLives = lives <= LOW_LIVES_THRESHOLD;
+        const elapsed = Date.now() - bossFightStartTimeRef.current;
+        const introProgress = Math.min(elapsed / BOSS_INTRO_EASE_MS, 1);
+        const baseSpawnRate = healthPercent < 0.3 ? 0.65 : (healthPercent < 0.6 ? 0.5 : 0.4); // Faster when low health
+        let spawnRate = baseSpawnRate * (0.55 + introProgress * 0.45);
+        if (lowLives) spawnRate *= 0.82;
+        spawnRate = Math.max(0.18, Math.min(0.75, spawnRate));
         
         if (Math.random() < spawnRate) {
           // Boss shoots from his face area (center-top of boss)
@@ -424,7 +474,10 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
           
           // Projectile velocity components - mostly horizontal
           const baseSpeed = 12 + Math.random() * 4; // 12-16 speed for faster straight shots
-          const speed = healthPercent < 0.3 ? baseSpeed * 1.2 : baseSpeed;
+          const introSpeedScale = 0.78 + introProgress * 0.22;
+          const livesSpeedScale = lowLives ? 0.85 : 1.0;
+          const healthSpeedScale = healthPercent < 0.3 ? 1.2 : 1.0;
+          const speed = baseSpeed * introSpeedScale * livesSpeedScale * healthSpeedScale;
           const vx = Math.cos(angle) * speed;
           const vy = Math.sin(angle) * speed * 0.4; // Reduce vertical component for straighter trajectory
           
@@ -455,16 +508,29 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     }
 
     const beachTypes: ObstacleType[] = ['CRAB', 'CRAB', 'BEACHBALL', 'BEACHBALL', 'SEAGULL', 'SANDCASTLE', 'TIDEPOOL', 'PALM_TREE'];
+    const lives = livesRef.current;
+    const lowLives = lives <= LOW_LIVES_THRESHOLD;
+    const criticalLives = lives <= CRITICAL_LIVES_THRESHOLD;
     
-    let isCoin = Math.random() < 0.75; // 75% chance of coin (reduced from 85% to allow more shells)
+    const coinChance = criticalLives ? 0.9 : (lowLives ? 0.86 : 0.75);
+    const shellChanceWhenNoCoin = criticalLives ? 0.65 : (lowLives ? 0.55 : 0.4);
+    const harmfulStreakLimit = lowLives ? 1 : 2;
+
+    let isCoin = Math.random() < coinChance;
     let isShell = false;
-    if (!isCoin && Math.random() < 0.4) {
-      // 40% chance of shell when not spawning coin (increased from 15%)
+    if (!isCoin && Math.random() < shellChanceWhenNoCoin) {
       isShell = true;
     }
-    if (consecutiveHarmfulRef.current >= 2) { isCoin = true; isShell = false; }
+    if (consecutiveHarmfulRef.current >= harmfulStreakLimit) { isCoin = true; isShell = false; }
 
-    const selectedType = typeOverride || (isShell ? 'SHELL' : (isCoin ? 'COIN' : beachTypes[Math.floor(Math.random() * beachTypes.length)]));
+    let selectedType: EntityType = typeOverride || (isShell ? 'SHELL' : (isCoin ? 'COIN' : beachTypes[Math.floor(Math.random() * beachTypes.length)]));
+
+    // Keep opening moments fair: avoid unavoidable hits right after start or damage.
+    if (Date.now() < safeSpawnUntilRef.current && HARMFUL_TYPES.includes(selectedType)) {
+      selectedType = 'COIN';
+      isCoin = true;
+      isShell = false;
+    }
     
     if (HARMFUL_TYPES.includes(selectedType)) consecutiveHarmfulRef.current++; else consecutiveHarmfulRef.current = 0;
     
@@ -592,6 +658,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     setObstacles([]);
     playSound('boss_alert');
     bossHealthRef.current = 100;
+    bossFightStartTimeRef.current = Date.now();
     setBossFacingDirection('right');
     triggerScreenShake(5); // Initial boss entrance shake
     setBoss({ id: 999, type: 'BOSS', x: window.innerWidth - 450, y: GROUND_Y + 100, width: 320, height: 320, speed: 0, isPassed: false, health: 100, maxHealth: 100 });
@@ -606,6 +673,8 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     }
 
     const now = Date.now();
+    const lowLivesMode = livesRef.current <= LOW_LIVES_THRESHOLD;
+    const criticalLivesMode = livesRef.current <= CRITICAL_LIVES_THRESHOLD;
 
     // Handle freeze frame - skip updates but keep rendering
     if (now < freezeUntilRef.current) {
@@ -730,7 +799,8 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
         const inPatternGap = now < patternEndTime.current;
 
         if (patternQueue.current.length === 0 && !inPatternGap) {
-          const patternChance = Math.min(0.15 + (scoreRef.current / 12000), 0.7);
+          const lifeAssistScale = criticalLivesMode ? 0.45 : (lowLivesMode ? 0.65 : 1);
+          const patternChance = Math.min(0.15 + (scoreRef.current / 12000), 0.7) * lifeAssistScale;
           // Don't start new pattern if player is invincible (just took damage)
           const isPlayerRecovering = now < invincibilityUntilRef.current;
 
@@ -739,7 +809,8 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
             consecutiveHarmfulRef.current = 0; // Reset harmful counter at pattern start
           }
           else {
-            if (coinCounterRef.current >= POWERUP_THRESHOLD) {
+            const powerupThreshold = criticalLivesMode ? 10 : (lowLivesMode ? 14 : POWERUP_THRESHOLD);
+            if (coinCounterRef.current >= powerupThreshold) {
               // Spawn powerup: 40% SPEED, 40% MAGNET, 20% SUPER_SIZE (rarer because more powerful)
               const roll = Math.random();
               const powerupType = roll < 0.4 ? 'SPEED' : roll < 0.8 ? 'MAGNET' : 'SUPER_SIZE';
@@ -747,7 +818,11 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
               coinCounterRef.current = 0;
             }
             else { spawnEntity(); }
-            nextSpawnTime.current = now + (1200 - Math.min(speedRef.current * 45, 800) + (Math.random() - 0.5) * 400) / speedMultiplier;
+            const lifeIntervalBonus = criticalLivesMode ? 320 : (lowLivesMode ? 180 : 0);
+            const spawnJitter = (Math.random() - 0.5) * PLAYING_SPAWN_JITTER_MS;
+            const computedInterval = PLAYING_SPAWN_BASE_MS - Math.min(speedRef.current * 43, 760) + lifeIntervalBonus + spawnJitter;
+            const intervalMs = Math.max(PLAYING_SPAWN_MIN_MS, computedInterval);
+            nextSpawnTime.current = now + (intervalMs / speedMultiplier);
           }
         }
         if (patternQueue.current.length > 0) {
@@ -757,29 +832,37 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
           if (HARMFUL_TYPES.includes(step.type)) {
             lastHarmfulSpawnTime.current = now;
           }
-          nextSpawnTime.current = now + (step.delay / speedMultiplier);
+          const patternDelayScale = criticalLivesMode ? 1.25 : (lowLivesMode ? 1.15 : 1);
+          nextSpawnTime.current = now + ((step.delay * patternDelayScale) / speedMultiplier);
 
           // If pattern just finished, set mandatory gap before next spawn
           if (patternQueue.current.length === 0) {
-            patternEndTime.current = now + PATTERN_END_GAP;
+            patternEndTime.current = now + PATTERN_END_GAP + (lowLivesMode ? 200 : 0);
             consecutiveHarmfulRef.current = 0; // Reset after pattern
           }
         }
       }
     } else if (status === GameStatus.BOSS_FIGHT) {
-      if (time - lastObstacleTime.current > 1100) { spawnEntity(); lastObstacleTime.current = time; }
+      const fightElapsed = now - bossFightStartTimeRef.current;
+      const introProgress = Math.min(fightElapsed / BOSS_INTRO_EASE_MS, 1);
+      let bossSpawnInterval = 1400 - (introProgress * 300); // 1400ms -> 1100ms over intro window
+      if (lowLivesMode) bossSpawnInterval += 180;
+      if (time - lastObstacleTime.current > bossSpawnInterval) { spawnEntity(); lastObstacleTime.current = time; }
     }
     
     // Handle seagull poop drops - with stacking prevention
     if (status === GameStatus.PLAYING || status === GameStatus.BOSS_FIGHT) {
       // Skip poop if harmful obstacle spawned too recently (prevents impossible stacking)
-      const canSpawnPoop = (now - lastHarmfulSpawnTime.current) > HARMFUL_COOLDOWN;
+      const harmfulCooldown = HARMFUL_COOLDOWN + (lowLivesMode ? 250 : 0);
+      const canSpawnPoop = (now - lastHarmfulSpawnTime.current) > harmfulCooldown;
 
       obstaclesRef.current.forEach(obs => {
         if (obs.type === 'SEAGULL' && obs.seagullType === 'poop' && obs.lastPoopTime && canSpawnPoop) {
           const timeSinceLastPoop = now - obs.lastPoopTime;
           // Drop poop every 2-3 seconds
-          if (timeSinceLastPoop > 2000 + Math.random() * 1000) {
+          const poopDropDelayBase = lowLivesMode ? 2600 : 2000;
+          const poopDropDelayRange = lowLivesMode ? 1200 : 1000;
+          if (timeSinceLastPoop > poopDropDelayBase + Math.random() * poopDropDelayRange) {
             // Spawn poop projectile falling downward
             const seagullX = obs.x + obs.width / 2;
             const seagullY = obs.y ?? 220;
@@ -1237,6 +1320,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
           // Skip damage if SUPER_SIZE power-up is active (invincible)
           livesRef.current--;
           invincibilityUntilRef.current = now + INVINCIBILITY_DURATION;
+          safeSpawnUntilRef.current = now + HIT_SPAWN_GRACE_MS;
           playSound('hiss'); // Cat hiss when hurt!
           streakRef.current = 0;
           triggerFreezeFrame(80); // Brief freeze on hit for dramatic effect
@@ -1292,6 +1376,28 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     };
   }, [handleTouchStart, handleTouchEnd]);
 
+  const speedLineConfig = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, i) => ({
+        id: i,
+        top: `${10 + i * 7 + Math.sin(i) * 3}%`,
+        width: `${30 + Math.random() * 40}%`,
+        animation: `speedLine ${0.2 + Math.random() * 0.15}s linear infinite`,
+        animationDelay: `${i * 0.05}s`,
+      })),
+    []
+  );
+
+  const sortedBackgroundEntities = useMemo(
+    () =>
+      [...backgroundEntities].sort((a, b) => {
+        const aDepth = BACKGROUND_DEPTH_ORDER[a.depth || 'mid'];
+        const bDepth = BACKGROUND_DEPTH_ORDER[b.depth || 'mid'];
+        return aDepth - bDepth;
+      }),
+    [backgroundEntities]
+  );
+
   return (
     <div 
       className="absolute inset-0 w-full h-full overflow-hidden"
@@ -1324,16 +1430,16 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
             className="absolute inset-0 pointer-events-none overflow-hidden z-0"
             style={{ opacity: Math.min((speedRef.current - 10) / 10, 0.6) }}
           >
-            {[...Array(12)].map((_, i) => (
+            {speedLineConfig.map((line) => (
               <div
-                key={i}
+                key={line.id}
                 className="absolute h-[2px] bg-gradient-to-r from-white/80 via-white/40 to-transparent"
                 style={{
-                  top: `${10 + (i * 7) + (Math.sin(i) * 3)}%`,
+                  top: line.top,
                   left: '-10%',
-                  width: `${30 + Math.random() * 40}%`,
-                  animation: `speedLine ${0.2 + Math.random() * 0.15}s linear infinite`,
-                  animationDelay: `${i * 0.05}s`
+                  width: line.width,
+                  animation: line.animation,
+                  animationDelay: line.animationDelay
                 }}
               />
             ))}
@@ -1349,21 +1455,8 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
         )}
 
         {/* Background Decor - sorted by depth for proper layering */}
-        {backgroundEntities
-          .sort((a, b) => {
-            const depthOrder = { 'far': 0, 'mid': 1, 'near': 2 };
-            const aDepth = depthOrder[a.depth || 'mid'];
-            const bDepth = depthOrder[b.depth || 'mid'];
-            return aDepth - bDepth;
-          })
-          .map(b => {
-            const zIndexMap: Record<string, number> = {
-              'far': 1,
-              'mid': 2,
-              'near': 3,
-            };
-            const baseZ = zIndexMap[b.depth || 'mid'] || 2;
-            const zIndex = baseZ;
+        {sortedBackgroundEntities.map(b => {
+            const zIndex = BACKGROUND_Z_INDEX[b.depth || 'mid'] || 2;
             return (
           <div 
             key={b.id} 
@@ -1710,6 +1803,16 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
         {multFeedback && (
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-bounce">
             <span className="text-6xl font-black text-white italic drop-shadow-[0_5px_0_black] uppercase">{multFeedback}</span>
+          </div>
+        )}
+
+        {showControlsHint && status === GameStatus.PLAYING && (
+          <div className="absolute top-24 left-1/2 -translate-x-1/2 z-30 pointer-events-none animate-[fadeIn_0.25s_ease-out]">
+            <div className="bg-white/90 backdrop-blur-md border-2 border-amber-200 rounded-2xl px-5 py-3 shadow-xl text-center">
+              <p className="text-xs uppercase font-black tracking-widest text-amber-800">Controls</p>
+              <p className="text-sm font-bold text-slate-700">Jump: Space / Up / left touch</p>
+              <p className="text-sm font-bold text-slate-700">Duck/Shoot: Down / right touch</p>
+            </div>
           </div>
         )}
 

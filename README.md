@@ -14,7 +14,7 @@ An AI-powered endless runner where a cat sprints along a beach, dodging crabs an
 
 ## About
 
-Beach Kitty is a browser-based endless runner built with React 19 and TypeScript. It combines hand-tuned platformer physics with Gemini AI integration that lets players generate custom cat sprites from text descriptions and receive AI-written in-game dialogue. The game runs entirely client-side with no backend.
+Beach Kitty is a browser-based endless runner built with React 19 and TypeScript. It combines hand-tuned platformer physics with Gemini AI integration that lets players generate custom cat sprites from text descriptions and receive AI-written in-game dialogue. AI requests are routed through server-side API endpoints so API keys are not exposed in the browser.
 
 ## Features
 
@@ -34,7 +34,7 @@ Beach Kitty is a browser-based endless runner built with React 19 and TypeScript
 | Framework | React 19 |
 | Language | TypeScript |
 | Build | Vite |
-| AI | Google Gemini (sprite generation, in-game dialogue) |
+| AI | Google Gemini via server-side API routes |
 | Audio | Web Audio API (procedural synthesis) |
 | Graphics | Canvas API (sprite processing), inline SVG (game objects) |
 | Styling | Tailwind CSS |
@@ -50,11 +50,13 @@ npm install
 npm run dev
 ```
 
-To enable AI features (custom cat generation, in-game messages), create a `.env.local` file:
+To enable AI features (custom cat generation, in-game messages), create a `.env.local` file for local server execution:
 
 ```
 GEMINI_API_KEY=your_api_key_here
 ```
+
+In production, set `GEMINI_API_KEY` as a server environment variable on your hosting platform.
 
 ## Built With
 
