@@ -6,8 +6,7 @@ An AI-powered endless runner where a cat sprints along a beach, dodging crabs an
 
 [Play Now](https://www.beachkittygame.games/)
 
-<!-- Add a gameplay screenshot: place your image at docs/screenshots/gameplay.png -->
-<!-- ![Beach Kitty gameplay](docs/screenshots/gameplay.png) -->
+![Beach Kitty gameplay](docs/screenshots/gameplay.png)
 
 </div>
 
