@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import bossImage from '../Generated Image December 21, 2025 - 4_59PM.jpeg';
+import bossImage from '../assets/sand-monster.jpeg';
 
 interface SandMonsterProps {
   health: number;
