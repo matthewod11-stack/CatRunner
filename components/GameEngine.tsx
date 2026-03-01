@@ -8,6 +8,8 @@ import GameCanvas from './GameCanvas';
 import { startMusic, stopMusic, setMusicTempo, setBossMode } from '../services/audioService';
 import { useTuningStore } from '../systems/tuning/useTuningStore';
 import { createRunTelemetry, RunTelemetry } from '../systems/telemetry/runTelemetry';
+import { computeSwoopY, checkPoopDrop } from '../systems/behaviors';
+import { handleBounceCollision, handleSlowCollision, handleHarmfulCollision, CollisionResult, BOUNCE_POINTS } from '../systems/collisionHandlers';
 
 interface GameEngineProps {
   initialLives: number;
@@ -843,36 +845,15 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     
     // Handle seagull poop drops - with stacking prevention
     if (status === GameStatus.PLAYING || status === GameStatus.BOSS_FIGHT) {
-      // Skip poop if harmful obstacle spawned too recently (prevents impossible stacking)
       const harmfulCooldown = tuning.harmfulCooldownMs + (lowLivesMode ? 250 : 0);
       const canSpawnPoop = (now - lastHarmfulSpawnTime.current) > harmfulCooldown;
 
       obstaclesRef.current.forEach(obs => {
-        if (obs.type === 'SEAGULL' && obs.seagullType === 'poop' && obs.lastPoopTime && canSpawnPoop) {
-          const timeSinceLastPoop = now - obs.lastPoopTime;
-          // Drop poop every 2-3 seconds
-          const poopDropDelayBase = lowLivesMode ? 2600 : 2000;
-          const poopDropDelayRange = lowLivesMode ? 1200 : 1000;
-          if (timeSinceLastPoop > poopDropDelayBase + Math.random() * poopDropDelayRange) {
-            // Spawn poop projectile falling downward
-            const seagullX = obs.x + obs.width / 2;
-            const seagullY = obs.y ?? 220;
-            obstaclesRef.current.push({
-              id: Date.now() + Math.random(),
-              type: 'SAND_PROJECTILE',
-              x: seagullX,
-              y: seagullY,
-              width: 60,
-              height: 60,
-              speed: 0, // No horizontal movement
-              vx: 0,
-              vy: 2 + Math.random() * 2, // Fall downward
-              rotation: 0,
-              isPassed: false
-            });
-            obs.lastPoopTime = now;
-            lastHarmfulSpawnTime.current = now; // Track this as harmful spawn too
-          }
+        const projectile = checkPoopDrop(obs, now, lowLivesMode, canSpawnPoop);
+        if (projectile) {
+          obstaclesRef.current.push(projectile);
+          obs.lastPoopTime = now;
+          lastHarmfulSpawnTime.current = now;
         }
       });
     }
@@ -1132,26 +1113,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
         newX = obs.x - step;
         
         if (obs.type === 'SEAGULL' && obs.isSwooping) {
-          // Smoother swoop trajectory using easing function (ease-in-out curve)
-          const centerX = window.innerWidth / 2;
-          const distFromCenter = Math.abs(newX - centerX);
-          const maxDist = centerX;
-          const prog = Math.min(distFromCenter / maxDist, 1);
-          // Use ease-in-out cubic function for smoother motion
-          const easedProg = prog < 0.5 ? 4 * prog * prog * prog : 1 - Math.pow(-2 * prog + 2, 3) / 2;
-          // Swoop from mid height (280) down to lower 3rd (150) then back up slightly
-          const swoopStartY = 280; // Mid height
-          const swoopLowY = 150; // Lower 3rd of screen
-          const swoopEndY = 200; // Slight recovery
-          if (newX > centerX) {
-            // Approaching center - swooping down
-            newY = swoopStartY + (swoopLowY - swoopStartY) * easedProg;
-          } else {
-            // Past center - swooping up
-            const upProg = (centerX - newX) / centerX;
-            const easedUpProg = upProg < 0.5 ? 4 * upProg * upProg * upProg : 1 - Math.pow(-2 * upProg + 2, 3) / 2;
-            newY = swoopLowY + (swoopEndY - swoopLowY) * easedUpProg;
-          }
+          newY = computeSwoopY(newX, window.innerWidth);
         }
       }
       
@@ -1162,6 +1124,30 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
       }
       return { ...obs, x: newX, y: newY };
     }).filter(obs => obs.x > -400);
+
+    const applyCollisionResult = (result: CollisionResult, obs: Obstacle, oRectTop: number) => {
+      result.sounds.forEach(s => playSound(s));
+      if (result.particleColor) {
+        spawnBopParticles(obs.x + obs.width / 2, oRectTop, result.particleColor);
+      }
+      if (result.bounceForce !== undefined) {
+        playerRef.current.vy = result.bounceForce;
+      }
+      if (result.jumpCount !== undefined) {
+        playerRef.current.jumpCount = result.jumpCount;
+      }
+      if (result.points) {
+        scoreRef.current += result.points;
+        const scoreId = Date.now() + Math.random();
+        setFloatingScores(prev => [...prev, { id: scoreId, x: obs.x + obs.width / 2, y: oRectTop, value: result.points! }]);
+        setTimeout(() => setFloatingScores(prev => prev.filter(s => s.id !== scoreId)), 1500);
+      }
+      if (result.slowDuration) {
+        slowdownUntilRef.current = now + result.slowDuration;
+      }
+      if (result.markAs === 'collected') obs.isCollected = true;
+      else if (result.markAs === 'passed') obs.isPassed = true;
+    };
 
     for (const obs of obstaclesRef.current) {
       if (obs.isCollected) continue;
@@ -1250,86 +1236,24 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
         }
         const isLanding = playerRef.current.vy < 0 && (kRect.b >= oRect.t - 30);
         if (isLanding) {
-          const BOUNCE_POINTS = 10; // Points awarded for stomping enemies
-          if (obs.type === 'CRAB') {
-            playSound('meow');
-            playSound('cartoon-splat-310479');
-            spawnBopParticles(obs.x + obs.width/2, oRect.t, '#ef4444');
-            playerRef.current.vy = 8;
-            playerRef.current.jumpCount = 0;
-            scoreRef.current += BOUNCE_POINTS;
-            const scoreId = Date.now() + Math.random();
-            setFloatingScores(prev => [...prev, { id: scoreId, x: obs.x + obs.width/2, y: oRect.t, value: BOUNCE_POINTS }]);
-            setTimeout(() => setFloatingScores(prev => prev.filter(s => s.id !== scoreId)), 1500);
-            obs.isCollected = true;
+          if (obs.type === 'CRAB' || obs.type === 'BEACHBALL' || (obs.type === 'SEAGULL' && obs.seagullType === 'dive') || obs.type === 'SAND_PROJECTILE') {
+            const result = handleBounceCollision(obs.type, tuning);
+            applyCollisionResult(result, obs, oRect.t);
             continue;
           }
-          else if (obs.type === 'BEACHBALL') {
-            playSound('meow');
-            playSound('boing-boing-bounce-454474');
-            spawnBopParticles(obs.x + obs.width/2, oRect.t, '#fde047');
-            playerRef.current.vy = tuning.bounceForce;
-            playerRef.current.jumpCount = 0;
-            scoreRef.current += BOUNCE_POINTS;
-            const scoreId = Date.now() + Math.random();
-            setFloatingScores(prev => [...prev, { id: scoreId, x: obs.x + obs.width/2, y: oRect.t, value: BOUNCE_POINTS }]);
-            setTimeout(() => setFloatingScores(prev => prev.filter(s => s.id !== scoreId)), 1500);
-            obs.isPassed = true;
-            continue;
-          }
-          else if (obs.type === 'SEAGULL' && obs.seagullType === 'dive') {
-            playSound('meow');
-            playSound('cartoon-splat-310479');
-            spawnBopParticles(obs.x + obs.width/2, oRect.t, '#ffffff');
-            playerRef.current.vy = 8;
-            playerRef.current.jumpCount = 1;
-            scoreRef.current += BOUNCE_POINTS;
-            const scoreId = Date.now() + Math.random();
-            setFloatingScores(prev => [...prev, { id: scoreId, x: obs.x + obs.width/2, y: oRect.t, value: BOUNCE_POINTS }]);
-            setTimeout(() => setFloatingScores(prev => prev.filter(s => s.id !== scoreId)), 1500);
-            obs.isCollected = true;
-            continue;
-          }
-          else if (obs.type === 'SAND_PROJECTILE') {
-            playSound('meow');
-            spawnBopParticles(obs.x + obs.width/2, oRect.t, '#ffffff');
-            playerRef.current.vy = 8;
-            playerRef.current.jumpCount = 1;
-            scoreRef.current += BOUNCE_POINTS;
-            const scoreId = Date.now() + Math.random();
-            setFloatingScores(prev => [...prev, { id: scoreId, x: obs.x + obs.width/2, y: oRect.t, value: BOUNCE_POINTS }]);
-            setTimeout(() => setFloatingScores(prev => prev.filter(s => s.id !== scoreId)), 1500);
-            obs.isCollected = true;
-            continue;
-          }
-        } else if (obs.type === 'SANDCASTLE' && !isCurrentlyHurt) {
-          // Sand castle slows the player down instead of taking a life
-          slowdownUntilRef.current = now + 2000; // Slow down for 2 seconds
-          playSound('hit');
-          obs.isPassed = true;
-          spawnBopParticles(obs.x + obs.width/2, oRect.t, '#fbbf24');
-        } else if (obs.type === 'TIDEPOOL' && !isCurrentlyHurt) {
-          // Tidepool slows the player down instead of taking a life
-          slowdownUntilRef.current = now + 2000; // Slow down for 2 seconds
-          playSound('hit');
-          obs.isPassed = true;
-          spawnBopParticles(obs.x + obs.width/2, oRect.t, '#60a5fa'); // Blue/water-colored particles
+        } else if ((obs.type === 'SANDCASTLE' || obs.type === 'TIDEPOOL') && !isCurrentlyHurt) {
+          const result = handleSlowCollision(obs.type);
+          applyCollisionResult(result, obs, oRect.t);
         } else if (HARMFUL_TYPES.includes(obs.type) && !isCurrentlyHurt && activePowerUpRef.current?.type !== 'SUPER_SIZE') {
-          // Skip damage if SUPER_SIZE power-up is active (invincible)
+          const result = handleHarmfulCollision();
+          result.sounds.forEach(s => playSound(s));
           livesRef.current--;
-          telemetryRef.current.logDamage(
-            obs.type,
-            speedRef.current,
-            livesRef.current,
-            Math.floor(scoreRef.current / 10)
-          );
+          telemetryRef.current.logDamage(obs.type, speedRef.current, livesRef.current, Math.floor(scoreRef.current / 10));
           invincibilityUntilRef.current = now + tuning.invincibilityDurationMs;
           safeSpawnUntilRef.current = now + tuning.hitSpawnGraceMs;
-          playSound('hiss'); // Cat hiss when hurt!
           streakRef.current = 0;
-          triggerFreezeFrame(80); // Brief freeze on hit for dramatic effect
-          triggerScreenShake(12); // Add screen shake on player hit
-          // Red flash effect
+          triggerFreezeFrame(80);
+          triggerScreenShake(12);
           setHitFlash(true);
           setTimeout(() => setHitFlash(false), 150);
           // Update score immediately when lives change
