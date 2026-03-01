@@ -9,7 +9,7 @@ import { startMusic, stopMusic, setMusicTempo, setBossMode } from '../services/a
 import { useTuningStore } from '../systems/tuning/useTuningStore';
 import { createRunTelemetry, RunTelemetry } from '../systems/telemetry/runTelemetry';
 import { computeSwoopY, checkPoopDrop } from '../systems/behaviors';
-import { handleBounceCollision, handleSlowCollision, handleHarmfulCollision, CollisionResult, BOUNCE_POINTS } from '../systems/collisionHandlers';
+import { handleBounceCollision, handleSlowCollision, handleHarmfulCollision, CollisionResult } from '../systems/collisionHandlers';
 
 interface GameEngineProps {
   initialLives: number;

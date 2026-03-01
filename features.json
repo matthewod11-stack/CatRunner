@@ -5,7 +5,7 @@
     "lastUpdated": "2026-03-01",
     "planFile": "~/.claude/plans/compressed-gathering-kite.md",
     "totalPhases": 9,
-    "completedPhases": 4
+    "completedPhases": 5
   },
   "phase-1": {
     "description": "Session Protocol Infrastructure",
@@ -33,14 +33,14 @@
   },
   "phase-3": {
     "description": "Behavior System Library",
-    "status": "not-started",
+    "status": "pass",
     "tasks": {
-      "behaviors-ts": { "status": "not-started", "notes": "Create systems/behaviors.ts" },
-      "swoop-behavior": { "status": "not-started", "notes": "Extract seagull swoop" },
-      "drop-projectile": { "status": "not-started", "notes": "Extract seagull poop" },
-      "bounceable": { "status": "not-started", "notes": "Extract beachball bounce" },
-      "slow-on-contact": { "status": "not-started", "notes": "Extract sandcastle/tidepool" },
-      "collision-handlers": { "status": "not-started", "notes": "Create collision system" }
+      "behaviors-ts": { "status": "pass", "notes": "Created systems/behaviors.ts with computeSwoopY and checkPoopDrop" },
+      "swoop-behavior": { "status": "pass", "notes": "Extracted seagull swoop easing into computeSwoopY" },
+      "drop-projectile": { "status": "pass", "notes": "Extracted seagull poop into checkPoopDrop" },
+      "bounceable": { "status": "pass", "notes": "Extracted into handleBounceCollision (CRAB/BEACHBALL/SEAGULL/SAND_PROJECTILE)" },
+      "slow-on-contact": { "status": "pass", "notes": "Extracted into handleSlowCollision (SANDCASTLE/TIDEPOOL)" },
+      "collision-handlers": { "status": "pass", "notes": "Created systems/collisionHandlers.ts with CollisionResult + 3 handlers, wired into GameEngine" }
     }
   },
   "phase-4": {
