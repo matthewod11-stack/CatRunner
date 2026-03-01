@@ -1,3 +1,4 @@
+import type { TuningProfile } from './systems/tuning/defaultTuning';
 
 export enum GameStatus {
   START = 'START',
@@ -118,4 +119,107 @@ export interface Outfit {
   id: string;
   name: string;
   url: string;
+}
+
+// ─── Phase 2: Multi-Level Type Foundation ───────────────────────────
+
+/** A single step in a spawn pattern (promotes local interface from GameEngine.tsx) */
+export interface PatternStep {
+  type: EntityType;
+  delay: number;
+  y?: number;
+}
+
+/** Behavior archetypes for obstacle movement/interaction */
+export type BehaviorType =
+  | 'swoop'          // seagull dive trajectory
+  | 'dropProjectile' // seagull poop drops
+  | 'bounce'         // beachball bounce-on-stomp
+  | 'slowOnContact'  // sandcastle/tidepool speed reduction
+  | 'static';        // no special movement (crab, palm tree)
+
+export interface BehaviorConfig {
+  type: BehaviorType;
+  config?: Record<string, number>;
+}
+
+/** Per-obstacle shape, behavior, and spawn weighting for a level */
+export interface ObstacleDefinition {
+  type: ObstacleType;
+  width: number;
+  height: number;
+  behaviors: BehaviorConfig[];
+  isHarmful: boolean;
+  spawnWeight: number;
+  spawnY?: number | { min: number; max: number };
+}
+
+/** Visual theme parameters for a level */
+export interface ThemeConfig {
+  groundY: number;
+  skyGradient: [string, string];
+  particleColors: {
+    dust: string;
+    impact: string;
+    coinCollect: string;
+  };
+  speedLineThreshold: number;
+  screenShakeDecay: number;
+}
+
+/** Boss projectile tuning */
+export interface BossProjectileConfig {
+  baseSpeed: number;
+  speedRange: number;
+  spawnRateByHealth: { high: number; mid: number; low: number };
+}
+
+/** Boss movement tuning */
+export interface BossMovementConfig {
+  swayAmountNormal: number;
+  swayAmountLow: number;
+  swayFrequency: number;
+  bobFrequency: number;
+  bobAmplitude: number;
+}
+
+/** Full boss configuration for a level */
+export interface BossConfig {
+  health: number;
+  damagePerHit: number;
+  width: number;
+  height: number;
+  spawnYOffset: number;
+  movement: BossMovementConfig;
+  projectile: BossProjectileConfig;
+  componentId?: string;
+}
+
+/** Definition for a single background entity type */
+export interface BackgroundEntityDefinition {
+  type: BackgroundEntityType;
+  width: number;
+  height: number;
+  speedMultiplier: number;
+  depth: 'far' | 'mid' | 'near';
+}
+
+/** Background entity pool and spawn timing for a level */
+export interface BackgroundConfig {
+  entities: BackgroundEntityDefinition[];
+  spawnInterval: { normal: number; boss: number };
+}
+
+/** Top-level level configuration — composes all per-level data */
+export interface LevelConfig {
+  id: LevelId;
+  name: string;
+  description: string;
+  obstacles: ObstacleDefinition[];
+  patterns: PatternStep[][];
+  theme: ThemeConfig;
+  boss: BossConfig;
+  background: BackgroundConfig;
+  tuningOverrides?: Partial<TuningProfile>;
+  harmfulTypes?: EntityType[];
 }
