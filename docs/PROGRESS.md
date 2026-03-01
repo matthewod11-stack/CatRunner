@@ -34,6 +34,52 @@ cat ~/.claude/plans/compressed-gathering-kite.md
 Most recent session should be first.
 -->
 
+## Session: 2026-03-01 (Phase 9 Implementation)
+
+**Phase:** 9 — Live Balancing + Telemetry (implementation)
+**Focus:** Implemented all 8 tasks from the Phase 9 plan
+
+### Completed
+- [x] Task 1: Created `systems/tuning/defaultTuning.ts` — TuningProfile interface, DEFAULT_TUNING, TUNING_RANGES
+- [x] Task 2: Created `systems/tuning/useTuningStore.ts` — React hook with localStorage persistence and preset management
+- [x] Task 3: Created `systems/telemetry/runTelemetry.ts` — Factory-based telemetry with damage/death/run_summary events + JSON export
+- [x] Task 4: Wired tuning store into GameEngine — replaced 18 hardcoded constants with `tuning.*` references, updated all dependency arrays
+- [x] Task 5: Wired telemetry into GameEngine — logging at damage, death, and victory paths, exposed via `onTelemetryReady` callback prop
+- [x] Task 6: Built `components/dev/BalancePanel.tsx` — collapsible slider groups, preset save/load/delete, telemetry export button
+- [x] Task 7: Wired BalancePanel into App.tsx — backtick toggle, telemetry passthrough from GameEngine
+- [x] Task 8: Final verification, docs update, features.json update
+
+### How to Use
+- Press backtick (`` ` ``) during gameplay to toggle the dev balance panel
+- Adjust sliders to tweak physics, spawning, difficulty, assist, and boss parameters
+- Save/load named presets for different tuning profiles
+- Export telemetry JSON after a run for analysis
+
+### Files Created
+```
+systems/tuning/defaultTuning.ts
+systems/tuning/useTuningStore.ts
+systems/telemetry/runTelemetry.ts
+components/dev/BalancePanel.tsx
+```
+
+### Files Modified
+```
+components/GameEngine.tsx  — tuning store + telemetry wiring
+App.tsx                    — BalancePanel rendering + backtick toggle
+```
+
+### Issues Encountered
+- None — all 8 tasks completed cleanly
+- Pre-existing TS image import warnings remain (non-blocking)
+
+### Next Session Should
+- **Resume at top of roadmap: Phase 2** (Type System Foundation) — extend `types.ts` with `LevelId`, `BehaviorType`, `ObstacleDefinition`, `LevelConfig`, `ThemeConfig`, `BossConfig`, `BackgroundConfig`
+- Read the full multi-level plan: `~/.claude/plans/compressed-gathering-kite.md`
+- Quick playtest with balance panel (backtick) to verify Phase 9 feels right in-game
+
+---
+
 ## Session: 2026-03-01 (Phase 9 Design + Planning)
 
 **Phase:** 9 — Live Balancing + Telemetry (design & planning only)

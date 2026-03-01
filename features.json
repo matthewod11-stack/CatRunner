@@ -2,10 +2,10 @@
   "$schema": "./features.schema.json",
   "_meta": {
     "description": "Multi-level system feature tracking. Status: not-started | in-progress | pass | fail | blocked",
-    "lastUpdated": "2026-02-28",
+    "lastUpdated": "2026-03-01",
     "planFile": "~/.claude/plans/compressed-gathering-kite.md",
     "totalPhases": 9,
-    "completedPhases": 1
+    "completedPhases": 2
   },
   "phase-1": {
     "description": "Session Protocol Infrastructure",
@@ -92,14 +92,14 @@
   },
   "phase-9": {
     "description": "Live Balancing + Telemetry",
-    "status": "not-started",
+    "status": "pass",
     "tasks": {
-      "dev-balance-panel": { "status": "not-started", "notes": "Runtime tuning UI (dev-only)" },
-      "tuning-presets": { "status": "not-started", "notes": "Persist settings to localStorage" },
-      "hit-death-logging": { "status": "not-started", "notes": "Structured telemetry events during runs" },
-      "run-summary": { "status": "not-started", "notes": "Session summary at game over/victory" },
-      "telemetry-export": { "status": "not-started", "notes": "Download telemetry JSON for analysis" },
-      "verification": { "status": "not-started", "notes": "Default gameplay unchanged when panel disabled" }
+      "dev-balance-panel": { "status": "pass", "notes": "BalancePanel with collapsible slider groups, backtick toggle" },
+      "tuning-presets": { "status": "pass", "notes": "Save/load/delete named presets via localStorage" },
+      "hit-death-logging": { "status": "pass", "notes": "Damage and death events logged with context" },
+      "run-summary": { "status": "pass", "notes": "Run summary at game over and victory" },
+      "telemetry-export": { "status": "pass", "notes": "JSON export via BalancePanel button" },
+      "verification": { "status": "pass", "notes": "Build passes, default tuning values match original constants" }
     }
   }
 }

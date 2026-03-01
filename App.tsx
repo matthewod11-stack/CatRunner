@@ -5,6 +5,8 @@ import GameEngine from './components/GameEngine';
 import CatCustomizer from './components/CatCustomizer';
 import AnimatedWater from './components/AnimatedWater';
 import { getCatWisdom, getDeathMessage } from './services/geminiService';
+import BalancePanel from './components/dev/BalancePanel';
+import { TelemetryEvent } from './systems/telemetry/runTelemetry';
 
 const MAX_LIVES = 9;
 const BOSS_STARS_THRESHOLD = 50;
@@ -20,6 +22,8 @@ const App: React.FC = () => {
   const [kittyName, setKittyName] = useState<string>("Beach Kitty");
   const [customCatUrl, setCustomCatUrl] = useState<string | null>(null);
   const [outfits, setOutfits] = useState<Outfit[]>([]);
+  const [showDevPanel, setShowDevPanel] = useState(false);
+  const [getTelemetryEvents, setGetTelemetryEvents] = useState<(() => TelemetryEvent[]) | null>(null);
   const victoryConfetti = useMemo(
     () =>
       Array.from({ length: 20 }, (_, index) => ({
@@ -173,6 +177,18 @@ const App: React.FC = () => {
   useEffect(() => {
     if (status === GameStatus.LEVEL_SELECTION) fetchWisdom();
   }, [status]);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === '`') setShowDevPanel(prev => !prev);
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
+
+  const handleTelemetryReady = useCallback((getter: () => TelemetryEvent[]) => {
+    setGetTelemetryEvents(() => getter);
+  }, []);
 
   const isBossMoment = status === GameStatus.BOSS_INTRO || status === GameStatus.BOSS_FIGHT;
 
@@ -412,6 +428,7 @@ const App: React.FC = () => {
           onGameOver={handleGameOver}
           onScoreUpdate={handleScoreUpdate}
           onStatusChange={handleStatusChange}
+          onTelemetryReady={handleTelemetryReady}
         />
       )}
 
@@ -568,6 +585,10 @@ const App: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {showDevPanel && (
+        <BalancePanel getTelemetryEvents={getTelemetryEvents ?? undefined} />
       )}
 
       <style dangerouslySetInnerHTML={{ __html: `

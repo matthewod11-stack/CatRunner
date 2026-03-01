@@ -73,7 +73,7 @@ This is tracked as **Phase 9** below and is intended to be completed before resu
 | 6 | GameEngine Abstraction | 2-3 | Not Started |
 | 7 | Level Selection UI | 1 | Not Started |
 | 8 | Documentation & Polish | 1 | Not Started |
-| 9 | Live Balancing + Telemetry | 1-2 | Not Started |
+| 9 | Live Balancing + Telemetry | 1-2 | **Complete** |
 
 ---
 

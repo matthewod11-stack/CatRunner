@@ -6,6 +6,8 @@ import ObstacleComponent from './ObstacleComponent';
 import SandMonster from './SandMonster';
 import GameCanvas from './GameCanvas';
 import { startMusic, stopMusic, setMusicTempo, setBossMode } from '../services/audioService';
+import { useTuningStore } from '../systems/tuning/useTuningStore';
+import { createRunTelemetry, RunTelemetry } from '../systems/telemetry/runTelemetry';
 
 interface GameEngineProps {
   initialLives: number;
@@ -15,29 +17,11 @@ interface GameEngineProps {
   onGameOver: (score: number) => void;
   onScoreUpdate: (score: GameScore) => void;
   onStatusChange?: (status: GameStatus) => void;
+  onTelemetryReady?: (getTelemetry: () => import('../systems/telemetry/runTelemetry').TelemetryEvent[]) => void;
 }
 
-const GRAVITY = 0.75;
-const JUMP_FORCE = 17;
-const BOUNCE_FORCE = 15;
-const INITIAL_SPEED = 7.5;
-const SPEED_INCREMENT = 0.002; // Increased from 0.0015 to compensate for safety gaps
 const GROUND_Y = 100;
-const POWERUP_THRESHOLD = 20;
-const BOSS_THRESHOLD = 50;
-const STREAK_REQUIRED = 5;
-const INVINCIBILITY_DURATION = 2000;
-const PATTERN_END_GAP = 600; // Minimum ms gap after pattern completes
-const HARMFUL_COOLDOWN = 400; // Minimum ms between harmful spawns (for poop stacking)
-const START_SPAWN_GRACE_MS = 1800;
-const HIT_SPAWN_GRACE_MS = 900;
 const CONTROLS_HINT_DURATION_MS = 6000;
-const LOW_LIVES_THRESHOLD = 2;
-const CRITICAL_LIVES_THRESHOLD = 1;
-const BOSS_INTRO_EASE_MS = 12000;
-const PLAYING_SPAWN_BASE_MS = 1225;
-const PLAYING_SPAWN_MIN_MS = 520;
-const PLAYING_SPAWN_JITTER_MS = 320;
 
 interface PatternStep {
   type: EntityType;
@@ -68,7 +52,7 @@ const BEACH_PATTERNS: PatternStep[][] = [
 ];
 
 
-const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtBoss = false, customCatUrl, onGameOver, onScoreUpdate, onStatusChange }) => {
+const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtBoss = false, customCatUrl, onGameOver, onScoreUpdate, onStatusChange, onTelemetryReady }) => {
   const [status, setStatus] = useState<GameStatus>(GameStatus.PLAYING);
   const [isPaused, setIsPaused] = useState(false);
   const [player, setPlayer] = useState<PlayerState>({
@@ -88,6 +72,8 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
   const freezeUntilRef = useRef<number>(0);
   const [hitFlash, setHitFlash] = useState(false);
 
+  const { tuning } = useTuningStore();
+
   // Boss defeat animation state
   const [bossDefeating, setBossDefeating] = useState(false);
   const [defeatPoops, setDefeatPoops] = useState<Array<{
@@ -104,12 +90,13 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
   const defeatAnimationStartRef = useRef<number>(0);
   const defeatPoopsSpawnedRef = useRef<number>(0);
   
+  const telemetryRef = useRef<RunTelemetry>(createRunTelemetry());
   const requestRef = useRef<number | null>(null);
   const scoreRef = useRef(0);
   const distanceRef = useRef(0);
-  const coinsRef = useRef(startAtBoss ? BOSS_THRESHOLD : 0);
+  const coinsRef = useRef(startAtBoss ? tuning.bossThreshold : 0);
   const livesRef = useRef(initialLives);
-  const speedRef = useRef(INITIAL_SPEED);
+  const speedRef = useRef(tuning.initialSpeed);
   const streakRef = useRef(0);
   const multiplierRef = useRef(1);
   const slowdownUntilRef = useRef(0);
@@ -133,7 +120,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
   const prevVyRef = useRef<number>(0);
   const prevLivesRef = useRef(initialLives);
   const sfxAudioContextRef = useRef<AudioContext | null>(null);
-  const safeSpawnUntilRef = useRef<number>(Date.now() + START_SPAWN_GRACE_MS);
+  const safeSpawnUntilRef = useRef<number>(Date.now() + tuning.startSpawnGraceMs);
   const bossFightStartTimeRef = useRef<number>(0);
 
   // Music lifecycle management
@@ -157,6 +144,10 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
       stopMusic();
     };
   }, [status, isPaused]);
+
+  useEffect(() => {
+    onTelemetryReady?.(() => telemetryRef.current.getEvents());
+  }, [onTelemetryReady]);
 
   // Audio file cache for cat sounds
   const audioCache = useRef<Record<string, HTMLAudioElement>>({});
@@ -386,9 +377,9 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
       playSound('cartoon-jump-6462'); spawnFartTrail();
       const catFeetX = 100 + 64;
       spawnSandParticles(catFeetX, playerRef.current.y, 0.8);
-      playerRef.current = { ...playerRef.current, vy: JUMP_FORCE, jumpCount: playerRef.current.jumpCount + 1, isJumping: true, isDucking: false };
+      playerRef.current = { ...playerRef.current, vy: tuning.jumpForce, jumpCount: playerRef.current.jumpCount + 1, isJumping: true, isDucking: false };
     }
-  }, [playSound, spawnFartTrail, spawnSandParticles]);
+  }, [playSound, spawnFartTrail, spawnSandParticles, tuning]);
 
   const performDuck = useCallback((isDucking: boolean) => {
     if (status === GameStatus.BOSS_FIGHT) { if (isDucking) shootPoop(); return; }
@@ -440,9 +431,9 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
         // Enhanced projectile spawning - varies based on boss health
         const healthPercent = bossHealthRef.current / 100;
         const lives = livesRef.current;
-        const lowLives = lives <= LOW_LIVES_THRESHOLD;
+        const lowLives = lives <= tuning.lowLivesThreshold;
         const elapsed = Date.now() - bossFightStartTimeRef.current;
-        const introProgress = Math.min(elapsed / BOSS_INTRO_EASE_MS, 1);
+        const introProgress = Math.min(elapsed / tuning.bossIntroEaseMs, 1);
         const baseSpawnRate = healthPercent < 0.3 ? 0.65 : (healthPercent < 0.6 ? 0.5 : 0.4); // Faster when low health
         let spawnRate = baseSpawnRate * (0.55 + introProgress * 0.45);
         if (lowLives) spawnRate *= 0.82;
@@ -509,8 +500,8 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
 
     const beachTypes: ObstacleType[] = ['CRAB', 'CRAB', 'BEACHBALL', 'BEACHBALL', 'SEAGULL', 'SANDCASTLE', 'TIDEPOOL', 'PALM_TREE'];
     const lives = livesRef.current;
-    const lowLives = lives <= LOW_LIVES_THRESHOLD;
-    const criticalLives = lives <= CRITICAL_LIVES_THRESHOLD;
+    const lowLives = lives <= tuning.lowLivesThreshold;
+    const criticalLives = lives <= tuning.criticalLivesThreshold;
     
     const coinChance = criticalLives ? 0.9 : (lowLives ? 0.86 : 0.75);
     const shellChanceWhenNoCoin = criticalLives ? 0.65 : (lowLives ? 0.55 : 0.4);
@@ -571,7 +562,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     else if (selectedType === 'PALM_TREE') { width = 100; height = 180; }
     
     obstaclesRef.current.push({ id: Date.now() + Math.random(), type: selectedType as any, x: window.innerWidth + 200, y, isSwooping, width, height, speed: speedRef.current, isPassed: false });
-  }, [status, boss, spawnPoopLaunchParticles, playSound, triggerScreenShake]);
+  }, [status, boss, spawnPoopLaunchParticles, playSound, triggerScreenShake, tuning]);
 
   const spawnBackgroundDeco = useCallback((isChaosMode: boolean = false) => {
     if (isChaosMode) {
@@ -673,8 +664,8 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     }
 
     const now = Date.now();
-    const lowLivesMode = livesRef.current <= LOW_LIVES_THRESHOLD;
-    const criticalLivesMode = livesRef.current <= CRITICAL_LIVES_THRESHOLD;
+    const lowLivesMode = livesRef.current <= tuning.lowLivesThreshold;
+    const criticalLivesMode = livesRef.current <= tuning.criticalLivesThreshold;
 
     // Handle freeze frame - skip updates but keep rendering
     if (now < freezeUntilRef.current) {
@@ -708,7 +699,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     }
 
     if (status === GameStatus.PLAYING) {
-        speedRef.current += SPEED_INCREMENT * speedMultiplier;
+        speedRef.current += tuning.speedIncrement * speedMultiplier;
         // Dynamically adjust music tempo as speed increases
         if (Math.random() < 0.02) { // Don't update every frame to avoid jitter
           setMusicTempo(100 + Math.floor(speedRef.current * 4));
@@ -719,7 +710,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
 
     const p = playerRef.current;
     let newY = p.y + p.vy;
-    let newVy = p.vy - GRAVITY;
+    let newVy = p.vy - tuning.gravity;
     const wasInAir = prevVyRef.current < 0; // Was moving down (falling)
     if (newY <= 0) { 
       newY = 0; 
@@ -789,7 +780,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
       obstaclesRef.current.forEach(obs => { if (obs.type === 'COIN') { const dx = catX - obs.x, dy = catY - (obs.y || GROUND_Y); const dist = Math.sqrt(dx * dx + dy * dy); if (dist < 450) { obs.x += dx * 0.2; obs.y = (obs.y || GROUND_Y) + dy * 0.2; } } });
     }
 
-    if (status === GameStatus.PLAYING && coinsRef.current >= BOSS_THRESHOLD) {
+    if (status === GameStatus.PLAYING && coinsRef.current >= tuning.bossThreshold) {
         triggerBossFight();
     }
 
@@ -809,7 +800,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
             consecutiveHarmfulRef.current = 0; // Reset harmful counter at pattern start
           }
           else {
-            const powerupThreshold = criticalLivesMode ? 10 : (lowLivesMode ? 14 : POWERUP_THRESHOLD);
+            const powerupThreshold = criticalLivesMode ? 10 : (lowLivesMode ? 14 : tuning.powerupThreshold);
             if (coinCounterRef.current >= powerupThreshold) {
               // Spawn powerup: 40% SPEED, 40% MAGNET, 20% SUPER_SIZE (rarer because more powerful)
               const roll = Math.random();
@@ -819,9 +810,9 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
             }
             else { spawnEntity(); }
             const lifeIntervalBonus = criticalLivesMode ? 320 : (lowLivesMode ? 180 : 0);
-            const spawnJitter = (Math.random() - 0.5) * PLAYING_SPAWN_JITTER_MS;
-            const computedInterval = PLAYING_SPAWN_BASE_MS - Math.min(speedRef.current * 43, 760) + lifeIntervalBonus + spawnJitter;
-            const intervalMs = Math.max(PLAYING_SPAWN_MIN_MS, computedInterval);
+            const spawnJitter = (Math.random() - 0.5) * tuning.spawnJitterMs;
+            const computedInterval = tuning.spawnBaseMs - Math.min(speedRef.current * 43, 760) + lifeIntervalBonus + spawnJitter;
+            const intervalMs = Math.max(tuning.spawnMinMs, computedInterval);
             nextSpawnTime.current = now + (intervalMs / speedMultiplier);
           }
         }
@@ -837,14 +828,14 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
 
           // If pattern just finished, set mandatory gap before next spawn
           if (patternQueue.current.length === 0) {
-            patternEndTime.current = now + PATTERN_END_GAP + (lowLivesMode ? 200 : 0);
+            patternEndTime.current = now + tuning.patternEndGapMs + (lowLivesMode ? 200 : 0);
             consecutiveHarmfulRef.current = 0; // Reset after pattern
           }
         }
       }
     } else if (status === GameStatus.BOSS_FIGHT) {
       const fightElapsed = now - bossFightStartTimeRef.current;
-      const introProgress = Math.min(fightElapsed / BOSS_INTRO_EASE_MS, 1);
+      const introProgress = Math.min(fightElapsed / tuning.bossIntroEaseMs, 1);
       let bossSpawnInterval = 1400 - (introProgress * 300); // 1400ms -> 1100ms over intro window
       if (lowLivesMode) bossSpawnInterval += 180;
       if (time - lastObstacleTime.current > bossSpawnInterval) { spawnEntity(); lastObstacleTime.current = time; }
@@ -853,7 +844,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     // Handle seagull poop drops - with stacking prevention
     if (status === GameStatus.PLAYING || status === GameStatus.BOSS_FIGHT) {
       // Skip poop if harmful obstacle spawned too recently (prevents impossible stacking)
-      const harmfulCooldown = HARMFUL_COOLDOWN + (lowLivesMode ? 250 : 0);
+      const harmfulCooldown = tuning.harmfulCooldownMs + (lowLivesMode ? 250 : 0);
       const canSpawnPoop = (now - lastHarmfulSpawnTime.current) > harmfulCooldown;
 
       obstaclesRef.current.forEach(obs => {
@@ -1074,6 +1065,13 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
         // Stop boss music and reset to normal
         setBossMode(false);
         // Transition to victory
+        telemetryRef.current.logRunSummary(
+          Math.floor(scoreRef.current / 10),
+          coinsRef.current,
+          true,
+          true,
+          localStorage.getItem('beach-cat-dev-tuning') ? 'custom' : 'default'
+        );
         setStatus(GameStatus.VICTORY);
         onStatusChange?.(GameStatus.VICTORY);
         // Final score update
@@ -1160,7 +1158,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
       if (!obs.isPassed && (HARMFUL_TYPES.includes(obs.type) || obs.type === 'SANDCASTLE') && newX < kRect.l) {
         obs.isPassed = true; 
         if (obs.type !== 'SANDCASTLE') streakRef.current++;
-        if (streakRef.current >= STREAK_REQUIRED) { multiplierRef.current++; streakRef.current = 0; playSound('mult'); setMultFeedback("MULTIPLIER UP!"); setTimeout(() => setMultFeedback(null), 1000); }
+        if (streakRef.current >= tuning.streakRequired) { multiplierRef.current++; streakRef.current = 0; playSound('mult'); setMultFeedback("MULTIPLIER UP!"); setTimeout(() => setMultFeedback(null), 1000); }
       }
       return { ...obs, x: newX, y: newY };
     }).filter(obs => obs.x > -400);
@@ -1270,7 +1268,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
             playSound('meow');
             playSound('boing-boing-bounce-454474');
             spawnBopParticles(obs.x + obs.width/2, oRect.t, '#fde047');
-            playerRef.current.vy = BOUNCE_FORCE;
+            playerRef.current.vy = tuning.bounceForce;
             playerRef.current.jumpCount = 0;
             scoreRef.current += BOUNCE_POINTS;
             const scoreId = Date.now() + Math.random();
@@ -1319,8 +1317,14 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
         } else if (HARMFUL_TYPES.includes(obs.type) && !isCurrentlyHurt && activePowerUpRef.current?.type !== 'SUPER_SIZE') {
           // Skip damage if SUPER_SIZE power-up is active (invincible)
           livesRef.current--;
-          invincibilityUntilRef.current = now + INVINCIBILITY_DURATION;
-          safeSpawnUntilRef.current = now + HIT_SPAWN_GRACE_MS;
+          telemetryRef.current.logDamage(
+            obs.type,
+            speedRef.current,
+            livesRef.current,
+            Math.floor(scoreRef.current / 10)
+          );
+          invincibilityUntilRef.current = now + tuning.invincibilityDurationMs;
+          safeSpawnUntilRef.current = now + tuning.hitSpawnGraceMs;
           playSound('hiss'); // Cat hiss when hurt!
           streakRef.current = 0;
           triggerFreezeFrame(80); // Brief freeze on hit for dramatic effect
@@ -1339,6 +1343,19 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
           });
           prevLivesRef.current = livesRef.current;
           if (livesRef.current <= 0) {
+            telemetryRef.current.logDeath(
+              Math.floor(scoreRef.current / 10),
+              coinsRef.current,
+              speedRef.current,
+              activePowerUpRef.current?.type ?? null
+            );
+            telemetryRef.current.logRunSummary(
+              Math.floor(scoreRef.current / 10),
+              coinsRef.current,
+              status === GameStatus.BOSS_FIGHT || status === GameStatus.BOSS_INTRO,
+              false,
+              localStorage.getItem('beach-cat-dev-tuning') ? 'custom' : 'default'
+            );
             setStatus(GameStatus.GAMEOVER);
             onGameOver(Math.floor(scoreRef.current / 10));
           }
@@ -1346,7 +1363,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
       }
     }
     setObstacles([...obstaclesRef.current]);
-  }, [status, onGameOver, onScoreUpdate, onStatusChange, playSound, spawnBackgroundDeco, spawnBopParticles, spawnSandParticles, spawnEntity, triggerBossFight, isPaused, bossDefeating, defeatPoops, triggerScreenShake]);
+  }, [status, onGameOver, onScoreUpdate, onStatusChange, playSound, spawnBackgroundDeco, spawnBopParticles, spawnSandParticles, spawnEntity, triggerBossFight, isPaused, bossDefeating, defeatPoops, triggerScreenShake, tuning]);
 
   useEffect(() => {
     const loop = (time: number) => {
