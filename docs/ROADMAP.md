@@ -125,13 +125,13 @@ scripts/dev-init.sh
 **Goal:** Extract hardcoded obstacle behaviors into reusable system
 
 ### Tasks
-- [ ] Create `systems/behaviors.ts`
-- [ ] Extract seagull swoop → `swoopBehavior`
-- [ ] Extract seagull poop → `dropProjectileBehavior`
-- [ ] Extract beachball bounce → `bounceableBehavior`
-- [ ] Extract slowdown effect → `slowOnContactBehavior`
-- [ ] Create `systems/collisionHandlers.ts`
-- [ ] Verify all behaviors work unchanged
+- [x] Create `systems/behaviors.ts`
+- [x] Extract seagull swoop → `computeSwoopY`
+- [x] Extract seagull poop → `checkPoopDrop`
+- [x] Extract beachball bounce → `handleBounceCollision`
+- [x] Extract slowdown effect → `handleSlowCollision`
+- [x] Create `systems/collisionHandlers.ts`
+- [x] Verify all behaviors work unchanged
 
 ### Key Files
 ```
@@ -287,13 +287,13 @@ PHASE 1 - INFRASTRUCTURE
 [x] Commit all files
 
 PHASE 2 - TYPES
-[ ] Extend types.ts with level system types
-[ ] Verify compilation
+[x] Extend types.ts with level system types
+[x] Verify compilation
 
 PHASE 3 - BEHAVIORS
-[ ] Create systems/behaviors.ts
-[ ] Create systems/collisionHandlers.ts
-[ ] Verify behaviors work
+[x] Create systems/behaviors.ts
+[x] Create systems/collisionHandlers.ts
+[x] Verify behaviors work
 
 PHASE 4 - LEVEL CONFIG
 [ ] Create levels/beach/ structure

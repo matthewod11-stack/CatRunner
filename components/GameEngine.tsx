@@ -536,7 +536,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
       const seagullType = Math.random() < 0.5 ? 'dive' : 'poop';
       if (seagullType === 'dive') {
         isSwooping = Math.random() < 0.6;
-        if (yOverride === undefined) y = isSwooping ? 280 : 220; // Start at mid height (280px) for swooping, or 220 for non-swooping
+        if (yOverride === undefined) y = isSwooping ? 400 : 350; // Start high for dramatic swoop, or mid-high for flyover
       } else {
         // 'poop' type - higher altitude, no swooping (much higher so poops fall down)
         isSwooping = false;
@@ -1091,7 +1091,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
         
         // Update velocities
         const vx = (obs.vx ?? obs.speed) * friction;
-        const vy = (obs.vy ?? 0) + gravity; // Apply gravity
+        const vy = (obs.vy ?? 0) - gravity; // Apply gravity (negative = downward)
         
         // Update position
         newX = obs.x + vx;
@@ -1103,8 +1103,8 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
         obs.vx = vx;
         obs.vy = vy;
         
-        // Remove if off screen or hit ground
-        if (newX < -200 || newY > GROUND_Y + 400) {
+        // Remove if off screen
+        if (newX < -200 || newY < -200 || newY > GROUND_Y + 400) {
           obs.isPassed = true;
         }
       } else {
@@ -1151,7 +1151,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
 
     for (const obs of obstaclesRef.current) {
       if (obs.isCollected) continue;
-      const oY = obs.y ?? (obs.type === 'SEAGULL' ? (obs.seagullType === 'poop' ? 550 : 220) : GROUND_Y);
+      const oY = obs.y ?? (obs.type === 'SEAGULL' ? (obs.seagullType === 'poop' ? 550 : 350) : GROUND_Y);
       const hPadding = 10, vPadding = 5;
       const oRect = { l: obs.x + hPadding, r: obs.x + obs.width - hPadding, b: oY + vPadding, t: oY + obs.height - vPadding };
       let overlaps = (kRect.r > oRect.l && kRect.l < oRect.r && kRect.t > oRect.b && kRect.b < oRect.t);

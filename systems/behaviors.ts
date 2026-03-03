@@ -6,9 +6,9 @@ import type { WorldEntity } from '../types';
  */
 export function computeSwoopY(obsX: number, screenWidth: number): number {
   const centerX = screenWidth / 2;
-  const swoopStartY = 280;
-  const swoopLowY = 150;
-  const swoopEndY = 200;
+  const swoopStartY = 400;
+  const swoopLowY = 170;
+  const swoopEndY = 280;
 
   const easeInOutCubic = (t: number): number =>
     t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -63,7 +63,7 @@ export function checkPoopDrop(
     height: 60,
     speed: 0,
     vx: 0,
-    vy: 2 + Math.random() * 2,
+    vy: -(2 + Math.random() * 2),
     rotation: 0,
     isPassed: false,
   };

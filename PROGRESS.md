@@ -2,6 +2,39 @@
 
 ---
 
+## Session: 2026-03-02 (Phase 3 + Gameplay Fixes)
+
+### Completed
+- **Phase 3: Behavior System Library** — complete
+  - Created `systems/behaviors.ts` with `computeSwoopY` and `checkPoopDrop` pure functions
+  - Created `systems/collisionHandlers.ts` with `CollisionResult` interface + 3 handlers (`handleBounceCollision`, `handleSlowCollision`, `handleHarmfulCollision`)
+  - Wired all functions into `GameEngine.tsx` with `applyCollisionResult` helper
+  - Net reduction: 76 lines from GameEngine.tsx
+  - All spec reviews passed (behaviors, collisions, wiring)
+- **Bug fixes discovered during play-test:**
+  - Fixed SAND_PROJECTILE gravity direction: `vy + gravity` → `vy - gravity` (was backwards vs player physics)
+  - Fixed poop vy sign: positive → negative so poop falls downward instead of upward
+  - Added `newY < -200` removal condition for projectiles falling off screen
+  - Raised seagull spawn heights: dive seagulls 220/280 → 350/400, swoop trajectory 280→150→200 → 400→170→280
+  - Updated seagull Y fallback in collision detection to match new heights
+
+### In Progress
+- Gameplay tuning fixes are uncommitted (pending play-test verification)
+
+### Issues Encountered
+- SAND_PROJECTILE gravity was inverted vs player physics (pre-existing bug, not Phase 3 regression)
+- Seagull spawn heights were too low relative to the cat (pre-existing tuning issue)
+
+### Next Session Should
+- Play-test the seagull/poop fixes to confirm they feel right
+- Consider spawn rate tuning (user reported "too many obstacles, feels constant")
+- Consider sunset clock alignment with game progress
+- Sound engine overhaul noted for future
+- Begin Phase 5 (Obstacle Component Refactor) or Phase 6 (GameEngine Abstraction)
+- Pre-existing image import warnings (4 total) remain unrelated to this work
+
+---
+
 ## Session: 2026-03-01 (Phase 3 — Behavior System Library)
 
 ### Completed
