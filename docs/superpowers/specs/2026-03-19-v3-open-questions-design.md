@@ -67,7 +67,7 @@ SFX remains procedural + file-backed via the existing `sfxService.ts` architectu
 
 The current procedural `audioService.ts` beach music is retired once Level 1 is ported to Phaser with its own pre-composed track.
 
-**Audio context note:** `sfxService.ts` currently creates its own Web Audio `AudioContext`. Phaser also creates one for music playback. During Phase 0/1, evaluate whether both systems can share a single `AudioContext` to avoid browser limits (especially on mobile, where multiple contexts may be silently dropped). If sharing is impractical, sfxService should be migrated to use Phaser's `this.sound` API.
+**Audio context ownership:** SFX migrates to Phaser's audio system during Phase 1. The existing `sfxService.ts` creates its own Web Audio `AudioContext` separate from the music context — running dual contexts risks silent drops on mobile and complicates lifecycle management. During the Phase 1 port, procedural SFX is reimplemented using Phaser's `this.sound.add()` / Web Audio nodes routed through Phaser's context. File-backed SFX uses Phaser's audio loader. The standalone `sfxService.ts` and `audioService.ts` are retired once Phase 1 is complete. One `AudioContext`, owned by Phaser.
 
 **Music sourcing:** Tracks will be AI-generated, composed by a contributor, or sourced from royalty-free libraries. Specific sourcing is a per-level creative decision outside this spec.
 
@@ -93,7 +93,23 @@ If duplication emerges across scenes (e.g., identical tap-zone logic in 3+ scene
 
 **Decision:** Per-level high scores + 1–3 star ratings.
 
-On level completion, each genre reports:
+### Completion contract
+
+The current `VictoryFinalizePayload` is boss-specific. V3 replaces it with a generic level completion event that all genres emit:
+
+```typescript
+/** Emitted by any Phaser scene when the level is completed. */
+export interface LevelCompletePayload {
+  levelId: LevelId;
+  finalScore: number;
+  gameScore: GameScore;
+  victoryType: VictoryCondition['type']; // 'boss' | 'goal' | 'score' | 'survive' | 'clear'
+}
+```
+
+`VictoryFinalizePayload` and `wasBossFight` are retired. The Phaser→React bridge emits `levelComplete` (not `victoryFinalize`). Non-boss scenes have a first-class path — they emit the same event with `victoryType: 'goal'`, `'score'`, etc. Whether it was a boss fight is derivable: `victoryType === 'boss'`.
+
+On level completion, the scene also reports a result for persistence:
 
 ```typescript
 interface LevelResult {
@@ -112,13 +128,26 @@ starThresholds: [number, number, number]; // raw score cutoffs for 1, 2, 3 stars
 
 A shared utility maps `(rawScore, thresholds) → stars`. Each genre's scene calls this on completion.
 
-**Normalized scoring:** The V3 spec proposes a 0–999 normalized `finalScore` for cross-level Hall of Fame comparison. This spec defers normalization — Hall of Fame entries are scoped by `levelId`, so raw scores are compared only within the same level. If cross-level leaderboards are needed later, a normalization function can be added without changing the persistence format.
+### Persistence: best-score merge rules
+
+Per-level results use **best-of** semantics. On completion, the stored `LevelResult` is updated only if the new score exceeds the stored best, or if no result exists yet. Stars are independently best-of (a 2-star run followed by a 1-star run keeps 2 stars). Failed runs (game over before completion) do **not** update `LevelResult` — only successful completions count.
 
 **Persistence keys** follow the existing `beach-cat-` prefix convention: `beach-cat-level-result-<LEVEL_ID>-v1` (e.g., `beach-cat-level-result-BEACH-v1`).
 
-The campaign screen displays star count on each branch of the cat tree. Hall of Fame continues to track top scores with `levelId` context.
+### Hall of Fame
 
-**Level completion tracking:** The existing `defeatedBosses` key is generalized to `beach-cat-completed-levels-v1` storing `Partial<Record<LevelId, boolean>>`. Every level records completion here regardless of whether it has a boss — the `victoryCondition` type determines what "completion" means. The existing `beach-cat-defeated-bosses-v1` key is migrated on first load. Unlock logic in `levels/catalog.ts` reads from the new key.
+The current Hall of Fame is a global top-5 list (`HighScoreEntry[]`) with no `levelId`, written on both loss and victory. V3 changes:
+
+- **`HighScoreEntry` gains a `levelId` field.** New entries always include it. Legacy entries (no `levelId`) are displayed as "Beach" for backwards compatibility.
+- **Both losses and victories still enter Hall of Fame.** This preserves the current behavior — a great run that ends in death is still worth celebrating. `isVictory` is kept (derived from whether `LevelCompletePayload` or game-over triggered the entry).
+- **Hall of Fame remains a single global list**, sorted by score descending, capped at top 5. Scores are raw (not normalized). Since different genres produce different score ranges, a runner score of 500 and a shooter score of 12000 coexist — the Hall of Fame is a "greatest hits" board, not a cross-genre leaderboard. The `levelId` tag lets the UI show which level each score came from.
+- **Normalized cross-level scoring is deferred.** If a unified leaderboard is needed later, a normalization function can be added without changing the persistence format.
+
+The campaign screen displays **per-level stars** (from `LevelResult`), not Hall of Fame data. These are separate concerns: stars show mastery per level, Hall of Fame shows memorable runs across the campaign.
+
+### Level completion tracking
+
+The existing `defeatedBosses` key is generalized to `beach-cat-completed-levels-v1` storing `Partial<Record<LevelId, boolean>>`. Every level records completion here regardless of whether it has a boss — the `victoryCondition` type determines what "completion" means. The existing `beach-cat-defeated-bosses-v1` key is migrated on first load (old key removed after successful write). Unlock logic in `levels/catalog.ts` reads from the new key.
 
 No mid-level checkpoints, no collectible tracking, no cumulative campaign score.
 
