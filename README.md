@@ -8,6 +8,17 @@ A browser game where a custom AI-generated cat runs, jumps, and fights its way t
 
 ![Beach Kitty gameplay](docs/screenshots/gameplay.png)
 
+<table>
+<tr>
+<td><img src="docs/screenshots/main-menu.png" alt="Main menu" width="400"></td>
+<td><img src="docs/screenshots/kitty-closet.png" alt="Kitty Closet — AI cat customizer" width="400"></td>
+</tr>
+<tr>
+<td align="center"><em>Main Menu</em></td>
+<td align="center"><em>Kitty Closet — AI Cat Customizer</em></td>
+</tr>
+</table>
+
 </div>
 
 ---
