@@ -2,7 +2,7 @@
 
 # Beach Kitty
 
-An AI-powered endless runner where a cat sprints along a beach, dodging crabs and seagulls, collecting coins, and battling a Sand Monster boss.
+A browser game where a custom AI-generated cat runs, jumps, and fights its way through nine distinct game genres — from endless runner to space shooter to snake.
 
 [Play Now](https://www.beachkittygame.games/)
 
@@ -14,18 +14,20 @@ An AI-powered endless runner where a cat sprints along a beach, dodging crabs an
 
 ## About
 
-Beach Kitty is a browser-based endless runner built with React 19 and TypeScript. It combines hand-tuned platformer physics with Gemini AI integration that lets players generate custom cat sprites from text descriptions and receive AI-written in-game dialogue. AI requests are routed through server-side API endpoints so API keys are not exposed in the browser.
+Beach Kitty started as an endless runner and is evolving into a nine-level campaign called **Nine Lives**. Each level is a different game genre — platformer, launcher, space shooter, breakout, frogger, whack-a-mole, snake, and vertical climber — all played with the same custom cat character. The cat is generated from a text prompt using Google Gemini, and AI also writes the in-game quips and death messages.
+
+The game runs entirely in the browser. Gemini API calls go through same-origin server routes so the key never touches the client.
 
 ## Features
 
-- **Double jump and duck** mechanics with squash-and-stretch animation
-- **Boss fight** against the Sand Monster after collecting 50 stars
-- **Power-ups** including speed boost, coin magnet, and super size with invincibility
-- **AI cat customizer** that generates custom cat sprites from text prompts via Gemini AI
-- **Procedural audio** using the Web Audio API with dynamic tempo that scales with game speed
-- **Game feel** details: freeze frames on impact, screen shake, hit flash, speed lines, dust trails, floating score popups
-- **Pattern-based obstacle spawning** that scales difficulty with score progress
-- **Mobile support** with touch controls
+- **Double jump and duck** with squash-and-stretch animation and freeze-frame hit feedback
+- **Boss fight** against the Sand Monster after collecting enough coins
+- **Power-ups** — speed boost, coin magnet, super size with invincibility
+- **AI cat customizer** — describe any cat and Gemini generates a sprite, matted and ready to play
+- **Procedural music** that reacts to game speed, plus file-backed SFX
+- **Custom cat wardrobe** with IndexedDB sprite storage and localStorage metadata
+- **Pattern-based spawning** scaled by progress, with life-assist difficulty adjustment
+- **Accessible** — landmark roles, `aria-live` regions, `prefers-reduced-motion` support
 
 ## Tech Stack
 
@@ -34,12 +36,12 @@ Beach Kitty is a browser-based endless runner built with React 19 and TypeScript
 | Framework | React 19 |
 | Language | TypeScript |
 | Build | Vite |
-| AI | Google Gemini via server-side API routes |
-| Audio | Web Audio API (procedural synthesis) |
-| Graphics | Canvas API (sprite processing), inline SVG (game objects) |
-| Styling | Tailwind CSS |
-
-The game loop runs on `requestAnimationFrame` with mutable refs for game state, avoiding React re-render overhead during gameplay. Collision detection uses axis-aligned bounding boxes with forgiving padding.
+| AI | Google Gemini (server-side `/api/cat/*` routes) |
+| Image processing | sharp (server-side sprite matting) |
+| Audio | Web Audio API (procedural music + SFX) |
+| Graphics | Canvas API, inline SVG |
+| Hosting | Vercel |
+| Testing | Vitest |
 
 ## Getting Started
 
@@ -50,18 +52,62 @@ npm install
 npm run dev
 ```
 
-To enable AI features (custom cat generation, in-game messages), create a `.env.local` file for local server execution:
+The dev server starts on **port 3000**.
+
+### AI features
+
+Add a `.env.local` file with your Gemini API key:
 
 ```
-GEMINI_API_KEY=your_api_key_here
+GEMINI_API_KEY=your_key_here
 ```
 
-In production, set `GEMINI_API_KEY` as a server environment variable on your hosting platform.
+The game works without it — AI cat generation, wisdom quotes, and death messages will be unavailable but gameplay is unaffected.
+
+## Controls
+
+| Action | Keyboard | Touch |
+|--------|----------|-------|
+| Jump | Space / Up | Tap left half |
+| Duck | Down | Tap right half |
+| Double jump | Jump while airborne | Tap left half while airborne |
+| Pause | P / Esc | — |
+
+<details>
+<summary><strong>Development</strong></summary>
+
+### Commands
+
+```bash
+npm run dev          # Dev server (port 3000)
+npm run build        # Production build
+npm run test:run     # Run tests (CI mode)
+npm run preview      # Preview production build
+```
+
+### Dev balance panel
+
+Press **backtick** (`` ` ``) during gameplay to open the tuning panel. Adjust physics, spawning, boss pressure, and assist values in real time. Named presets persist in localStorage. Export telemetry JSON for balancing analysis.
+
+### Architecture
+
+- **CLAUDE.md** / **AGENTS.md** — Full architecture reference (twin docs, kept in sync)
+- **docs/LEVEL_DEVELOPMENT.md** — Adding new levels
+- **docs/BEHAVIOR_SYSTEM.md** — Obstacle behaviors and collision handlers
+- **docs/LEVEL_RUNTIME.md** — Runtime tuning contract
+- **docs/API_PROTECTION.md** — Rate limits, timeouts, prompt hardening
+- **docs/QA_CHECKLIST.md** — Manual QA for releases
+
+### Roadmap
+
+The project is heading toward a **Nine Lives** campaign — nine levels, each a different game genre, powered by Phaser 3. See [ROADMAP_V3.md](ROADMAP_V3.md) for the implementation plan and [ROADMAP_V3_SPEC.md](ROADMAP_V3_SPEC.md) for the design spec.
+
+</details>
 
 ## Built With
 
-Built using [Claude Code](https://claude.ai/code) and [Google Gemini](https://ai.google.dev/).
+Built with [Claude Code](https://claude.ai/code) and [Google Gemini](https://ai.google.dev/).
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+MIT — see [LICENSE](LICENSE).
