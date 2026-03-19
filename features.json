@@ -2,18 +2,21 @@
   "$schema": "./features.schema.json",
   "_meta": {
     "description": "Multi-level system feature tracking. Status: not-started | in-progress | pass | fail | blocked",
-    "lastUpdated": "2026-03-01",
-    "planFile": "~/.claude/plans/compressed-gathering-kite.md",
+    "lastUpdated": "2026-03-19",
+    "planFile": "./ROADMAP_V3.md",
+    "v2PlanFile": "./ROADMAP_V2.md",
+    "v2Status": "complete",
     "totalPhases": 9,
-    "completedPhases": 5
+    "completedPhases": 9,
+    "v3Status": "planned — design spec and implementation plan complete, execution not started"
   },
   "phase-1": {
     "description": "Session Protocol Infrastructure",
     "status": "pass",
     "tasks": {
-      "docs-roadmap": { "status": "pass", "notes": "Created with plan reference" },
-      "docs-progress": { "status": "pass", "notes": "Created with session template" },
-      "docs-known-issues": { "status": "pass", "notes": "Created with deferred decisions" },
+      "docs-roadmap": { "status": "pass", "notes": "Active ROADMAP_V2.md at repo root; ROADMAP.md and docs/ROADMAP.md are index stubs; completed roadmap archived in docs/ROADMAP_V1_COMPLETE.md" },
+      "docs-progress": { "status": "pass", "notes": "Canonical PROGRESS.md at repo root; docs/PROGRESS.md stub" },
+      "docs-known-issues": { "status": "pass", "notes": "Canonical KNOWN_ISSUES.md at root; docs/ stub" },
       "features-json": { "status": "pass", "notes": "This file" },
       "dev-init-script": { "status": "pass", "notes": "Created and tested" },
       "commit": { "status": "pass", "notes": "Committed as c944986" }
@@ -49,45 +52,46 @@
     "tasks": {
       "levels-directory": { "status": "pass", "notes": "Created levels/ directory" },
       "beach-config": { "status": "pass", "notes": "Created levels/beach.ts with full BEACH_LEVEL_CONFIG" },
-      "beach-patterns": { "status": "pass", "notes": "8 patterns extracted verbatim from GameEngine.tsx" },
-      "level-registry": { "status": "pass", "notes": "Created levels/index.ts barrel export" }
+      "beach-patterns": { "status": "pass", "notes": "GameEngine reads patterns from LEVEL_REGISTRY[levelId]" },
+      "level-registry": { "status": "pass", "notes": "levels/index.ts: LEVEL_REGISTRY, getLevelConfig" },
+      "wire-gameengine": { "status": "pass", "notes": "GameEngine uses config for patterns, harmfulTypes, theme, boss, background, spawns" }
     }
   },
   "phase-5": {
     "description": "Obstacle Component Refactor",
-    "status": "not-started",
+    "status": "pass",
     "tasks": {
-      "beach-obstacles": { "status": "not-started", "notes": "Extract Beach SVGs" },
-      "level-context": { "status": "not-started", "notes": "Create LevelContext" },
-      "obstacle-component": { "status": "not-started", "notes": "Refactor to use context" }
+      "beach-obstacles": { "status": "pass", "notes": "levels/beach/obstacles.tsx: BeachObstacleIcon, seagull ProcessedSprite" },
+      "level-context": { "status": "pass", "notes": "contexts/LevelContext.tsx; GameEngine LevelProvider" },
+      "obstacle-component": { "status": "pass", "notes": "Shared COIN/SHELL/powerups; beach via context + isBeachObstacleType" }
     }
   },
   "phase-6": {
     "description": "GameEngine Abstraction",
-    "status": "not-started",
+    "status": "pass",
     "tasks": {
-      "session-6a": { "status": "not-started", "notes": "Extract level-specific state" },
-      "session-6b": { "status": "not-started", "notes": "Integrate behavior system" },
-      "session-6c": { "status": "not-started", "notes": "Abstract boss system" }
+      "session-6a": { "status": "pass", "notes": "Optional levelConfig prop; App passes getLevelConfig('BEACH')" },
+      "session-6b": { "status": "pass", "notes": "levelBehaviorHelpers + theme.groundKickParticles; stomp/slow/arc from behaviors" },
+      "session-6c": { "status": "pass", "notes": "bossSystem.ts, bossComponents lazy SandMonster, abstract boss projectile spawn" }
     }
   },
   "phase-7": {
     "description": "Level Selection UI",
-    "status": "not-started",
+    "status": "pass",
     "tasks": {
-      "level-state": { "status": "not-started", "notes": "Add selectedLevel, defeatedBosses" },
-      "selection-component": { "status": "not-started", "notes": "Create LevelSelection" },
-      "context-provider": { "status": "not-started", "notes": "Wrap GameEngine" },
-      "unlock-logic": { "status": "not-started", "notes": "Victory unlocks next level" }
+      "level-state": { "status": "pass", "notes": "selectedLevel, defeatedBosses; GameEngine key + getLevelConfig(selectedLevel)" },
+      "selection-component": { "status": "pass", "notes": "components/LevelSelection.tsx" },
+      "context-provider": { "status": "pass", "notes": "LevelProvider remains in GameEngine" },
+      "unlock-logic": { "status": "pass", "notes": "levels/catalog.ts linear unlock; handleVictory(levelBeat)" }
     }
   },
   "phase-8": {
     "description": "Documentation & Polish",
-    "status": "not-started",
+    "status": "pass",
     "tasks": {
-      "level-dev-guide": { "status": "not-started", "notes": "docs/LEVEL_DEVELOPMENT.md" },
-      "behavior-docs": { "status": "not-started", "notes": "docs/BEHAVIOR_SYSTEM.md" },
-      "claude-md-update": { "status": "not-started", "notes": "Update architecture docs" }
+      "level-dev-guide": { "status": "pass", "notes": "docs/LEVEL_DEVELOPMENT.md" },
+      "behavior-docs": { "status": "pass", "notes": "docs/BEHAVIOR_SYSTEM.md" },
+      "claude-md-update": { "status": "pass", "notes": "CLAUDE.md + AGENTS.md + README Documentation section" }
     }
   },
   "phase-9": {

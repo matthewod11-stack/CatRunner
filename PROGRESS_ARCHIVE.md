@@ -1,124 +1,42 @@
-# Beach Kitty Multi-Level System — Session Progress Log
-
-> **Purpose:** Track progress across development sessions. Each session adds an entry at the TOP.
-> **Related Docs:** [ROADMAP_V2.md](./ROADMAP_V2.md) | [KNOWN_ISSUES.md](./KNOWN_ISSUES.md) | [docs/ROADMAP_V1_COMPLETE.md](./docs/ROADMAP_V1_COMPLETE.md)
+# Progress Archive — Beach Kitty
 
 ---
 
-## **ACTIVE ROADMAP**
+## Session: 2026-03-19 (ROADMAP V2 Phase 2 — API protection)
 
-```
-./ROADMAP_V3.md
-```
-
-**Start with `ROADMAP_V3.md` for active work.** V2 is complete. V1 archived at `docs/ROADMAP_V1_COMPLETE.md`.
-
----
-
-## How to Resume
-
-```bash
-# 1. Run session init
-./scripts/dev-init.sh
-
-# 2. Read the active roadmap:
-sed -n '1,100p' ROADMAP_V3.md
-
-# 3. Check the latest session entry below for handoff notes
-```
-
----
-
-<!--
-=== ADD NEW SESSIONS AT THE TOP ===
-Most recent session should be first.
--->
-
-## Session: 2026-03-19 15:00 (V3 Spec Design + Implementation Plan)
+**Focus:** `/api/cat/*` rate limits, body caps, client/server timeouts, prompt hardening
 
 ### Completed
-- [x] Walked through all 9 open questions in ROADMAP_V3_SPEC.md — decisions validated and documented
-- [x] Design spec written: `docs/superpowers/specs/2026-03-19-v3-open-questions-design.md`
-  - Spec reviewed twice by automated reviewer (10 issues → 0), then user-reviewed (3 findings → fixed)
-  - Key decisions: feel-identical port, Phaser graphics primitives, code-defined levels, hybrid audio, desktop-primary, per-level stars, self-contained difficulty, static cutscenes, code-split scenes
-- [x] Generic completion contract: `LevelCompletePayload` replaces boss-specific `VictoryFinalizePayload`
-- [x] Persistence model: `completedLevels` replaces `defeatedBosses`, best-of merge for `LevelResult`, Hall of Fame gains `levelId`
-- [x] Audio ownership: single AudioContext owned by Phaser, sfxService migrates in Phase 1
-- [x] Implementation plan written: `ROADMAP_V3.md` (30 tasks across 10 phases)
-  - Plan reviewed twice — fixed PhaserGame instantiation, event race condition, SceneInitData contract, phase ordering, LevelConfig evolution, twin-doc requirement
-- [x] Parent spec updated: cutscene shape aligned, bridge language updated to `levelComplete`
-- [x] Memory saved: DaVinci Resolve MCP connector for cutscene video production (other machine)
+- [x] [`server/catApiProtection.ts`](server/catApiProtection.ts): body byte cap, per-client sliding-window limits (generate vs text routes), `x-forwarded-for` / `x-real-ip` client id
+- [x] Dev [`server/devApiMiddleware.ts`](server/devApiMiddleware.ts): bounded JSON read + 400 on invalid JSON; Vercel routes use [`runCatApiVercelPreflight`](server/catApiVercelPreflight.ts)
+- [x] [`services/geminiService.ts`](services/geminiService.ts): `AbortController` fetch timeouts; optional `VITE_CAT_API_CLIENT_TIMEOUT_MS`
+- [x] [`server/geminiGateway.ts`](server/geminiGateway.ts): `GEMINI_TEXT_TIMEOUT_MS` / `GEMINI_IMAGE_TIMEOUT_MS` via `Promise.race`
+- [x] [`server/prompts/customCatSprite.ts`](server/prompts/customCatSprite.ts): sanitization + delimiter isolation + instruction reinforcement; new error codes `RATE_LIMITED`, `REQUEST_TIMEOUT` in [`types/catGenerateApi.ts`](types/catGenerateApi.ts)
+- [x] [docs/API_PROTECTION.md](docs/API_PROTECTION.md); Vitest for protection + prompt helpers
 
-### Issues Encountered
-- PhaserGame.tsx scene instantiation required careful design: inline scene config breaks prototype chain, autoStart races with event wiring, inline sceneFactory causes re-renders
-- LevelId expansion from 1→9 values breaks `Record<LevelId, LevelConfig>` — needed `Partial<Record<...>>`
-
-### Next Session Should
-1. **Execute Phase 0** of ROADMAP_V3.md — install Phaser, define V3 types, create SceneBridge, PhaserGame wrapper, TestScene, docs, SpriteLoader, persistence migration, levelCompletion service
-2. **Then Phase 1** — port Beach runner to Phaser RunnerScene (largest phase, ~13 tasks)
-3. The plan is designed for subagent-driven development — Phase 0 tasks 0.1–0.9 have clear boundaries
+### Next
+- ROADMAP V2 Phase 3 (gameplay consistency) or stronger production rate limiting (shared store / Edge)
 
 ---
 
-## Session: 2026-03-19 (V2 completion audit — fixes + doc sync)
+## Session: 2026-03-19 (ROADMAP V2 Phase 1 — correctness)
 
-**Focus:** Post–V2 audit fixes: boss victory no longer calls `onScoreUpdate` after `onVictoryFinalize` (lives refill preserved). Indexed `handleIndexedSave` guards `putCatSprite`, repairs missing dedup blobs, equips by `assetId` only when blob exists. `stopMusic` closes the correct `AudioContext` and clears pending timers. Beach `SEAGULL` harmful for body collisions. `services/blobContentKey.test.ts` typed for `tsc --noEmit`. Docs: [ROADMAP_V2.md](ROADMAP_V2.md) phase table, [AGENTS.md](AGENTS.md) / [CLAUDE.md](CLAUDE.md) Vitest truth, [docs/QA_CHECKLIST.md](docs/QA_CHECKLIST.md), [KNOWN_ISSUES.md](KNOWN_ISSUES.md) V2-9–12. **`npm run test:run`**, **`npm run build`**, **`npx tsc --noEmit`** pass. **Manual:** run [docs/QA_CHECKLIST.md](docs/QA_CHECKLIST.md) in browser before release.
+**Focus:** Data integrity, victory score, cat assets, hooks, Vitest scaffold
 
----
+### Completed
+- [x] `VictoryFinalizePayload` + `onVictoryFinalize` in `GameEngine` / `App` (no stale React score on victory); functional `setHighScores` for game over and victory
+- [x] `CatCustomizerLegacy` extract (Rules of Hooks); indexed delete resets preview; duplicate closet save guard; static `catAssetStore` import in `blobToDataUrlFromAsset`
+- [x] `migrateCatStorageIfNeeded`: legacy keys cleared only after successful writes / matching blob puts; re-read v1 state before write
+- [x] `getCatSprite` / `deleteCatSprite` resolve on errors; boot repairs missing equipped blob via `writeCatCharacterState`
+- [x] Vitest + `services/catAssetStore.test.ts`, `levels/catalog.test.ts`, `services/migrateCatStorage.test.ts`; `tsconfig` excludes `dist`
+- [x] `KNOWN_ISSUES.md` updates; TypeScript `strict` explicitly deferred (large backlog)
 
-## Session: 2026-03-19 (KNOWN_ISSUES closure — closet delete, migration lock, strict deferral)
-
-**Focus:** Indexed closet **delete** now persists via **`handleClosetLookDelete`** (localStorage + **`deleteCatSprite`** after write); **`CatCustomizer`** async **`deleteLook`** + dirty snapshot. **`migrateCatStorageIfNeeded`** uses **`navigator.locks.request('beach-kitty-cat-migration-v1')`** when available. **[KNOWN_ISSUES.md](KNOWN_ISSUES.md)** open list cleared; V2-6 resolved as already capped; V2-7 closed as documented **`strict`** deferral. `npm test` + `npm run build` pass.
-
----
-
-## Session: 2026-03-19 (ROADMAP V2 complete — must-fix closure)
-
-**Focus:** **`mergeLevelTuning`** in **`levels/catalog.ts`** — **`App`** and **`GameEngine`** both use it (replacing duplicated `{ ...store, ...tuningOverrides }`). Boss entry / HUD / sky stay tied to **`getBossEntryCoinThreshold(levelConfig, merged)`**. New **[docs/LEVEL_RUNTIME.md](docs/LEVEL_RUNTIME.md)** (authoritative runtime contract); **`levels/catalog.test.ts`** extended; **`ROADMAP_V2.md`** must-fix items + status banner. `npm run build` + `npm test` pass.
-
----
-
-## Session: 2026-03-19 (ROADMAP V2 Phase 7 — regression net + QA)
-
-**Focus:** `services/runOutcome.ts` — Hall of Fame merge, boss-defeat map update, victory score merge (with React high-water mark); `App.tsx` uses shared key `HALL_OF_FAME_STORAGE_KEY`. New tests: `runOutcome.test.ts`, `levelProgress.test.ts`, `collisionHandlers.test.ts`, `server/catApiBody.test.ts`, `catSpriteMattingCore.test.ts`. [docs/QA_CHECKLIST.md](docs/QA_CHECKLIST.md) for manual / release playtesting. `ROADMAP_V2` Phase 7 closed. `npm run build` + `npm test` (53 tests) pass.
+### Next
+- ROADMAP V2 Phase 2 (API protection) or expand test coverage / strict-mode incremental fixes
 
 ---
 
-## Session: 2026-03-19 (ROADMAP V2 Phase 6 — UX, a11y, SFX, music timing)
-
-**Focus:** `sfxService` + `GameEngine` wiring; `audioService` rAF + lookahead music scheduler; `usePrefersReducedMotion` + `html.prefers-reduced-motion` CSS for `.motion-intense` / `.motion-intense-pulse` (sun + speed lines); title / level select / Hall of Fame / game-over / victory semantics and copy; `CatCustomizer` dialog focus + status region + touch targets (legacy + indexed); `LevelSelection` subtitle clarity (no duplicate Unlocked + Boss cleared); `MatteCatImage` `loading` prop + lazy Hall of Fame avatars + reduced-motion matting spinner; docs (`ROADMAP_V2` Phase 6 closed, `README`, `AGENTS`/`CLAUDE` audio). `npm run build` + `npm test` pass.
-
----
-
-## Session: 2026-03-19 (ROADMAP V2 Phase 5b — background config + view registry)
-
-**Focus:** Unified **`spawnBackgroundEntities`** in **`systems/backgroundSpawn.ts`** (replaces `levels/beach/backgroundSpawn` + engine legacy block); **`BackgroundConfig`** fields `chaosSpawnTypes`, `midLayerSpawnTypes`, `cloudSpawnChance`, `cloudEntityType`; **`levels/levelBackgroundViews.tsx`** (`BACKGROUND_ENTITY_VIEW_BY_LEVEL`, `BackgroundEntityRenderer`); beach config explicit pools; **`systems/backgroundSpawn.test.ts`**; **`docs/LEVEL_DEVELOPMENT.md`** type-vocabulary + registration table; roadmap Phase 5 follow-ups closed. `npm run build` + `npm test` pass.
-
----
-
-## Session: 2026-03-19 (ROADMAP V2 Phase 5 — architecture / future levels)
-
-**Focus:** Beach `stompCollision` / `slowCollision` + theme anchors in `levels/beach.ts`; `resolvePlayerAnchor` wired through `GameEngine` (hitbox, magnet, particles, bullets, player `left`); `createBossProjectileObstacle({ projectileAimX })`; `spawnBeachBackgroundEntities` + `BackgroundEntityDefinition` spawn fields; `BeachBackgroundEntityView` extracted from `GameEngine`; collision handlers receive obstacle defs; docs (`ROADMAP_V2`, `LEVEL_DEVELOPMENT`, `BEHAVIOR_SYSTEM`). `npm run build` + `npm test` pass.
-
----
-
-## Session: 2026-03-19 (ROADMAP V2 Phase 4 — customizer / asset pipeline)
-
-**Focus:** Player vs closet look naming, dirty exit confirm, `contentKey` dedup + equip reuse, `SavedCatLook.mattedOnServer` + skip client matting (preview/thumbs/equipped when saved), `useMatteCatUrl` LRU + `alreadyMatted`, beach obstacle sprite cache cap, `blobContentKey` + tests.
-
-**Key files:** `App.tsx`, `components/CatCustomizer.tsx`, `hooks/useMatteCatUrl.ts`, `levels/beach/obstacles.tsx`, `services/blobContentKey.ts`, `types.ts`
-
----
-
-## Session: 2026-03-19 (ROADMAP V2 Phase 3 — gameplay consistency)
-
-**Focus:** Boss coin threshold single source (`getBossEntryCoinThreshold`), merged `tuningOverrides` in `GameEngine` + App, `theme.skyProgressMode`, seagull `spawnY` + swoop/poop behavior `config`, removed dead `GameStatus` / `LevelDef`, victory CONTINUE pre-selects next level, level-select copy for single-level campaign, docs + Vitest helpers.
-
-**Key files:** `App.tsx`, `components/GameEngine.tsx`, `types.ts`, `levels/catalog.ts`, `levels/beach.ts`, `systems/behaviors.ts`, `systems/levelBehaviorHelpers.ts`, `components/LevelSelection.tsx`, `docs/LEVEL_DEVELOPMENT.md`, `docs/BEHAVIOR_SYSTEM.md`
-
----
-
-> **Older sessions archived in [PROGRESS_ARCHIVE.md](./PROGRESS_ARCHIVE.md)**
+## Session: 2026-03-19 (Roadmap V2 handoff)
 
 **Focus:** Archive completed roadmap, create active `ROADMAP_V2.md`, and repoint repo docs/scripts
 
