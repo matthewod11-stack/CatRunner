@@ -67,6 +67,10 @@ SFX remains procedural + file-backed via the existing `sfxService.ts` architectu
 
 The current procedural `audioService.ts` beach music is retired once Level 1 is ported to Phaser with its own pre-composed track.
 
+**Audio context note:** `sfxService.ts` currently creates its own Web Audio `AudioContext`. Phaser also creates one for music playback. During Phase 0/1, evaluate whether both systems can share a single `AudioContext` to avoid browser limits (especially on mobile, where multiple contexts may be silently dropped). If sharing is impractical, sfxService should be migrated to use Phaser's `this.sound` API.
+
+**Music sourcing:** Tracks will be AI-generated, composed by a contributor, or sourced from royalty-free libraries. Specific sourcing is a per-level creative decision outside this spec.
+
 **Rationale:** Pre-composed music sets genre mood instantly and sounds better than procedural generation across 9 diverse genres. Procedural SFX is responsive, lightweight, and already working. Lazy-loading keeps the bundle lean.
 
 ---
@@ -99,9 +103,24 @@ interface LevelResult {
 }
 ```
 
-Persisted in localStorage (one key per level, e.g., `beach-kitty-level-BEACH`). The campaign screen displays star count on each branch of the cat tree. Hall of Fame continues to track top scores with `levelId` context.
+**Star thresholds** are defined per level in `LevelConfig`:
 
-Existing `defeatedBosses` persistence remains for unlock progression. No mid-level checkpoints, no collectible tracking, no cumulative campaign score.
+```typescript
+// In LevelConfigBase
+starThresholds: [number, number, number]; // raw score cutoffs for 1, 2, 3 stars
+```
+
+A shared utility maps `(rawScore, thresholds) → stars`. Each genre's scene calls this on completion.
+
+**Normalized scoring:** The V3 spec proposes a 0–999 normalized `finalScore` for cross-level Hall of Fame comparison. This spec defers normalization — Hall of Fame entries are scoped by `levelId`, so raw scores are compared only within the same level. If cross-level leaderboards are needed later, a normalization function can be added without changing the persistence format.
+
+**Persistence keys** follow the existing `beach-cat-` prefix convention: `beach-cat-level-result-<LEVEL_ID>-v1` (e.g., `beach-cat-level-result-BEACH-v1`).
+
+The campaign screen displays star count on each branch of the cat tree. Hall of Fame continues to track top scores with `levelId` context.
+
+**Level completion tracking:** The existing `defeatedBosses` key is generalized to `beach-cat-completed-levels-v1` storing `Partial<Record<LevelId, boolean>>`. Every level records completion here regardless of whether it has a boss — the `victoryCondition` type determines what "completion" means. The existing `beach-cat-defeated-bosses-v1` key is migrated on first load. Unlock logic in `levels/catalog.ts` reads from the new key.
+
+No mid-level checkpoints, no collectible tracking, no cumulative campaign score.
 
 **Rationale:** Stars on the campaign tree give visual richness and replay motivation with minimal persistence complexity. Arcade-style levels (2–5 minutes each) don't benefit from mid-level saves.
 
@@ -114,6 +133,8 @@ Existing `defeatedBosses` persistence remains for unlock progression. No mid-lev
 Each level has its own internal difficulty curve (wave escalation, speed increase over time, shorter windows, etc.) but there is no campaign-wide difficulty ramp. Level 1 and Level 9 do not differ in baseline difficulty — the challenge comes from the genre itself.
 
 The level order in the spec (runner → platformer → launcher → shooter → breakout → frogger → whack → snake → climber) naturally progresses from accessible to demanding genres. This implicit ordering provides enough campaign arc without artificial tuning.
+
+**Note on V3 spec Phase 9:** The Phase 9 task "balance pass on all 9 levels (difficulty curve across the campaign)" refers to ensuring the genre ordering provides a natural progression and that no single level is a disproportionate wall — not to adding artificial parameter scaling across levels.
 
 **Rationale:** Genre variety *is* the difficulty curve. Players who struggle on one genre aren't permanently stuck behind an artificially inflated wall. Each level being self-contained also means replaying any cleared level feels appropriately challenging regardless of campaign progress.
 
@@ -142,6 +163,17 @@ interface CutsceneFrame {
   durationMs?: number;    // auto-advance timing
   transition?: 'fade' | 'slide' | 'cut';
 }
+
+interface CutsceneConfig {
+  frames: CutsceneFrame[];
+}
+```
+
+The V3 spec defines two shapes for `cutscene?` on `LevelConfigBase`. The **intro/outro pair** form is canonical:
+
+```typescript
+// In LevelConfigBase
+cutscene?: { intro?: CutsceneConfig; outro?: CutsceneConfig };
 ```
 
 **Rationale:** Cutscenes are structural narrative — they need to be coherent and reliable. The Resolve video pipeline enables high-quality production without runtime API dependency.
@@ -154,12 +186,16 @@ interface CutsceneFrame {
 
 Phaser core loads once on first gameplay entry. Each Phaser scene is a dynamic `import()` — Vite handles the code splitting natively. Per-level assets (music tracks, generated textures) load in each scene's `preload()`.
 
+**Lazy scene registration:** To ensure code splitting actually works, `PhaserGame.tsx` must not statically import all 9 scene classes. Instead, it receives a scene factory (e.g., `sceneFactory: () => Promise<typeof Phaser.Scene>`) and dynamically imports + registers only the scene for the current level. This is the key constraint that makes per-scene splitting effective.
+
 The campaign screen is pure React — no Phaser loaded until the player starts a level. This keeps initial page load fast.
 
+Approximate load profile (illustrative, not targets):
+
 ```
-Initial load:  React shell + campaign screen (~200KB)
+Initial load:  React shell + campaign screen
 First play:    + Phaser core (~1MB, cached thereafter)
-Per level:     + scene code (~10-50KB) + assets (music ~200KB, textures variable)
+Per level:     + scene code + assets (music, textures)
 ```
 
 **Rationale:** Vite dynamic imports make per-scene splitting nearly free. Phaser's `preload()` naturally handles asset loading with a loading bar. Players only download what they play.
