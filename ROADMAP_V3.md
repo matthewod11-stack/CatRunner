@@ -269,13 +269,29 @@ export function getLevelConfig(id: LevelId): LevelConfig {
 }
 ```
 
-- [ ] **Step 8: Add `starThresholds` to `LevelConfig`**
+- [ ] **Step 8: Add V3 fields to `LevelConfig` and the existing runner config**
 
-Add `starThresholds?: [number, number, number]` to the existing `LevelConfig` interface in `types.ts`. Add initial values to `BEACH_LEVEL_CONFIG` in `levels/beach.ts`:
+Add these optional fields to the existing `LevelConfig` interface in `types.ts` so runner and future genres coexist during the transition:
 
 ```typescript
+// Add to existing LevelConfig interface:
+genre?: LevelGenre;
+catPose?: CatPoseId;
+victoryCondition?: VictoryCondition;
+starThresholds?: [number, number, number];
+cutscene?: { intro?: CutsceneConfig; outro?: CutsceneConfig };
+```
+
+All fields are optional so the existing `BEACH_LEVEL_CONFIG` doesn't break. Then add the V3 fields to `BEACH_LEVEL_CONFIG` in `levels/beach.ts`:
+
+```typescript
+genre: 'runner',
+catPose: 'runner',
+victoryCondition: { type: 'boss', bossId: 'sandMonster' },
 starThresholds: [100, 300, 500],
 ```
+
+**Note on LevelConfig evolution:** The existing `LevelConfig` is runner-specific (has `obstacles`, `patterns`, `boss`, etc.). For V3, the plan is to eventually move to a discriminated union (`RunnerLevelConfig | PlatformerLevelConfig | ...`). But that refactor happens incrementally — each new genre adds its own interface. The existing `LevelConfig` effectively becomes `RunnerLevelConfig`. The discriminated union is assembled in `levels/index.ts` as genres are built. For now, adding optional V3 fields to the existing interface is the minimal change that unblocks all phases.
 
 - [ ] **Step 9: Type-check again**
 
@@ -283,12 +299,12 @@ starThresholds: [100, 300, 500],
 npx tsc --noEmit
 ```
 
-Expected: Fewer errors. Remaining errors should be limited to places that use the old `LevelConfig` (single-genre runner) shape — those get fixed in Phase 1.
+Expected: Fewer errors. Remaining errors should be limited to the `GameStatus.LEVEL_SELECTION` rename downstream — those are caught in subsequent commits.
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 10: Commit**
 
 ```bash
-git add types.ts App.tsx
+git add types.ts App.tsx levels/index.ts levels/beach.ts
 git commit -m "feat(v3): add V3 type foundations — LevelGenre, VictoryCondition, CutsceneConfig, expanded LevelId/GameStatus"
 ```
 
@@ -354,6 +370,11 @@ export interface SceneInitData {
   levelId: LevelId;
   catSpriteUrl: string | null;
   levelConfig: LevelConfig;
+  initialLives: number;
+  startAtBoss: boolean;
+  tuning: TuningProfile;
+  /** Optional telemetry hook — scene calls this to hand off its getTelemetry fn */
+  onTelemetryReady?: (getTelemetry: () => TelemetryEvent[]) => void;
 }
 
 /**
@@ -365,12 +386,22 @@ export abstract class SceneBridge extends Phaser.Scene {
   protected levelId!: LevelId;
   protected catSpriteUrl: string | null = null;
   protected levelConfig!: LevelConfig;
+  protected initialLives!: number;
+  protected startAtBoss!: boolean;
+  protected tuning!: TuningProfile;
 
   init(data: SceneInitData): void {
     this.levelId = data.levelId;
     this.catSpriteUrl = data.catSpriteUrl;
     this.levelConfig = data.levelConfig;
+    this.initialLives = data.initialLives;
+    this.startAtBoss = data.startAtBoss;
+    this.tuning = data.tuning;
+    if (data.onTelemetryReady) data.onTelemetryReady(this.getTelemetry.bind(this));
   }
+
+  /** Override in subclasses that support telemetry export */
+  protected getTelemetry(): TelemetryEvent[] { return []; }
 
   /** Emit score update to React HUD */
   protected emitScoreUpdate(score: GameScore): void {
@@ -423,35 +454,34 @@ This component mounts a `Phaser.Game` instance inside a div, handles lazy scene 
 ```typescript
 import React, { useEffect, useRef } from 'react';
 import type { GameScore, GameStatus, LevelCompletePayload, LevelConfig, LevelId } from '../types';
+import type { TuningProfile } from '../systems/tuning/defaultTuning';
+import type { TelemetryEvent } from '../systems/telemetry/runTelemetry';
 import { BRIDGE_EVENTS, type SceneInitData } from '../scenes/shared/SceneBridge';
 
 interface PhaserGameProps {
   levelId: LevelId;
   levelConfig: LevelConfig;
   catSpriteUrl: string | null;
+  initialLives: number;
+  startAtBoss: boolean;
+  tuning: TuningProfile;
   sceneFactory: () => Promise<{ default: typeof Phaser.Scene }>;
   onScoreUpdate: (score: GameScore) => void;
   onLevelComplete: (payload: LevelCompletePayload) => void;
   onGameOver: (finalScore: number) => void;
   onStatusChange?: (status: GameStatus) => void;
+  onTelemetryReady?: (getTelemetry: () => TelemetryEvent[]) => void;
 }
 
-const PhaserGame: React.FC<PhaserGameProps> = ({
-  levelId,
-  levelConfig,
-  catSpriteUrl,
-  sceneFactory,
-  onScoreUpdate,
-  onLevelComplete,
-  onGameOver,
-  onStatusChange,
-}) => {
+const PhaserGame: React.FC<PhaserGameProps> = (props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
 
-  // Store callbacks in refs to avoid re-creating the Phaser instance on callback changes
-  const callbacksRef = useRef({ onScoreUpdate, onLevelComplete, onGameOver, onStatusChange });
-  callbacksRef.current = { onScoreUpdate, onLevelComplete, onGameOver, onStatusChange };
+  // ALL props go in a ref so the effect closure always sees current values
+  // without restarting Phaser. The effect depends ONLY on levelId
+  // (new level = new Phaser instance; everything else updates in-place).
+  const propsRef = useRef(props);
+  propsRef.current = props;
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -459,22 +489,30 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
     let destroyed = false;
 
     const boot = async () => {
+      const p = propsRef.current;
       const Phaser = (await import('phaser')).default;
-      const { default: SceneClass } = await sceneFactory();
+      const { default: SceneClass } = await p.sceneFactory();
 
       if (destroyed) return;
 
-      const sceneKey = `scene-${levelId}`;
-      const initData: SceneInitData = { levelId, catSpriteUrl, levelConfig };
+      const sceneKey = `scene-${p.levelId}`;
+      const initData: SceneInitData = {
+        levelId: p.levelId,
+        catSpriteUrl: p.catSpriteUrl,
+        levelConfig: p.levelConfig,
+        initialLives: p.initialLives,
+        startAtBoss: p.startAtBoss,
+        tuning: p.tuning,
+        onTelemetryReady: p.onTelemetryReady,
+      };
 
-      // Create the Phaser game WITHOUT a scene — we add it dynamically
       const game = new Phaser.Game({
         type: Phaser.AUTO,
         parent: containerRef.current!,
         width: window.innerWidth,
         height: window.innerHeight,
         backgroundColor: '#000000',
-        audio: { disableWebAudio: false }, // force Web Audio for single-context SFX
+        audio: { disableWebAudio: false },
         physics: {
           default: 'arcade',
           arcade: { gravity: { x: 0, y: 0 }, debug: false },
@@ -485,26 +523,20 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
         },
       });
 
-      // Register the actual scene class (preserves prototype chain + SceneBridge)
-      // and start it with init data. `true` = autoStart.
-      game.scene.add(sceneKey, SceneClass, true, initData);
+      // Add scene but do NOT auto-start (false). Wire events first, then start.
+      game.scene.add(sceneKey, SceneClass, false);
 
-      // Wire bridge events AFTER the scene is created (avoids race condition).
-      // Phaser emits 'create' on the scene's event emitter once create() finishes.
       const scene = game.scene.getScene(sceneKey);
       if (scene) {
-        const wireBridge = () => {
-          scene.events.on(BRIDGE_EVENTS.SCORE_UPDATE, (s: GameScore) => callbacksRef.current.onScoreUpdate(s));
-          scene.events.on(BRIDGE_EVENTS.LEVEL_COMPLETE, (p: LevelCompletePayload) => callbacksRef.current.onLevelComplete(p));
-          scene.events.on(BRIDGE_EVENTS.GAME_OVER, (s: number) => callbacksRef.current.onGameOver(s));
-          scene.events.on(BRIDGE_EVENTS.STATUS_CHANGE, (s: GameStatus) => callbacksRef.current.onStatusChange?.(s));
-        };
-        // If scene.create() already ran, wire immediately; otherwise wait
-        if (scene.scene.isActive()) {
-          wireBridge();
-        } else {
-          scene.events.once('create', wireBridge);
-        }
+        // Wire bridge events BEFORE starting the scene.
+        // This ensures no events emitted during create() are lost.
+        scene.events.on(BRIDGE_EVENTS.SCORE_UPDATE, (s: GameScore) => propsRef.current.onScoreUpdate(s));
+        scene.events.on(BRIDGE_EVENTS.LEVEL_COMPLETE, (p: LevelCompletePayload) => propsRef.current.onLevelComplete(p));
+        scene.events.on(BRIDGE_EVENTS.GAME_OVER, (s: number) => propsRef.current.onGameOver(s));
+        scene.events.on(BRIDGE_EVENTS.STATUS_CHANGE, (s: GameStatus) => propsRef.current.onStatusChange?.(s));
+
+        // NOW start the scene — create() runs with listeners already attached
+        game.scene.start(sceneKey, initData);
       }
 
       gameRef.current = game;
@@ -519,7 +551,9 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
         gameRef.current = null;
       }
     };
-  }, [levelId, catSpriteUrl, levelConfig, sceneFactory]);
+  // ONLY levelId triggers a full Phaser restart. Callbacks and config
+  // are read from propsRef so React re-renders don't restart the game.
+  }, [props.levelId]);
 
   return <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }} />;
 };
@@ -528,11 +562,11 @@ export default PhaserGame;
 ```
 
 **Key design points:**
-- `sceneFactory` enables code-splitting — each level provides `() => import('../scenes/RunnerScene')`
-- Phaser core is lazy-imported too (first `import('phaser')` triggers the load)
-- Scene is added via `game.scene.add(key, SceneClass, ...)` — this preserves the `SceneBridge` prototype chain (NOT the inline scene config approach, which would break `super.init()` and all bridge methods)
-- Bridge events are wired via `scene.events.once('create', ...)` to avoid a race condition where events are registered before the scene's `create()` runs
-- `audio: { disableWebAudio: false }` ensures Phaser uses Web Audio (single AudioContext for music + SFX)
+- **No re-render restarts:** The effect depends ONLY on `props.levelId`. All other props (callbacks, config, sceneFactory) live in `propsRef` — React re-renders from score/lives updates do NOT tear down Phaser.
+- **Events before start:** Scene is added with `autoStart: false`, events are wired, THEN `game.scene.start()` is called. Events emitted during `create()` (like the initial `statusChange`) are never lost.
+- **Full contract:** `SceneInitData` carries `initialLives`, `startAtBoss`, `tuning`, and `onTelemetryReady` — matching the current `GameEngine` props. Balance panel, boss-practice, persisted lives, and telemetry all work.
+- **Code splitting:** `sceneFactory` is called once during boot (read from `propsRef.current`), not on every render.
+- **Web Audio forced:** `audio: { disableWebAudio: false }` ensures single AudioContext for music + SFX.
 
 - [ ] **Step 2: Verify type-check**
 
@@ -656,8 +690,9 @@ git commit -m "feat(v3): add TestScene — verifies Phaser bridge end-to-end"
 
 **Files:**
 - Modify: `CLAUDE.md`
+- Modify: `AGENTS.md` (twin doc — must stay in sync per `AGENTS.md:3`)
 
-- [ ] **Step 1: Add Phaser architecture section to CLAUDE.md**
+- [ ] **Step 1: Add Phaser architecture section to CLAUDE.md and AGENTS.md**
 
 Add a new section after "Architecture" in CLAUDE.md:
 
@@ -670,11 +705,15 @@ Add a new section after "Architecture" in CLAUDE.md:
 - **Code splitting:** Each scene is a dynamic import. `PhaserGame` receives `sceneFactory: () => Promise<...>`. Never statically import all scene classes.
 ```
 
-- [ ] **Step 2: Commit**
+- [ ] **Step 2: Mirror the same section into AGENTS.md**
+
+CLAUDE.md and AGENTS.md are twin docs (see `AGENTS.md:3`). Add the same Phaser architecture section to AGENTS.md.
+
+- [ ] **Step 3: Commit**
 
 ```bash
-git add CLAUDE.md
-git commit -m "docs: add Phaser architecture notes to CLAUDE.md"
+git add CLAUDE.md AGENTS.md
+git commit -m "docs: add Phaser architecture notes to CLAUDE.md and AGENTS.md"
 ```
 
 ---
@@ -842,6 +881,121 @@ npm run test:run
 ```bash
 git add services/levelProgress.ts services/levelProgress.test.ts services/runOutcome.ts App.tsx
 git commit -m "feat(v3): migrate defeatedBosses to completedLevels with migration path"
+```
+
+---
+
+### Task 0.9: Create levelCompletion service
+
+**Files:**
+- Create: `services/levelCompletion.ts`
+- Create: `services/levelCompletion.test.ts`
+
+This service owns star calculation and per-level result persistence. `runOutcome.ts` continues to own Hall of Fame merge.
+
+- [ ] **Step 1: Write tests**
+
+```typescript
+import { describe, it, expect, beforeEach } from 'vitest';
+import { computeStars, loadLevelResult, saveLevelResult } from './levelCompletion';
+
+beforeEach(() => localStorage.clear());
+
+describe('computeStars', () => {
+  it('returns 1 star below threshold[1]', () => {
+    expect(computeStars(50, [0, 100, 300])).toBe(1);
+  });
+  it('returns 2 stars at threshold[1]', () => {
+    expect(computeStars(100, [0, 100, 300])).toBe(2);
+  });
+  it('returns 3 stars at threshold[2]', () => {
+    expect(computeStars(300, [0, 100, 300])).toBe(3);
+  });
+  it('returns 3 stars above all thresholds', () => {
+    expect(computeStars(999, [0, 100, 300])).toBe(3);
+  });
+});
+
+describe('saveLevelResult best-of merge', () => {
+  it('saves first result', () => {
+    saveLevelResult({ levelId: 'BEACH', score: 100, stars: 1 });
+    expect(loadLevelResult('BEACH')).toEqual({ levelId: 'BEACH', score: 100, stars: 1 });
+  });
+  it('keeps higher score', () => {
+    saveLevelResult({ levelId: 'BEACH', score: 100, stars: 1 });
+    saveLevelResult({ levelId: 'BEACH', score: 50, stars: 1 });
+    expect(loadLevelResult('BEACH')!.score).toBe(100);
+  });
+  it('keeps higher stars independently', () => {
+    saveLevelResult({ levelId: 'BEACH', score: 100, stars: 2 });
+    saveLevelResult({ levelId: 'BEACH', score: 200, stars: 1 });
+    const result = loadLevelResult('BEACH')!;
+    expect(result.score).toBe(200); // higher score
+    expect(result.stars).toBe(2);   // higher stars (independent)
+  });
+});
+```
+
+- [ ] **Step 2: Run tests — verify they fail**
+
+```bash
+npm run test:run -- services/levelCompletion.test.ts
+```
+
+- [ ] **Step 3: Implement levelCompletion.ts**
+
+```typescript
+import type { LevelId, LevelResult } from '../types';
+
+function storageKey(levelId: LevelId): string {
+  return `beach-cat-level-result-${levelId}-v1`;
+}
+
+export function computeStars(
+  score: number,
+  thresholds: [number, number, number]
+): 1 | 2 | 3 {
+  if (score >= thresholds[2]) return 3;
+  if (score >= thresholds[1]) return 2;
+  return 1;
+}
+
+export function loadLevelResult(levelId: LevelId): LevelResult | null {
+  try {
+    const raw = localStorage.getItem(storageKey(levelId));
+    if (!raw) return null;
+    return JSON.parse(raw) as LevelResult;
+  } catch {
+    return null;
+  }
+}
+
+export function saveLevelResult(result: LevelResult): void {
+  const existing = loadLevelResult(result.levelId);
+  const merged: LevelResult = existing
+    ? {
+        levelId: result.levelId,
+        score: Math.max(existing.score, result.score),
+        stars: Math.max(existing.stars, result.stars) as 1 | 2 | 3,
+      }
+    : result;
+  try {
+    localStorage.setItem(storageKey(result.levelId), JSON.stringify(merged));
+  } catch { /* ignore */ }
+}
+```
+
+- [ ] **Step 4: Run tests — verify they pass**
+
+```bash
+npm run test:run -- services/levelCompletion.test.ts
+```
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add services/levelCompletion.ts services/levelCompletion.test.ts
+git commit -m "feat(v3): add levelCompletion service — star calculation, best-of result persistence"
 ```
 
 ---
@@ -1358,13 +1512,19 @@ With:
   levelId={selectedLevel}
   levelConfig={levelConfig}
   catSpriteUrl={mattedCatUrl}
+  initialLives={score.lives}
+  startAtBoss={startAtBoss}
+  tuning={mergedTuning}
   sceneFactory={() => import('./scenes/RunnerScene')}
   onScoreUpdate={handleScoreUpdate}
   onLevelComplete={handleLevelComplete}
   onGameOver={handleGameOver}
   onStatusChange={handleStatusChange}
+  onTelemetryReady={handleTelemetryReady}
 />
 ```
+
+**Note on `sceneFactory`:** The inline arrow function `() => import(...)` creates a new function identity on every render, but this is safe — `PhaserGame` reads it from `propsRef.current` inside the boot closure, and the effect depends only on `levelId`. The factory is never compared by reference.
 
 - [ ] **Step 2: Add handleLevelComplete**
 
@@ -1476,29 +1636,15 @@ Replace `<LevelSelection ... />` with `<CampaignScreen ... />` in the `CAMPAIGN`
 
 Clicking an unlocked branch calls `onSelectLevel(levelId)`. Locked branches show a tooltip ("Clear [previous level] to unlock").
 
-- [ ] **Step 4: Add per-level result persistence**
+- [ ] **Step 4: Wire to levelCompletion service**
 
-Create utility in `services/levelCompletion.ts`:
+Use `loadLevelResult(levelId)` from `services/levelCompletion.ts` (created in Task 0.9) to read star data for each branch.
 
-```typescript
-export function loadLevelResult(levelId: LevelId): LevelResult | null { ... }
-export function saveLevelResult(result: LevelResult): void { ... }
-export function computeStars(score: number, thresholds: [number, number, number]): 1 | 2 | 3 { ... }
-```
-
-- [ ] **Step 5: Write tests for levelCompletion.ts**
+- [ ] **Step 5: Commit**
 
 ```bash
-npm run test:run -- services/levelCompletion.test.ts
-```
-
-Test `computeStars` (edge cases: exactly at threshold, below all, above all), `saveLevelResult` best-of merge, `loadLevelResult` with missing key.
-
-- [ ] **Step 6: Commit**
-
-```bash
-git add components/CampaignScreen.tsx services/levelCompletion.ts services/levelCompletion.test.ts App.tsx
-git commit -m "feat(v3/phase2): add CampaignScreen with nine-branch cat tree and per-level star persistence"
+git add components/CampaignScreen.tsx App.tsx
+git commit -m "feat(v3/phase2): add CampaignScreen with nine-branch cat tree and per-level star display"
 ```
 
 ---

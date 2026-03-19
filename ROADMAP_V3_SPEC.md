@@ -80,8 +80,8 @@ Shared services (unchanged)
 
 A `PhaserGame` React component mounts/destroys a `Phaser.Game` instance inside a div. Communication:
 
-- **React → Phaser:** Pass level config, cat sprite URL, and tuning via Phaser Scene `init()` data or a shared registry object.
-- **Phaser → React:** Phaser emits events (`scoreUpdate`, `livesChanged`, `bossDefeated`, `gameOver`, `victoryFinalize`) that the React wrapper translates into callbacks (`onScoreUpdate`, `onGameOver`, `onVictoryFinalize` — same interface as today's `GameEngine` props).
+- **React → Phaser:** Pass level config, cat sprite URL, tuning, initial lives, startAtBoss, and telemetry callback via Phaser Scene `init()` data (`SceneInitData`).
+- **Phaser → React:** Phaser emits events (`scoreUpdate`, `livesChanged`, `levelComplete`, `gameOver`, `statusChange`) that the React wrapper translates into callbacks (`onScoreUpdate`, `onLevelComplete`, `onGameOver`, `onStatusChange`). The old `victoryFinalize`/`bossDefeated` events are replaced by the generic `levelComplete` event carrying a `LevelCompletePayload` (see design decisions doc).
 - **HUD stays in React** — overlaid on the Phaser canvas via absolute positioning. This keeps HUD styling consistent and avoids reimplementing UI in Phaser.
 
 ### Genre-level config
