@@ -1,60 +1,94 @@
 
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { Obstacle, PlayerState, ObstacleType, Particle, ActivePowerUp, PowerUpType, GameScore, GameStatus, Bullet, EntityType, BackgroundEntity, BackgroundEntityType, LevelId } from '../types';
+import React, { useEffect, useRef, useState, useCallback, useMemo, Suspense } from 'react';
+import {
+  Obstacle,
+  PlayerState,
+  ObstacleType,
+  Particle,
+  ActivePowerUp,
+  PowerUpType,
+  GameScore,
+  GameStatus,
+  Bullet,
+  EntityType,
+  BackgroundEntity,
+  BackgroundEntityType,
+  LevelId,
+  PatternStep,
+  LevelConfig,
+  VictoryFinalizePayload,
+} from '../types';
 import Kitty from './Kitty';
+import type { MattedCatMattingState } from './MatteCatImage';
 import ObstacleComponent from './ObstacleComponent';
-import SandMonster from './SandMonster';
 import GameCanvas from './GameCanvas';
 import { startMusic, stopMusic, setMusicTempo, setBossMode } from '../services/audioService';
+import {
+  isGameFileSfx,
+  playGameFileSfx,
+  playProceduralGameSfx,
+  preloadGameFileSfx,
+} from '../services/sfxService';
 import { useTuningStore } from '../systems/tuning/useTuningStore';
 import { createRunTelemetry, RunTelemetry } from '../systems/telemetry/runTelemetry';
 import { computeSwoopY, checkPoopDrop } from '../systems/behaviors';
 import { handleBounceCollision, handleSlowCollision, handleHarmfulCollision, CollisionResult } from '../systems/collisionHandlers';
+import { LEVEL_REGISTRY, getBossEntryCoinThreshold, mergeLevelTuning } from '../levels';
+import { LevelProvider } from '../contexts/LevelContext';
+import {
+  obstacleHasBehavior,
+  pickSeagullSpawnVariant,
+  resolveDropProjectileSpec,
+  resolveObstacleSpawnY,
+  resolveSwoopConfig,
+} from '../systems/levelBehaviorHelpers';
+import {
+  computeBossProjectileSpawnRate,
+  createBossProjectileObstacle,
+  bossFacingFromProjectileAim,
+  computeBossWorldPose,
+  facingFromBossSway,
+} from '../systems/bossSystem';
+import { resolveLazyBoss } from '../systems/bossComponents';
+import { resolvePlayerAnchor } from '../systems/playerAnchor';
+import { spawnBackgroundEntities } from '../systems/backgroundSpawn';
+import { BackgroundEntityRenderer } from '../levels/levelBackgroundViews';
 
 interface GameEngineProps {
   initialLives: number;
   levelId: LevelId;
+  /** When set, used instead of resolving from LEVEL_REGISTRY (keeps engine level-agnostic) */
+  levelConfig?: LevelConfig;
   startAtBoss?: boolean;
   customCatUrl?: string | null;
+  /** Shared matting state from App (equipped custom cat). */
+  equippedCatMatting?: MattedCatMattingState;
   onGameOver: (score: number) => void;
   onScoreUpdate: (score: GameScore) => void;
+  /** Called with ref-derived score before VICTORY status (Hall of Fame must use this, not App state). */
+  onVictoryFinalize?: (payload: VictoryFinalizePayload) => void;
   onStatusChange?: (status: GameStatus) => void;
   onTelemetryReady?: (getTelemetry: () => import('../systems/telemetry/runTelemetry').TelemetryEvent[]) => void;
 }
 
-const GROUND_Y = 100;
 const CONTROLS_HINT_DURATION_MS = 6000;
 
-interface PatternStep {
-  type: EntityType;
-  delay: number;
-  y?: number;
-}
-
-const HARMFUL_TYPES: EntityType[] = ['CRAB', 'BEACHBALL', 'SAND_PROJECTILE', 'PALM_TREE'];
 const BACKGROUND_DEPTH_ORDER: Record<'far' | 'mid' | 'near', number> = { far: 0, mid: 1, near: 2 };
 const BACKGROUND_Z_INDEX: Record<'far' | 'mid' | 'near', number> = { far: 1, mid: 2, near: 3 };
 
-const BEACH_PATTERNS: PatternStep[][] = [
-  // Easy: Single obstacle + coin
-  [{ type: 'CRAB', delay: 700 }, { type: 'COIN', delay: 400, y: 200 }],
-  [{ type: 'BEACHBALL', delay: 800 }, { type: 'COIN', delay: 400, y: 200 }, { type: 'BEACHBALL', delay: 800 }],
-  
-  // Medium: Two obstacles with gap
-  [{ type: 'CRAB', delay: 600 }, { type: 'COIN', delay: 400, y: 220 }, { type: 'SEAGULL', delay: 700 }],
-  [{ type: 'BEACHBALL', delay: 700 }, { type: 'SANDCASTLE', delay: 900 }, { type: 'COIN', delay: 400, y: 200 }],
-  [{ type: 'CRAB', delay: 600 }, { type: 'SEAGULL', delay: 500, y: 150 }, { type: 'COIN', delay: 300, y: 250 }],
-  
-  // Hard: Three obstacles in sequence
-  [{ type: 'CRAB', delay: 600 }, { type: 'BEACHBALL', delay: 500 }, { type: 'CRAB', delay: 600 }, { type: 'COIN', delay: 400, y: 200 }],
-  [{ type: 'SEAGULL', delay: 700, y: 180 }, { type: 'CRAB', delay: 600 }, { type: 'SEAGULL', delay: 700, y: 200 }, { type: 'COIN', delay: 400, y: 250 }],
-  
-  // Gauntlet: Mixed obstacles requiring jump/duck combos
-  [{ type: 'CRAB', delay: 550 }, { type: 'SEAGULL', delay: 450, y: 140 }, { type: 'BEACHBALL', delay: 600 }, { type: 'SEAGULL', delay: 500, y: 160 }, { type: 'COIN', delay: 350, y: 240 }],
-];
-
-
-const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtBoss = false, customCatUrl, onGameOver, onScoreUpdate, onStatusChange, onTelemetryReady }) => {
+const GameEngine: React.FC<GameEngineProps> = ({
+  initialLives,
+  levelId,
+  levelConfig: levelConfigProp,
+  startAtBoss = false,
+  customCatUrl,
+  equippedCatMatting,
+  onGameOver,
+  onScoreUpdate,
+  onVictoryFinalize,
+  onStatusChange,
+  onTelemetryReady,
+}) => {
   const [status, setStatus] = useState<GameStatus>(GameStatus.PLAYING);
   const [isPaused, setIsPaused] = useState(false);
   const [player, setPlayer] = useState<PlayerState>({
@@ -74,7 +108,69 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
   const freezeUntilRef = useRef<number>(0);
   const [hitFlash, setHitFlash] = useState(false);
 
-  const { tuning } = useTuningStore();
+  const { tuning: storeTuning } = useTuningStore();
+
+  const levelConfig = useMemo(
+    () => levelConfigProp ?? LEVEL_REGISTRY[levelId],
+    [levelConfigProp, levelId]
+  );
+
+  const effectiveTuning = useMemo(
+    () => mergeLevelTuning(storeTuning, levelConfig),
+    [storeTuning, levelConfig]
+  );
+
+  const bossEntryCoins = getBossEntryCoinThreshold(levelConfig, effectiveTuning);
+
+  const seagullSwoopConfig = useMemo(
+    () => resolveSwoopConfig(levelConfig.obstacles.find(o => o.type === 'SEAGULL')),
+    [levelConfig]
+  );
+
+  const groundY = levelConfig.theme.groundY;
+  const harmfulTypes = (levelConfig.harmfulTypes ?? []) as EntityType[];
+  const patterns = levelConfig.patterns;
+  const theme = levelConfig.theme;
+  const bossCfg = levelConfig.boss;
+  const bgCfg = levelConfig.background;
+
+  const BossLazy = useMemo(
+    () => resolveLazyBoss(bossCfg.componentId),
+    [bossCfg.componentId]
+  );
+
+  const dropProjectileSpec = useMemo(
+    () => resolveDropProjectileSpec(levelConfig, 'SEAGULL'),
+    [levelConfig]
+  );
+
+  const magnetAttractSet = useMemo(
+    () => new Set<EntityType>(levelConfig.magnetAttractTypes ?? ['COIN']),
+    [levelConfig]
+  );
+
+  const bossProjectileObstacleType: ObstacleType =
+    bossCfg.projectileObstacleType ?? 'SAND_PROJECTILE';
+
+  const weightedObstaclePool = useMemo(() => {
+    const pool: ObstacleType[] = [];
+    for (const o of levelConfig.obstacles) {
+      for (let i = 0; i < o.spawnWeight; i++) pool.push(o.type);
+    }
+    return pool;
+  }, [levelConfig]);
+
+  const getObstacleDef = useCallback(
+    (t: ObstacleType) => levelConfig.obstacles.find(o => o.type === t),
+    [levelConfig]
+  );
+
+  const getBgEntityDef = useCallback(
+    (t: BackgroundEntityType) => levelConfig.background.entities.find(e => e.type === t),
+    [levelConfig]
+  );
+
+  const playerAnchor = useMemo(() => resolvePlayerAnchor(theme), [theme]);
 
   // Boss defeat animation state
   const [bossDefeating, setBossDefeating] = useState(false);
@@ -96,9 +192,9 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
   const requestRef = useRef<number | null>(null);
   const scoreRef = useRef(0);
   const distanceRef = useRef(0);
-  const coinsRef = useRef(startAtBoss ? tuning.bossThreshold : 0);
+  const coinsRef = useRef(startAtBoss ? bossEntryCoins : 0);
   const livesRef = useRef(initialLives);
-  const speedRef = useRef(tuning.initialSpeed);
+  const speedRef = useRef(effectiveTuning.initialSpeed);
   const streakRef = useRef(0);
   const multiplierRef = useRef(1);
   const slowdownUntilRef = useRef(0);
@@ -122,7 +218,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
   const prevVyRef = useRef<number>(0);
   const prevLivesRef = useRef(initialLives);
   const sfxAudioContextRef = useRef<AudioContext | null>(null);
-  const safeSpawnUntilRef = useRef<number>(Date.now() + tuning.startSpawnGraceMs);
+  const safeSpawnUntilRef = useRef<number>(Date.now() + effectiveTuning.startSpawnGraceMs);
   const bossFightStartTimeRef = useRef<number>(0);
 
   // Music lifecycle management
@@ -156,13 +252,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
 
   // Preload audio files on mount
   useEffect(() => {
-    const sounds = ['meow', 'hiss', 'cartoon-jump-6462', 'boing-boing-bounce-454474', 'cartoon-splat-310479', 'fart-4-228244'];
-    sounds.forEach(sound => {
-      const audio = new Audio(`/sounds/${sound}.mp3`);
-      audio.preload = 'auto';
-      audio.volume = 0.5;
-      audioCache.current[sound] = audio;
-    });
+    audioCache.current = preloadGameFileSfx();
   }, []);
 
   useEffect(() => {
@@ -194,90 +284,22 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     };
   }, []);
 
-  const playSound = useCallback((type: string) => {
-    try {
-      // File-based sounds (cat sounds and effect sounds)
-      const fileSounds = ['meow', 'hiss', 'cartoon-jump-6462', 'boing-boing-bounce-454474', 'cartoon-splat-310479', 'fart-4-228244'];
-      if (fileSounds.includes(type)) {
-        const cached = audioCache.current[type];
-        if (cached) {
-          // Clone the audio to allow overlapping playback
-          const audio = cached.cloneNode() as HTMLAudioElement;
-          if (type === 'meow') {
-            audio.volume = 0.4;
-          } else if (type === 'hiss') {
-            audio.volume = 0.5;
-          } else if (type === 'cartoon-jump-6462') {
-            audio.volume = 0.5;
-          } else if (type === 'boing-boing-bounce-454474') {
-            audio.volume = 0.5;
-          } else if (type === 'cartoon-splat-310479') {
-            audio.volume = 0.5;
-          } else if (type === 'fart-4-228244') {
-            audio.volume = 0.5;
-          }
-          audio.play().catch(() => {}); // Ignore autoplay errors
+  const playSound = useCallback(
+    (type: string) => {
+      try {
+        if (isGameFileSfx(type)) {
+          playGameFileSfx(audioCache.current[type], type);
+          return;
         }
-        return;
+        const audioCtx = getSfxAudioContext();
+        if (!audioCtx) return;
+        playProceduralGameSfx(audioCtx, type, { isBossFight: status === GameStatus.BOSS_FIGHT });
+      } catch {
+        /* ignore */
       }
-
-      // Oscillator-based sounds (retro game sounds)
-      const audioCtx = getSfxAudioContext();
-      if (!audioCtx) return;
-      const osc = audioCtx.createOscillator();
-      const windowGain = audioCtx.createGain();
-      const isBossFight = status === GameStatus.BOSS_FIGHT;
-
-      if (type === 'coin') { osc.type = 'sine'; osc.frequency.setValueAtTime(880, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(1320, audioCtx.currentTime + 0.1); windowGain.gain.setValueAtTime(0.05, audioCtx.currentTime); }
-      else if (type === 'mult') { osc.type = 'triangle'; osc.frequency.setValueAtTime(440, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3); windowGain.gain.setValueAtTime(0.2, audioCtx.currentTime); }
-      else if (type === 'hit') {
-        // Enhanced hit sound for boss fight - fallback if hiss not loaded
-        if (isBossFight) {
-          osc.type = 'square';
-          osc.frequency.setValueAtTime(80, audioCtx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.3);
-          windowGain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        } else {
-          osc.type = 'square'; osc.frequency.setValueAtTime(100, audioCtx.currentTime); windowGain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        }
-      }
-      else if (type === 'boing') { osc.type = 'sine'; osc.frequency.setValueAtTime(400, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.2); windowGain.gain.setValueAtTime(0.2, audioCtx.currentTime); }
-      else if (type === 'shoot') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.2); windowGain.gain.setValueAtTime(0.1, audioCtx.currentTime); }
-      else if (type === 'boss_alert') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(300, audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(150, audioCtx.currentTime + 0.5); windowGain.gain.setValueAtTime(0.2, audioCtx.currentTime); }
-      else if (type === 'poop_launch') {
-        // Lower pitch thump for poop launch
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(60, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.15);
-        windowGain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-      }
-      else if (type === 'boss_hit') {
-        // Bigger impact sound for boss hits
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(50, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(25, audioCtx.currentTime + 0.4);
-        windowGain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-      }
-      else if (type === 'boss_rumble') {
-        // Subtle rumble for boss movement
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(45, audioCtx.currentTime);
-        windowGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-      }
-      else if (type === 'powerup') {
-        // Rising arpeggio for power-up collection
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15);
-        windowGain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-      }
-
-      const duration = type === 'boss_hit' ? 0.5 : (type === 'poop_launch' ? 0.3 : 0.2);
-      windowGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-      osc.connect(windowGain); windowGain.connect(audioCtx.destination);
-      osc.start(); osc.stop(audioCtx.currentTime + duration + 0.1);
-    } catch (error) {}
-  }, [getSfxAudioContext, status]);
+    },
+    [getSfxAudioContext, status]
+  );
 
   const spawnBopParticles = useCallback((x: number, y: number, color: string = '#ffffff', count?: number, isBoss?: boolean) => {
     const numParticles = isBoss ? (count || 20) : (count || 8);
@@ -332,10 +354,10 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
   }, []);
 
   const spawnSandParticles = useCallback((x: number, y: number, intensity: number = 1.0) => {
-    if (levelId !== 'BEACH') return; // Only spawn sand on beach level
+    if (!theme.groundKickParticles) return;
     const numParticles = Math.floor(6 * intensity);
     const catFeetX = x;
-    const catFeetY = GROUND_Y + y;
+    const catFeetY = groundY + y;
     const newParticles: Particle[] = [];
     for (let i = 0; i < numParticles; i++) {
       const angle = (Math.random() - 0.5) * Math.PI * 0.6; // Arc pattern
@@ -353,45 +375,54 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
       });
     }
     particlesRef.current = [...particlesRef.current, ...newParticles];
-  }, [levelId]);
+  }, [theme.groundKickParticles, groundY]);
 
   const spawnFartTrail = useCallback(() => {
     const numParticles = 6;
-    const catCenterX = 100 + 64; 
-    const catBottomY = GROUND_Y + playerRef.current.y + 10;
+    const catCenterX = playerAnchor.hitboxCenterX;
+    const catBottomY = groundY + playerRef.current.y + 10;
     const newParticles: Particle[] = [];
     for (let i = 0; i < numParticles; i++) {
       newParticles.push({ id: Math.random() + Date.now(), x: catCenterX + (Math.random() - 0.5) * 30, y: catBottomY + (Math.random() - 0.5) * 15, vx: -speedRef.current - (Math.random() * 3), vy: (status === GameStatus.PLAYING ? (Math.random() - 0.5) * 4 : 0), size: 15 + Math.random() * 20, opacity: 0.7, life: 1.0, color: 'rgba(120, 53, 15, 0.4)' });
     }
     particlesRef.current = [...particlesRef.current, ...newParticles];
-  }, [status]);
+  }, [status, groundY, playerAnchor.hitboxCenterX]);
 
   const shootPoop = useCallback(() => {
     const now = Date.now();
     if (now - lastShotTime.current < 150) return; 
     playSound('fart-4-228244');
-    bulletsRef.current = [...bulletsRef.current, { id: now, x: 100 + 100, y: GROUND_Y + playerRef.current.y + 50, speed: 18, size: 28 }];
+    bulletsRef.current = [
+      ...bulletsRef.current,
+      {
+        id: now,
+        x: playerAnchor.anchorLeft + 100,
+        y: groundY + playerRef.current.y + 50,
+        speed: 18,
+        size: 28,
+      },
+    ];
     lastShotTime.current = now;
-  }, [playSound]);
+  }, [playSound, groundY, playerAnchor.anchorLeft]);
 
   const performJump = useCallback(() => {
     if (playerRef.current.jumpCount < 2) {
       playSound('cartoon-jump-6462'); spawnFartTrail();
-      const catFeetX = 100 + 64;
+      const catFeetX = playerAnchor.hitboxCenterX;
       spawnSandParticles(catFeetX, playerRef.current.y, 0.8);
-      playerRef.current = { ...playerRef.current, vy: tuning.jumpForce, jumpCount: playerRef.current.jumpCount + 1, isJumping: true, isDucking: false };
+      playerRef.current = { ...playerRef.current, vy: effectiveTuning.jumpForce, jumpCount: playerRef.current.jumpCount + 1, isJumping: true, isDucking: false };
     }
-  }, [playSound, spawnFartTrail, spawnSandParticles, tuning]);
+  }, [playSound, spawnFartTrail, spawnSandParticles, effectiveTuning, playerAnchor.hitboxCenterX]);
 
   const performDuck = useCallback((isDucking: boolean) => {
     if (status === GameStatus.BOSS_FIGHT) { if (isDucking) shootPoop(); return; }
     if (isDucking && !playerRef.current.isDucking && playerRef.current.y <= 5) {
       // Spawn small sand particles when ducking starts
-      const catFeetX = 100 + 64;
+      const catFeetX = playerAnchor.hitboxCenterX;
       spawnSandParticles(catFeetX, playerRef.current.y, 0.5);
     }
     playerRef.current = { ...playerRef.current, isDucking: isDucking };
-  }, [status, shootPoop, spawnSandParticles]);
+  }, [status, shootPoop, spawnSandParticles, playerAnchor.hitboxCenterX]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.code === 'KeyP' || e.code === 'Escape') {
@@ -430,80 +461,56 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
   const spawnEntity = useCallback((typeOverride?: EntityType, yOverride?: number) => {
     if (status !== GameStatus.PLAYING && !typeOverride) {
       if (status === GameStatus.BOSS_FIGHT && boss) {
-        // Enhanced projectile spawning - varies based on boss health
-        const healthPercent = bossHealthRef.current / 100;
+        const healthPercent = bossHealthRef.current / bossCfg.health;
         const lives = livesRef.current;
-        const lowLives = lives <= tuning.lowLivesThreshold;
+        const lowLives = lives <= effectiveTuning.lowLivesThreshold;
         const elapsed = Date.now() - bossFightStartTimeRef.current;
-        const introProgress = Math.min(elapsed / tuning.bossIntroEaseMs, 1);
-        const baseSpawnRate = healthPercent < 0.3 ? 0.65 : (healthPercent < 0.6 ? 0.5 : 0.4); // Faster when low health
-        let spawnRate = baseSpawnRate * (0.55 + introProgress * 0.45);
-        if (lowLives) spawnRate *= 0.82;
-        spawnRate = Math.max(0.18, Math.min(0.75, spawnRate));
-        
+        const introProgress = Math.min(elapsed / effectiveTuning.bossIntroEaseMs, 1);
+        const spawnRate = computeBossProjectileSpawnRate(
+          healthPercent,
+          bossCfg,
+          introProgress,
+          lowLives
+        );
+
         if (Math.random() < spawnRate) {
-          // Boss shoots from his face area (center-top of boss)
           const bossFaceX = boss.x + boss.width * 0.5;
-          const bossFaceY = boss.y + boss.height * 0.85; // Near top of boss, where face is
-          
-          // Calculate kitty's current position for aiming
-          const kittyX = 100 + 24 + 40; // Left position + padding + half kitty width
-          const kittyY = GROUND_Y + playerRef.current.y + 50; // Ground + player y + half kitty height
-          
-          // Calculate direction to kitty (straight horizontal with slight vertical adjustment)
-          const dx = kittyX - bossFaceX;
-          const dy = kittyY - bossFaceY;
-          
-          // For straight shot, prioritize horizontal aim with minimal vertical variation
-          const verticalOffset = dy * 0.3; // Only aim 30% at vertical position for straighter shot
-          
-          // Add some variation for dodging - more variation when boss is low health
-          const accuracy = healthPercent < 0.3 ? 0.85 : (healthPercent < 0.6 ? 0.9 : 0.95);
-          const angleVariation = (1 - accuracy) * 0.25; // Less vertical variation for straighter shots
-          
-          // Calculate angle with preference for horizontal
-          const baseAngle = Math.atan2(verticalOffset, dx);
-          const angle = baseAngle + (Math.random() - 0.5) * angleVariation;
-          
-          // Projectile velocity components - mostly horizontal
-          const baseSpeed = 12 + Math.random() * 4; // 12-16 speed for faster straight shots
-          const introSpeedScale = 0.78 + introProgress * 0.22;
-          const livesSpeedScale = lowLives ? 0.85 : 1.0;
-          const healthSpeedScale = healthPercent < 0.3 ? 1.2 : 1.0;
-          const speed = baseSpeed * introSpeedScale * livesSpeedScale * healthSpeedScale;
-          const vx = Math.cos(angle) * speed;
-          const vy = Math.sin(angle) * speed * 0.4; // Reduce vertical component for straighter trajectory
-          
-          // Spawn launch particles
+          const bossFaceY = boss.y + boss.height * 0.85;
+          const aimX = playerAnchor.projectileAimX;
+          const dx = aimX - bossFaceX;
+
+          const projDef = getObstacleDef(bossProjectileObstacleType);
+          const pw = projDef?.width ?? 100;
+          const ph = projDef?.height ?? 100;
+          obstaclesRef.current.push(
+            createBossProjectileObstacle({
+              boss,
+              groundY,
+              playerY: playerRef.current.y,
+              bossCfg,
+              healthPercent,
+              introProgress,
+              lowLives,
+              projWidth: pw,
+              projHeight: ph,
+              projectileType: bossProjectileObstacleType,
+              projectileAimX: aimX,
+            })
+          );
+
           spawnPoopLaunchParticles(bossFaceX, bossFaceY);
           playSound('poop_launch');
-          triggerScreenShake(3); // Small shake on launch
-          
-          obstaclesRef.current.push({ 
-            id: Date.now() + Math.random(), 
-            type: 'SAND_PROJECTILE', 
-            x: bossFaceX, 
-            y: bossFaceY, 
-            width: 100, 
-            height: 100, 
-            speed: vx, // Store horizontal speed in speed property
-            vx: vx, // Horizontal velocity
-            vy: vy, // Vertical velocity (reduced for straight shot)
-            rotation: 0, // Initial rotation
-            isPassed: false 
-          });
-          
-          // Flip boss direction based on where kitty is
-          setBossFacingDirection(dx < 0 ? 'left' : 'right');
+          triggerScreenShake(3);
+          setBossFacingDirection(bossFacingFromProjectileAim(dx));
         }
       }
       return;
     }
 
-    const beachTypes: ObstacleType[] = ['CRAB', 'CRAB', 'BEACHBALL', 'BEACHBALL', 'SEAGULL', 'SANDCASTLE', 'TIDEPOOL', 'PALM_TREE'];
+    const pool = weightedObstaclePool.length > 0 ? weightedObstaclePool : (['CRAB'] as ObstacleType[]);
     const lives = livesRef.current;
-    const lowLives = lives <= tuning.lowLivesThreshold;
-    const criticalLives = lives <= tuning.criticalLivesThreshold;
+    const lowLives = lives <= effectiveTuning.lowLivesThreshold;
+    const criticalLives = lives <= effectiveTuning.criticalLivesThreshold;
     
     const coinChance = criticalLives ? 0.9 : (lowLives ? 0.86 : 0.75);
     const shellChanceWhenNoCoin = criticalLives ? 0.65 : (lowLives ? 0.55 : 0.4);
@@ -516,31 +523,33 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     }
     if (consecutiveHarmfulRef.current >= harmfulStreakLimit) { isCoin = true; isShell = false; }
 
-    let selectedType: EntityType = typeOverride || (isShell ? 'SHELL' : (isCoin ? 'COIN' : beachTypes[Math.floor(Math.random() * beachTypes.length)]));
+    let selectedType: EntityType = typeOverride || (isShell ? 'SHELL' : (isCoin ? 'COIN' : pool[Math.floor(Math.random() * pool.length)]));
 
     // Keep opening moments fair: avoid unavoidable hits right after start or damage.
-    if (Date.now() < safeSpawnUntilRef.current && HARMFUL_TYPES.includes(selectedType)) {
+    if (Date.now() < safeSpawnUntilRef.current && harmfulTypes.includes(selectedType)) {
       selectedType = 'COIN';
       isCoin = true;
       isShell = false;
     }
     
-    if (HARMFUL_TYPES.includes(selectedType)) consecutiveHarmfulRef.current++; else consecutiveHarmfulRef.current = 0;
+    if (harmfulTypes.includes(selectedType)) consecutiveHarmfulRef.current++; else consecutiveHarmfulRef.current = 0;
     
-    let height = 120, width = 120, y = yOverride ?? GROUND_Y, isSwooping = false;
+    let height = 120, width = 120, y = yOverride ?? groundY, isSwooping = false;
     
-    if (selectedType === 'COIN' || selectedType === 'SHELL' || selectedType === 'SPEED' || selectedType === 'MAGNET' || selectedType === 'SUPER_SIZE') { width = 60; height = 60; if (yOverride === undefined) y = GROUND_Y + Math.random() * 250; }
+    if (selectedType === 'COIN' || selectedType === 'SHELL' || selectedType === 'SPEED' || selectedType === 'MAGNET' || selectedType === 'SUPER_SIZE') { width = 60; height = 60; if (yOverride === undefined) y = groundY + Math.random() * 250; }
     else if (selectedType === 'SEAGULL') { 
-      height = 90; 
-      width = 110; 
-      const seagullType = Math.random() < 0.5 ? 'dive' : 'poop';
-      if (seagullType === 'dive') {
-        isSwooping = Math.random() < 0.6;
-        if (yOverride === undefined) y = isSwooping ? 400 : 350; // Start high for dramatic swoop, or mid-high for flyover
+      const sg = getObstacleDef('SEAGULL');
+      height = sg?.height ?? 90; 
+      width = sg?.width ?? 110; 
+      const seagullType = pickSeagullSpawnVariant(sg);
+      if (yOverride !== undefined) {
+        y = yOverride;
+      } else if (seagullType === 'dive') {
+        isSwooping = obstacleHasBehavior(sg, 'swoop') && Math.random() < 0.6;
+        y = resolveObstacleSpawnY(sg?.spawnY, () => (isSwooping ? 400 : 350));
       } else {
-        // 'poop' type - higher altitude, no swooping (much higher so poops fall down)
         isSwooping = false;
-        if (yOverride === undefined) y = 500 + Math.random() * 100; // 500-600px range (high in sky)
+        y = resolveObstacleSpawnY(sg?.spawnY, () => 500 + Math.random() * 100);
       }
       obstaclesRef.current.push({ 
         id: Date.now() + Math.random(), 
@@ -557,92 +566,28 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
       });
       return; // Early return to skip the default push below
     }
-    else if (selectedType === 'BEACHBALL') width = 140; 
-    else if (selectedType === 'CRAB') { width = 130; height = 110; }
-    else if (selectedType === 'SANDCASTLE') { width = 160; height = 130; } 
-    else if (selectedType === 'TIDEPOOL') { width = 220; height = 50; }
-    else if (selectedType === 'PALM_TREE') { width = 100; height = 180; }
+    else {
+      const od = getObstacleDef(selectedType as ObstacleType);
+      if (od) { width = od.width; height = od.height; }
+    }
     
     obstaclesRef.current.push({ id: Date.now() + Math.random(), type: selectedType as any, x: window.innerWidth + 200, y, isSwooping, width, height, speed: speedRef.current, isPassed: false });
-  }, [status, boss, spawnPoopLaunchParticles, playSound, triggerScreenShake, tuning]);
+  }, [status, boss, spawnPoopLaunchParticles, playSound, triggerScreenShake, effectiveTuning, groundY, harmfulTypes, weightedObstaclePool, getObstacleDef, bossCfg, bossProjectileObstacleType, playerAnchor.projectileAimX]);
 
-  const spawnBackgroundDeco = useCallback((isChaosMode: boolean = false) => {
-    if (isChaosMode) {
-      // Boss fight chaos mode - sinking boats and burning planes
-      const chaosTypes: BackgroundEntityType[] = ['BOAT_SINKING', 'AIRPLANE_FIRE'];
-      const type = chaosTypes[Math.floor(Math.random() * chaosTypes.length)];
-      let y = 0, x = window.innerWidth + 300, speed = 0, width = 0, height = 0, bannerText = "";
-      const depth: 'far' | 'mid' | 'near' = 'mid';
-
-      if (type === 'BOAT_SINKING') {
-        y = window.innerHeight * 0.32 + Math.random() * (window.innerHeight * 0.08);
-        width = 260;
-        height = 140;
-        speed = speedRef.current * 1.2; // Faster than normal
-      } else if (type === 'AIRPLANE_FIRE') {
-        y = window.innerHeight * 0.5 + Math.random() * (window.innerHeight * 0.2);
-        width = 180;
-        height = 80;
-        speed = speedRef.current * 1.5; // Very fast - flying out of frame
-        bannerText = "HELP!";
-      }
-      backgroundRef.current.push({ id: Date.now(), type, x, y, speed, width, height, bannerText, depth, isChaos: true });
-      return;
-    }
-
-    // Normal gameplay backgrounds
-    // Far layer: Clouds
-    if (Math.random() < 0.3) {
-      const cloudY = window.innerHeight * 0.55 + Math.random() * (window.innerHeight * 0.15);
-      const cloudSize = 80 + Math.random() * 60;
-      backgroundRef.current.push({
-        id: Date.now(),
-        type: 'CLOUD',
-        x: window.innerWidth + 200,
-        y: cloudY,
-        speed: speedRef.current * 0.1,
-        width: cloudSize,
-        height: cloudSize * 0.6,
-        depth: 'far'
+  const spawnBackgroundDeco = useCallback(
+    (isChaosMode: boolean = false) => {
+      const spawned = spawnBackgroundEntities({
+        isChaosMode,
+        gameSpeed: speedRef.current,
+        innerWidth: window.innerWidth,
+        innerHeight: window.innerHeight,
+        getBgEntityDef,
+        background: bgCfg,
       });
-    }
-
-    // Mid layer: Boats, surfers, airplanes, jetskiers
-    const types: BackgroundEntityType[] = ['BOAT', 'SURFER', 'AIRPLANE', 'JETSKI'];
-    const type = types[Math.floor(Math.random() * types.length)];
-    let y = 0, x = window.innerWidth + 500, speed = 2, width = 100, height = 100, bannerText = "", depth: 'far' | 'mid' | 'near' = 'mid';
-    if (type === 'BOAT') {
-      y = window.innerHeight * 0.35 + Math.random() * (window.innerHeight * 0.1);
-      width = 240;
-      height = 120;
-      speed = speedRef.current * 0.4;
-      depth = 'mid';
-    }
-    else if (type === 'SURFER') {
-      y = window.innerHeight * 0.28 + Math.random() * (window.innerHeight * 0.05);
-      width = 70;
-      height = 50;
-      speed = speedRef.current * 0.5;
-      depth = 'mid';
-    }
-    else if (type === 'AIRPLANE') {
-      y = window.innerHeight * 0.55 + Math.random() * (window.innerHeight * 0.15);
-      width = 160;
-      height = 60;
-      speed = speedRef.current * 0.6;
-      bannerText = "WHO FARTED?";
-      depth = 'mid';
-    }
-    else if (type === 'JETSKI') {
-      x = -200 - Math.random() * 300;
-      y = window.innerHeight * 0.25 + Math.random() * (window.innerHeight * 0.15);
-      width = 80;
-      height = 60;
-      speed = speedRef.current * 0.7;
-      depth = 'mid';
-    }
-    backgroundRef.current.push({ id: Date.now(), type, x, y, speed, width, height, bannerText, depth });
-  }, []);
+      for (const ent of spawned) backgroundRef.current.push(ent);
+    },
+    [getBgEntityDef, bgCfg]
+  );
 
   const triggerBossFight = useCallback(() => {
     setStatus(GameStatus.BOSS_FIGHT);
@@ -650,12 +595,23 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     obstaclesRef.current = [];
     setObstacles([]);
     playSound('boss_alert');
-    bossHealthRef.current = 100;
+    bossHealthRef.current = bossCfg.health;
     bossFightStartTimeRef.current = Date.now();
     setBossFacingDirection('right');
     triggerScreenShake(5); // Initial boss entrance shake
-    setBoss({ id: 999, type: 'BOSS', x: window.innerWidth - 450, y: GROUND_Y + 100, width: 320, height: 320, speed: 0, isPassed: false, health: 100, maxHealth: 100 });
-  }, [onStatusChange, playSound, triggerScreenShake]);
+    setBoss({
+      id: 999,
+      type: 'BOSS',
+      x: window.innerWidth - 450,
+      y: groundY + bossCfg.spawnYOffset,
+      width: bossCfg.width,
+      height: bossCfg.height,
+      speed: 0,
+      isPassed: false,
+      health: bossCfg.health,
+      maxHealth: bossCfg.health,
+    });
+  }, [onStatusChange, playSound, triggerScreenShake, groundY, bossCfg]);
 
   const update = useCallback((time: number) => {
     if (isPaused) return;
@@ -666,8 +622,8 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     }
 
     const now = Date.now();
-    const lowLivesMode = livesRef.current <= tuning.lowLivesThreshold;
-    const criticalLivesMode = livesRef.current <= tuning.criticalLivesThreshold;
+    const lowLivesMode = livesRef.current <= effectiveTuning.lowLivesThreshold;
+    const criticalLivesMode = livesRef.current <= effectiveTuning.criticalLivesThreshold;
 
     // Handle freeze frame - skip updates but keep rendering
     if (now < freezeUntilRef.current) {
@@ -701,7 +657,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     }
 
     if (status === GameStatus.PLAYING) {
-        speedRef.current += tuning.speedIncrement * speedMultiplier;
+        speedRef.current += effectiveTuning.speedIncrement * speedMultiplier;
         // Dynamically adjust music tempo as speed increases
         if (Math.random() < 0.02) { // Don't update every frame to avoid jitter
           setMusicTempo(100 + Math.floor(speedRef.current * 4));
@@ -712,7 +668,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
 
     const p = playerRef.current;
     let newY = p.y + p.vy;
-    let newVy = p.vy - tuning.gravity;
+    let newVy = p.vy - effectiveTuning.gravity;
     const wasInAir = prevVyRef.current < 0; // Was moving down (falling)
     if (newY <= 0) { 
       newY = 0; 
@@ -721,7 +677,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
       p.jumpCount = 0;
       // Spawn sand particles on landing
       if (wasInAir) {
-        const catFeetX = 100 + 64;
+        const catFeetX = playerAnchor.hitboxCenterX;
         spawnSandParticles(catFeetX, 0, 1.2);
       }
     }
@@ -731,23 +687,23 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
 
     // Running dust trail - spawn particles while on ground and moving
     if (status === GameStatus.PLAYING && newY <= 5 && !p.isDucking && Math.random() < 0.3) {
-      const catFeetX = 100 + 50 + (Math.random() - 0.5) * 30;
+      const catFeetX = playerAnchor.hitboxCenterX - 14 + (Math.random() - 0.5) * 30;
       particlesRef.current.push({
         id: Date.now() + Math.random(),
         x: catFeetX,
-        y: GROUND_Y + 5,
+        y: groundY + 5,
         vx: -speedRef.current * 0.5 - Math.random() * 2,
         vy: Math.random() * 3 + 1,
         size: 3 + Math.random() * 4,
-        opacity: 0.5,
+        opacity: 0.4 + Math.random() * 0.3,
         life: 0.6,
-        color: `rgba(251, 219, 116, ${0.4 + Math.random() * 0.3})` // Sand color
+        color: theme.particleColors.dust,
       });
     }
 
     // Background spawning - normal during PLAYING, chaos during BOSS_FIGHT
     const isBossFight = status === GameStatus.BOSS_FIGHT;
-    const spawnInterval = isBossFight ? 2000 : 4000; // Faster spawns during boss
+    const spawnInterval = isBossFight ? bgCfg.spawnInterval.boss : bgCfg.spawnInterval.normal;
     if ((status === GameStatus.PLAYING || isBossFight) && time - lastBackgroundTime.current > spawnInterval) {
       spawnBackgroundDeco(isBossFight);
       lastBackgroundTime.current = time;
@@ -778,11 +734,21 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     bulletsRef.current = bulletsRef.current.map(b => b.x < window.innerWidth + 100 ? { ...b, x: b.x + b.speed } : b).filter(b => b.x < window.innerWidth + 100);
 
     if (activePowerUpRef.current?.type === 'MAGNET') {
-      const catX = 100 + 64, catY = GROUND_Y + playerRef.current.y + 40;
-      obstaclesRef.current.forEach(obs => { if (obs.type === 'COIN') { const dx = catX - obs.x, dy = catY - (obs.y || GROUND_Y); const dist = Math.sqrt(dx * dx + dy * dy); if (dist < 450) { obs.x += dx * 0.2; obs.y = (obs.y || GROUND_Y) + dy * 0.2; } } });
+      const catX = playerAnchor.hitboxCenterX;
+      const catY = groundY + playerRef.current.y + 40;
+      obstaclesRef.current.forEach(obs => {
+        if (!magnetAttractSet.has(obs.type)) return;
+        const dx = catX - obs.x;
+        const dy = catY - (obs.y || groundY);
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 450) {
+          obs.x += dx * 0.2;
+          obs.y = (obs.y || groundY) + dy * 0.2;
+        }
+      });
     }
 
-    if (status === GameStatus.PLAYING && coinsRef.current >= tuning.bossThreshold) {
+    if (status === GameStatus.PLAYING && coinsRef.current >= bossEntryCoins) {
         triggerBossFight();
     }
 
@@ -798,11 +764,12 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
           const isPlayerRecovering = now < invincibilityUntilRef.current;
 
           if (Math.random() < patternChance && !isPlayerRecovering) {
-            patternQueue.current = [...BEACH_PATTERNS[Math.floor(Math.random() * BEACH_PATTERNS.length)]];
+            const pi = Math.floor(Math.random() * patterns.length);
+            patternQueue.current = [...patterns[pi]];
             consecutiveHarmfulRef.current = 0; // Reset harmful counter at pattern start
           }
           else {
-            const powerupThreshold = criticalLivesMode ? 10 : (lowLivesMode ? 14 : tuning.powerupThreshold);
+            const powerupThreshold = criticalLivesMode ? 10 : (lowLivesMode ? 14 : effectiveTuning.powerupThreshold);
             if (coinCounterRef.current >= powerupThreshold) {
               // Spawn powerup: 40% SPEED, 40% MAGNET, 20% SUPER_SIZE (rarer because more powerful)
               const roll = Math.random();
@@ -812,9 +779,9 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
             }
             else { spawnEntity(); }
             const lifeIntervalBonus = criticalLivesMode ? 320 : (lowLivesMode ? 180 : 0);
-            const spawnJitter = (Math.random() - 0.5) * tuning.spawnJitterMs;
-            const computedInterval = tuning.spawnBaseMs - Math.min(speedRef.current * 43, 760) + lifeIntervalBonus + spawnJitter;
-            const intervalMs = Math.max(tuning.spawnMinMs, computedInterval);
+            const spawnJitter = (Math.random() - 0.5) * effectiveTuning.spawnJitterMs;
+            const computedInterval = effectiveTuning.spawnBaseMs - Math.min(speedRef.current * 43, 760) + lifeIntervalBonus + spawnJitter;
+            const intervalMs = Math.max(effectiveTuning.spawnMinMs, computedInterval);
             nextSpawnTime.current = now + (intervalMs / speedMultiplier);
           }
         }
@@ -822,7 +789,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
           const step = patternQueue.current.shift()!;
           spawnEntity(step.type, step.y);
           // Track harmful spawn time
-          if (HARMFUL_TYPES.includes(step.type)) {
+          if (harmfulTypes.includes(step.type)) {
             lastHarmfulSpawnTime.current = now;
           }
           const patternDelayScale = criticalLivesMode ? 1.25 : (lowLivesMode ? 1.15 : 1);
@@ -830,14 +797,14 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
 
           // If pattern just finished, set mandatory gap before next spawn
           if (patternQueue.current.length === 0) {
-            patternEndTime.current = now + tuning.patternEndGapMs + (lowLivesMode ? 200 : 0);
+            patternEndTime.current = now + effectiveTuning.patternEndGapMs + (lowLivesMode ? 200 : 0);
             consecutiveHarmfulRef.current = 0; // Reset after pattern
           }
         }
       }
     } else if (status === GameStatus.BOSS_FIGHT) {
       const fightElapsed = now - bossFightStartTimeRef.current;
-      const introProgress = Math.min(fightElapsed / tuning.bossIntroEaseMs, 1);
+      const introProgress = Math.min(fightElapsed / effectiveTuning.bossIntroEaseMs, 1);
       let bossSpawnInterval = 1400 - (introProgress * 300); // 1400ms -> 1100ms over intro window
       if (lowLivesMode) bossSpawnInterval += 180;
       if (time - lastObstacleTime.current > bossSpawnInterval) { spawnEntity(); lastObstacleTime.current = time; }
@@ -845,11 +812,11 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     
     // Handle seagull poop drops - with stacking prevention
     if (status === GameStatus.PLAYING || status === GameStatus.BOSS_FIGHT) {
-      const harmfulCooldown = tuning.harmfulCooldownMs + (lowLivesMode ? 250 : 0);
+      const harmfulCooldown = effectiveTuning.harmfulCooldownMs + (lowLivesMode ? 250 : 0);
       const canSpawnPoop = (now - lastHarmfulSpawnTime.current) > harmfulCooldown;
 
       obstaclesRef.current.forEach(obs => {
-        const projectile = checkPoopDrop(obs, now, lowLivesMode, canSpawnPoop);
+        const projectile = checkPoopDrop(obs, now, lowLivesMode, canSpawnPoop, dropProjectileSpec);
         if (projectile) {
           obstaclesRef.current.push(projectile);
           obs.lastPoopTime = now;
@@ -863,14 +830,14 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
       setScreenShake(prev => ({
         x: (Math.random() - 0.5) * prev.intensity,
         y: (Math.random() - 0.5) * prev.intensity,
-        intensity: prev.intensity * 0.92 // Decay multiplier
+        intensity: prev.intensity * theme.screenShakeDecay
       }));
     }
     
     // Ambient particles during boss fight
     if (status === GameStatus.BOSS_FIGHT && Math.random() < 0.15) {
       const ambientX = window.innerWidth * (0.5 + Math.random() * 0.5);
-      const ambientY = GROUND_Y + 50 + Math.random() * 300;
+      const ambientY = groundY + 50 + Math.random() * 300;
       particlesRef.current.push({
         id: Date.now() + Math.random(),
         x: ambientX,
@@ -885,26 +852,23 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     }
     
     if (status === GameStatus.BOSS_FIGHT && boss) {
-        // Enhanced boss movement with horizontal sway
-        const healthPercent = bossHealthRef.current / 100;
-        const swayAmount = healthPercent < 0.3 ? 30 : 15; // More sway when low health
-        const horizontalSway = Math.sin(time / 800) * swayAmount;
-        const baseX = window.innerWidth - 450;
-        
-        const updatedBoss = { 
-          ...boss, 
-          x: Math.max(window.innerWidth - 500, baseX + horizontalSway), 
-          y: GROUND_Y + Math.sin(time / 500) * 50 + 50, 
-          health: bossHealthRef.current 
+        const pose = computeBossWorldPose({
+          time,
+          windowInnerWidth: window.innerWidth,
+          groundY,
+          bossCfg,
+          bossHealth: bossHealthRef.current,
+        });
+        const updatedBoss = {
+          ...boss,
+          x: pose.x,
+          y: pose.y,
+          health: bossHealthRef.current,
         };
         setBoss(updatedBoss);
-        
-        // Update facing direction based on movement
-        if (horizontalSway > 5) {
-          setBossFacingDirection('right');
-        } else if (horizontalSway < -5) {
-          setBossFacingDirection('left');
-        }
+
+        const face = facingFromBossSway(pose.facingDelta);
+        if (face) setBossFacingDirection(face);
         
         bulletsRef.current = bulletsRef.current.filter(b => {
             const hit = b.x > updatedBoss.x && 
@@ -912,9 +876,9 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
                         b.y > updatedBoss.y && 
                         b.y < updatedBoss.y + updatedBoss.height;
             if (hit) {
-                bossHealthRef.current -= 4;
+                bossHealthRef.current -= bossCfg.damagePerHit;
                 // Enhanced hit effects
-                spawnBopParticles(b.x, b.y, '#ff6b6b', 25, true);
+                spawnBopParticles(b.x, b.y, theme.particleColors.impact, 25, true);
                 triggerScreenShake(8); // Big shake on hit
                 triggerFreezeFrame(40); // Brief freeze on boss hit
                 playSound('boss_hit');
@@ -932,8 +896,9 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
                     defeatPoopsSpawnedRef.current = 0;
                     setDefeatPoops([]);
 
-                    // Clear all projectiles
-                    obstaclesRef.current = obstaclesRef.current.filter(obs => obs.type !== 'SAND_PROJECTILE');
+                    obstaclesRef.current = obstaclesRef.current.filter(
+                      o => !obstacleHasBehavior(getObstacleDef(o.type as ObstacleType), 'arcProjectile')
+                    );
                 }
                 return false;
             }
@@ -1053,17 +1018,25 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
           true,
           localStorage.getItem('beach-cat-dev-tuning') ? 'custom' : 'default'
         );
+        const finalScore = Math.floor(scoreRef.current / 10);
+        const gameScore: GameScore = {
+          current: finalScore,
+          high: 0,
+          coins: coinsRef.current,
+          multiplier: multiplierRef.current,
+          streak: streakRef.current,
+          lives: livesRef.current,
+        };
+        onVictoryFinalize?.({
+          levelId,
+          finalScore,
+          gameScore,
+          wasBossFight: true,
+        });
+        // Do not call onScoreUpdate here: App's handleVictoryFinalize refills lives and merges high;
+        // a follow-up onScoreUpdate would overwrite with engine snapshot (e.g. pre-refill lives).
         setStatus(GameStatus.VICTORY);
         onStatusChange?.(GameStatus.VICTORY);
-        // Final score update
-        onScoreUpdate({ 
-          current: Math.floor(scoreRef.current / 10), 
-          high: 0, 
-          coins: coinsRef.current, 
-          multiplier: multiplierRef.current, 
-          streak: streakRef.current, 
-          lives: livesRef.current
-        });
       }
     }
 
@@ -1074,18 +1047,18 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
     const baseKittyW = 160, baseKittyH = playerRef.current.isDucking ? 90 : 200;
     const kittyW = isSuperSized ? baseKittyW * 3 : baseKittyW;
     const kittyH = isSuperSized ? baseKittyH * 3 : baseKittyH;
-    const kittyL = 100 + 24 - (isSuperSized ? baseKittyW : 0); // Adjust left position for centered scaling
-    const kittyR = 100 + 24 + kittyW;
-    const kittyB = GROUND_Y + playerRef.current.y;
-    const kittyT = GROUND_Y + playerRef.current.y + kittyH;
+    const kittyL = playerAnchor.hitboxLeft - (isSuperSized ? baseKittyW : 0);
+    const kittyR = playerAnchor.hitboxLeft + kittyW;
+    const kittyB = groundY + playerRef.current.y;
+    const kittyT = groundY + playerRef.current.y + kittyH;
     const kRect = { l: kittyL, r: kittyR, b: kittyB, t: kittyT };
     
     obstaclesRef.current = obstaclesRef.current.map(obs => {
       let newX = obs.x;
-      let newY = obs.y ?? GROUND_Y;
+      let newY = obs.y ?? groundY;
       
-      // Enhanced projectile physics with arc trajectory
-      if (obs.type === 'SAND_PROJECTILE') {
+      // Arc projectiles (boss shots, etc.) — driven by level obstacle behaviors
+      if (obstacleHasBehavior(getObstacleDef(obs.type as ObstacleType), 'arcProjectile')) {
         const gravity = 0.4; // Gravity for arc
         const friction = 0.98; // Slight air resistance
         
@@ -1095,7 +1068,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
         
         // Update position
         newX = obs.x + vx;
-        newY = (obs.y ?? GROUND_Y) + vy;
+        newY = (obs.y ?? groundY) + vy;
         
         // Calculate rotation based on movement direction
         const angle = Math.atan2(vy, vx) * (180 / Math.PI);
@@ -1104,7 +1077,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
         obs.vy = vy;
         
         // Remove if off screen
-        if (newX < -200 || newY < -200 || newY > GROUND_Y + 400) {
+        if (newX < -200 || newY < -200 || newY > groundY + 400) {
           obs.isPassed = true;
         }
       } else {
@@ -1113,14 +1086,14 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
         newX = obs.x - step;
         
         if (obs.type === 'SEAGULL' && obs.isSwooping) {
-          newY = computeSwoopY(newX, window.innerWidth);
+          newY = computeSwoopY(newX, window.innerWidth, seagullSwoopConfig);
         }
       }
       
-      if (!obs.isPassed && (HARMFUL_TYPES.includes(obs.type) || obs.type === 'SANDCASTLE') && newX < kRect.l) {
+      if (!obs.isPassed && (harmfulTypes.includes(obs.type) || obs.type === 'SANDCASTLE') && newX < kRect.l) {
         obs.isPassed = true; 
         if (obs.type !== 'SANDCASTLE') streakRef.current++;
-        if (streakRef.current >= tuning.streakRequired) { multiplierRef.current++; streakRef.current = 0; playSound('mult'); setMultFeedback("MULTIPLIER UP!"); setTimeout(() => setMultFeedback(null), 1000); }
+        if (streakRef.current >= effectiveTuning.streakRequired) { multiplierRef.current++; streakRef.current = 0; playSound('mult'); setMultFeedback("MULTIPLIER UP!"); setTimeout(() => setMultFeedback(null), 1000); }
       }
       return { ...obs, x: newX, y: newY };
     }).filter(obs => obs.x > -400);
@@ -1151,7 +1124,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
 
     for (const obs of obstaclesRef.current) {
       if (obs.isCollected) continue;
-      const oY = obs.y ?? (obs.type === 'SEAGULL' ? (obs.seagullType === 'poop' ? 550 : 350) : GROUND_Y);
+      const oY = obs.y ?? (obs.type === 'SEAGULL' ? (obs.seagullType === 'poop' ? 550 : 350) : groundY);
       const hPadding = 10, vPadding = 5;
       const oRect = { l: obs.x + hPadding, r: obs.x + obs.width - hPadding, b: oY + vPadding, t: oY + obs.height - vPadding };
       let overlaps = (kRect.r > oRect.l && kRect.l < oRect.r && kRect.t > oRect.b && kRect.b < oRect.t);
@@ -1199,7 +1172,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
           const coinValue = 10 * multiplierRef.current;
           const coinCenterX = obs.x + obs.width/2;
           const coinCenterY = oY + obs.height/2;
-          spawnBopParticles(coinCenterX, coinCenterY, '#facc15'); // Gold particle burst
+          spawnBopParticles(coinCenterX, coinCenterY, theme.particleColors.coinCollect);
           // Spawn additional sparkle particles in ring pattern
           const sparkleCount = 12;
           const baseTime = Date.now();
@@ -1235,22 +1208,29 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
           continue; 
         }
         const isLanding = playerRef.current.vy < 0 && (kRect.b >= oRect.t - 30);
+        const stompDef = getObstacleDef(obs.type as ObstacleType);
+        const canStompBounce =
+          obs.type === 'SEAGULL'
+            ? obs.seagullType === 'dive' && obstacleHasBehavior(stompDef, 'swoop')
+            : obstacleHasBehavior(stompDef, 'bounce') ||
+              obstacleHasBehavior(stompDef, 'stomp') ||
+              obstacleHasBehavior(stompDef, 'arcProjectile');
         if (isLanding) {
-          if (obs.type === 'CRAB' || obs.type === 'BEACHBALL' || (obs.type === 'SEAGULL' && obs.seagullType === 'dive') || obs.type === 'SAND_PROJECTILE') {
-            const result = handleBounceCollision(obs.type, tuning);
+          if (canStompBounce) {
+            const result = handleBounceCollision(obs.type, effectiveTuning, stompDef);
             applyCollisionResult(result, obs, oRect.t);
             continue;
           }
-        } else if ((obs.type === 'SANDCASTLE' || obs.type === 'TIDEPOOL') && !isCurrentlyHurt) {
-          const result = handleSlowCollision(obs.type);
+        } else if (obstacleHasBehavior(stompDef, 'slowOnContact') && !isCurrentlyHurt) {
+          const result = handleSlowCollision(obs.type, stompDef);
           applyCollisionResult(result, obs, oRect.t);
-        } else if (HARMFUL_TYPES.includes(obs.type) && !isCurrentlyHurt && activePowerUpRef.current?.type !== 'SUPER_SIZE') {
+        } else if (harmfulTypes.includes(obs.type) && !isCurrentlyHurt && activePowerUpRef.current?.type !== 'SUPER_SIZE') {
           const result = handleHarmfulCollision();
           result.sounds.forEach(s => playSound(s));
           livesRef.current--;
           telemetryRef.current.logDamage(obs.type, speedRef.current, livesRef.current, Math.floor(scoreRef.current / 10));
-          invincibilityUntilRef.current = now + tuning.invincibilityDurationMs;
-          safeSpawnUntilRef.current = now + tuning.hitSpawnGraceMs;
+          invincibilityUntilRef.current = now + effectiveTuning.invincibilityDurationMs;
+          safeSpawnUntilRef.current = now + effectiveTuning.hitSpawnGraceMs;
           streakRef.current = 0;
           triggerFreezeFrame(80);
           triggerScreenShake(12);
@@ -1276,7 +1256,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
             telemetryRef.current.logRunSummary(
               Math.floor(scoreRef.current / 10),
               coinsRef.current,
-              status === GameStatus.BOSS_FIGHT || status === GameStatus.BOSS_INTRO,
+              status === GameStatus.BOSS_FIGHT,
               false,
               localStorage.getItem('beach-cat-dev-tuning') ? 'custom' : 'default'
             );
@@ -1287,7 +1267,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
       }
     }
     setObstacles([...obstaclesRef.current]);
-  }, [status, onGameOver, onScoreUpdate, onStatusChange, playSound, spawnBackgroundDeco, spawnBopParticles, spawnSandParticles, spawnEntity, triggerBossFight, isPaused, bossDefeating, defeatPoops, triggerScreenShake, tuning]);
+  }, [status, onGameOver, onScoreUpdate, onVictoryFinalize, onStatusChange, levelId, playSound, spawnBackgroundDeco, spawnBopParticles, spawnSandParticles, spawnEntity, triggerBossFight, isPaused, bossDefeating, defeatPoops, triggerScreenShake, effectiveTuning, bossEntryCoins, seagullSwoopConfig, patterns, harmfulTypes, groundY, theme, bossCfg, bgCfg, getObstacleDef, dropProjectileSpec, magnetAttractSet, playerAnchor]);
 
   useEffect(() => {
     const loop = (time: number) => {
@@ -1340,6 +1320,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
   );
 
   return (
+    <LevelProvider levelId={levelId}>
     <div 
       className="absolute inset-0 w-full h-full overflow-hidden"
       style={{
@@ -1366,10 +1347,10 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
 
       <div className="absolute inset-0 w-full h-full pointer-events-none">
         {/* Speed Lines - appear at high velocities */}
-        {speedRef.current > 10 && status === GameStatus.PLAYING && (
+        {speedRef.current > theme.speedLineThreshold && status === GameStatus.PLAYING && (
           <div
-            className="absolute inset-0 pointer-events-none overflow-hidden z-0"
-            style={{ opacity: Math.min((speedRef.current - 10) / 10, 0.6) }}
+            className="motion-intense absolute inset-0 pointer-events-none overflow-hidden z-0"
+            style={{ opacity: Math.min((speedRef.current - theme.speedLineThreshold) / 10, 0.6) }}
           >
             {speedLineConfig.map((line) => (
               <div
@@ -1404,241 +1385,14 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
             className="absolute flex items-end" 
             style={{ left: b.x, bottom: b.y, width: b.width, height: b.height, zIndex }}
           >
-            {b.type === 'BOAT' && (
-              <div className="relative w-full h-full animate-[boatBob_3s_ease-in-out_infinite]">
-                <svg viewBox="0 0 240 120" className="w-full h-full drop-shadow-lg">
-                  <path d="M10 80 L 230 80 L 210 110 Q 120 120 30 110 Z" fill="#dc2626" />
-                  <path d="M10 80 L 230 80 L 225 60 L 40 60 L 15 50 L 10 55 Z" fill="#ffffff" />
-                  {[...Array(6)].map((_, i) => (
-                    <circle key={i} cx={50 + i * 30} cy={70} r="3" fill="#1e293b" opacity="0.6" />
-                  ))}
-                  <rect x="50" y="40" width="160" height="20" fill="#ffffff" />
-                  <rect x="80" y="25" width="100" height="15" fill="#ffffff" />
-                  <rect x="100" y="5" width="15" height="25" fill="#dc2626" />
-                  <rect x="100" y="5" width="15" height="6" fill="#1e293b" />
-                  <rect x="140" y="5" width="15" height="25" fill="#dc2626" />
-                  <rect x="140" y="5" width="15" height="6" fill="#1e293b" />
-                  <line x1="50" y1="40" x2="210" y2="40" stroke="#94a3b8" strokeWidth="1" />
-                  <line x1="80" y1="25" x2="180" y2="25" stroke="#94a3b8" strokeWidth="1" />
-                </svg>
-                {/* Wake trail */}
-                <div className="absolute bottom-[-15px] left-0 w-full h-6 bg-gradient-to-r from-transparent via-white/30 to-transparent blur-md animate-[wakeFlow_2s_ease-in-out_infinite]" />
-                <div className="absolute bottom-[-10px] w-full h-4 bg-white/20 blur-sm rounded-full" />
-                <style>{`
-                  @keyframes boatBob {
-                    0%, 100% { transform: translateY(0) rotate(-1deg); }
-                    50% { transform: translateY(-4px) rotate(1deg); }
-                  }
-                  @keyframes wakeFlow {
-                    0%, 100% { opacity: 0.3; transform: scaleX(1); }
-                    50% { opacity: 0.5; transform: scaleX(1.1); }
-                  }
-                `}</style>
-              </div>
-            )}
-            {b.type === 'SURFER' && (
-              <div className="relative w-full h-full animate-[surferWave_2s_ease-in-out_infinite]">
-                <svg viewBox="0 0 70 50" className="w-full h-full drop-shadow-md">
-                  {/* Wave */}
-                  <path d="M0 35 Q 17.5 25 35 30 T 70 30 L 70 50 L 0 50 Z" fill="#60a5fa" opacity="0.6" />
-                  {/* Surfer body */}
-                  <ellipse cx="35" cy="22" rx="8" ry="12" fill="#fbbf24" />
-                  {/* Surfboard */}
-                  <ellipse cx="35" cy="30" rx="20" ry="4" fill="#facc15" stroke="#eab308" strokeWidth="1" />
-                  {/* Arms */}
-                  <path d="M25 20 Q 20 15 18 18" stroke="#fbbf24" strokeWidth="3" fill="none" strokeLinecap="round" />
-                  <path d="M45 20 Q 50 15 52 18" stroke="#fbbf24" strokeWidth="3" fill="none" strokeLinecap="round" />
-                  {/* Splash */}
-                  <circle cx="15" cy="32" r="2" fill="white" opacity="0.7" />
-                  <circle cx="55" cy="32" r="2.5" fill="white" opacity="0.7" />
-                </svg>
-                <style>{`
-                  @keyframes surferWave {
-                    0%, 100% { transform: translateY(0) rotate(-2deg); }
-                    50% { transform: translateY(-3px) rotate(2deg); }
-                  }
-                `}</style>
-              </div>
-            )}
-            {b.type === 'AIRPLANE' && (
-              <div className="flex items-center relative overflow-visible">
-                <div className="relative w-20 h-10">
-                  <svg viewBox="0 0 100 60" className="w-full h-full">
-                    <path d="M20 30 L 70 15 L 80 30 L 70 45 Z" fill="#3b82f6" stroke="#1d4ed8" strokeWidth="2" />
-                    <path d="M10 30 Q 10 20 40 25 L 90 25 Q 95 25 95 30 Q 95 35 90 35 L 40 35 Q 10 40 10 30" fill="#cbd5e1" stroke="#475569" strokeWidth="2" />
-                    <path d="M80 25 L 95 10 L 95 25 Z" fill="#3b82f6" stroke="#1d4ed8" strokeWidth="2" />
-                    <circle cx="5" cy="30" r="4" fill="#1e293b" />
-                    <ellipse cx="5" cy="30" rx="2" ry="20" fill="white" opacity="0.4" className="animate-[spin_0.1s_linear_infinite]" />
-                  </svg>
-                </div>
-                {/* Banner with physics-based trailing */}
-                <div className="relative">
-                  <div className="w-10 h-0.5 bg-slate-400 opacity-60" />
-                  <div className="bg-white/95 backdrop-blur-sm border-4 border-red-500 px-6 py-2 rounded-2xl shadow-xl flex items-center h-12 animate-[bannerWave_1.5s_ease-in-out_infinite]">
-                    <span className="text-red-600 font-black text-sm uppercase tracking-widest whitespace-nowrap drop-shadow-sm">
-                      {b.bannerText}
-                    </span>
-                  </div>
-                </div>
-                {/* Optional contrail */}
-                <div className="absolute -left-4 top-1/2 w-8 h-1 bg-gradient-to-r from-transparent via-white/40 to-white/20 blur-sm opacity-50" />
-                <style>{`
-                  @keyframes bannerWave {
-                    0%, 100% { transform: translateY(0) rotate(-1deg); }
-                    25% { transform: translateY(-2px) rotate(0deg); }
-                    50% { transform: translateY(0) rotate(1deg); }
-                    75% { transform: translateY(-1px) rotate(0deg); }
-                  }
-                `}</style>
-              </div>
-            )}
-            {b.type === 'CLOUD' && (
-              <svg viewBox="0 0 100 60" className="w-full h-full opacity-70">
-                <ellipse cx="30" cy="30" rx="25" ry="15" fill="white" opacity="0.9" />
-                <ellipse cx="50" cy="25" rx="30" ry="18" fill="white" opacity="0.9" />
-                <ellipse cx="70" cy="30" rx="25" ry="15" fill="white" opacity="0.9" />
-                <ellipse cx="50" cy="35" rx="35" ry="12" fill="white" opacity="0.8" />
-              </svg>
-            )}
-            {b.type === 'JETSKI' && (
-              <div className="relative w-full h-full animate-[jetskiBob_2s_ease-in-out_infinite]">
-                <svg viewBox="0 0 80 60" className="w-full h-full drop-shadow-lg" style={{ transform: 'scaleX(-1)' }}>
-                  {/* Jetski body */}
-                  <ellipse cx="40" cy="35" rx="30" ry="12" fill="#ef4444" stroke="#dc2626" strokeWidth="2" />
-                  <ellipse cx="40" cy="30" rx="25" ry="8" fill="#f87171" />
-                  {/* Handlebar */}
-                  <rect x="35" y="20" width="10" height="8" rx="2" fill="#1e293b" />
-                  <path d="M30 20 Q 25 15 20 18" stroke="#1e293b" strokeWidth="3" fill="none" strokeLinecap="round" />
-                  <path d="M50 20 Q 55 15 60 18" stroke="#1e293b" strokeWidth="3" fill="none" strokeLinecap="round" />
-                  {/* Rider */}
-                  <circle cx="40" cy="22" r="6" fill="#fbbf24" />
-                  <ellipse cx="40" cy="28" rx="8" ry="10" fill="#3b82f6" />
-                  {/* Wake spray */}
-                  <path d="M10 40 Q 20 30 30 35 T 50 35 T 70 35" stroke="white" strokeWidth="2" fill="none" opacity="0.6" strokeLinecap="round" />
-                  <circle cx="15" cy="38" r="2" fill="white" opacity="0.7" />
-                  <circle cx="25" cy="36" r="1.5" fill="white" opacity="0.7" />
-                  <circle cx="55" cy="36" r="1.5" fill="white" opacity="0.7" />
-                  <circle cx="65" cy="38" r="2" fill="white" opacity="0.7" />
-                </svg>
-                {/* Wake trail behind */}
-                <div className="absolute bottom-[-10px] right-0 w-16 h-4 bg-gradient-to-l from-white/40 via-white/20 to-transparent blur-sm rounded-full animate-[wakeSpray_1.5s_ease-in-out_infinite]" />
-                <style>{`
-                  @keyframes jetskiBob {
-                    0%, 100% { transform: translateY(0) rotate(-1deg); }
-                    50% { transform: translateY(-3px) rotate(1deg); }
-                  }
-                  @keyframes wakeSpray {
-                    0%, 100% { opacity: 0.4; transform: scaleX(1); }
-                    50% { opacity: 0.6; transform: scaleX(1.2); }
-                  }
-                `}</style>
-              </div>
-            )}
-            {/* CHAOS MODE: Sinking boat during boss fight */}
-            {b.type === 'BOAT_SINKING' && (
-              <div className="relative w-full h-full animate-[sinkingBob_2s_ease-in-out_infinite]">
-                <svg viewBox="0 0 260 140" className="w-full h-full drop-shadow-lg" style={{ transform: 'rotate(18deg)' }}>
-                  {/* Water splashes */}
-                  <ellipse cx="130" cy="120" rx="120" ry="15" fill="#3b82f6" opacity="0.4" />
-                  <ellipse cx="130" cy="125" rx="100" ry="10" fill="#60a5fa" opacity="0.5" />
-                  {/* Partially submerged hull */}
-                  <path d="M30 90 L 230 70 L 220 110 Q 130 130 50 115 Z" fill="#dc2626" opacity="0.9" />
-                  <path d="M40 85 L 220 65 L 215 55 Q 130 45 50 55 Z" fill="#ffffff" opacity="0.8" />
-                  {/* Broken mast */}
-                  <rect x="110" y="30" width="8" height="35" fill="#78350f" />
-                  <rect x="140" y="20" width="6" height="20" fill="#78350f" transform="rotate(25, 143, 30)" />
-                  {/* Smoke puffs */}
-                  <circle cx="120" cy="25" r="12" fill="#64748b" opacity="0.6" className="animate-[smokePuff_1.5s_ease-out_infinite]" />
-                  <circle cx="135" cy="15" r="8" fill="#94a3b8" opacity="0.5" className="animate-[smokePuff_2s_ease-out_infinite]" style={{ animationDelay: '0.3s' }} />
-                  {/* Water spray */}
-                  <circle cx="60" cy="100" r="5" fill="white" opacity="0.7" className="animate-[splash_1s_ease-out_infinite]" />
-                  <circle cx="200" cy="90" r="4" fill="white" opacity="0.6" className="animate-[splash_1.2s_ease-out_infinite]" style={{ animationDelay: '0.2s' }} />
-                  <circle cx="90" cy="115" r="6" fill="white" opacity="0.5" className="animate-[splash_0.8s_ease-out_infinite]" style={{ animationDelay: '0.5s' }} />
-                </svg>
-                <style>{`
-                  @keyframes sinkingBob {
-                    0%, 100% { transform: translateY(0) rotate(18deg); }
-                    50% { transform: translateY(8px) rotate(22deg); }
-                  }
-                  @keyframes smokePuff {
-                    0% { transform: translateY(0) scale(1); opacity: 0.6; }
-                    100% { transform: translateY(-30px) scale(1.5); opacity: 0; }
-                  }
-                  @keyframes splash {
-                    0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
-                    50% { transform: translateY(-8px) scale(1.3); opacity: 0.3; }
-                  }
-                `}</style>
-              </div>
-            )}
-            {/* CHAOS MODE: Burning airplane during boss fight */}
-            {b.type === 'AIRPLANE_FIRE' && (
-              <div className="flex items-center relative overflow-visible animate-[planeDive_4s_linear_infinite]">
-                <div className="relative w-24 h-12">
-                  <svg viewBox="0 0 120 70" className="w-full h-full">
-                    {/* Plane body - damaged */}
-                    <path d="M25 35 L 80 18 L 95 35 L 80 52 Z" fill="#3b82f6" stroke="#1d4ed8" strokeWidth="2" />
-                    <path d="M15 35 Q 15 25 50 30 L 105 30 Q 110 30 110 35 Q 110 40 105 40 L 50 40 Q 15 45 15 35" fill="#cbd5e1" stroke="#475569" strokeWidth="2" />
-                    <path d="M90 30 L 108 15 L 108 30 Z" fill="#3b82f6" stroke="#1d4ed8" strokeWidth="2" />
-                    {/* Damaged/burning wing */}
-                    <path d="M50 25 L 85 10 L 88 18 L 55 30 Z" fill="#1e293b" opacity="0.4" />
-                    {/* Fire on wing */}
-                    <ellipse cx="70" cy="15" rx="8" ry="12" fill="#f97316" opacity="0.9" className="animate-[flicker_0.15s_ease-in-out_infinite]" />
-                    <ellipse cx="68" cy="12" rx="5" ry="8" fill="#fbbf24" opacity="0.9" className="animate-[flicker_0.1s_ease-in-out_infinite]" />
-                    <ellipse cx="75" cy="18" rx="6" ry="10" fill="#ef4444" opacity="0.8" className="animate-[flicker_0.12s_ease-in-out_infinite]" />
-                    {/* Propeller - spinning */}
-                    <circle cx="8" cy="35" r="5" fill="#1e293b" />
-                    <ellipse cx="8" cy="35" rx="3" ry="22" fill="white" opacity="0.4" className="animate-[spin_0.08s_linear_infinite]" />
-                  </svg>
-                </div>
-                {/* Smoke trail */}
-                <div className="absolute -right-20 top-0 flex gap-2">
-                  <div className="w-8 h-8 rounded-full bg-slate-600/60 blur-md animate-[smokeTrail_0.5s_ease-out_infinite]" />
-                  <div className="w-10 h-10 rounded-full bg-slate-500/50 blur-lg animate-[smokeTrail_0.6s_ease-out_infinite]" style={{ animationDelay: '0.1s' }} />
-                  <div className="w-12 h-12 rounded-full bg-slate-400/40 blur-xl animate-[smokeTrail_0.7s_ease-out_infinite]" style={{ animationDelay: '0.2s' }} />
-                </div>
-                {/* Fire trail */}
-                <div className="absolute -right-10 top-1/4 flex gap-1">
-                  <div className="w-4 h-6 rounded-full bg-orange-500/70 blur-sm animate-[flicker_0.15s_ease-in-out_infinite]" />
-                  <div className="w-3 h-5 rounded-full bg-yellow-400/60 blur-sm animate-[flicker_0.1s_ease-in-out_infinite]" />
-                </div>
-                {/* HELP banner - tattered */}
-                {b.bannerText && (
-                  <div className="relative ml-2">
-                    <div className="w-6 h-0.5 bg-slate-400 opacity-40" />
-                    <div className="bg-white/80 border-2 border-red-600 px-3 py-1 rounded-lg shadow-md animate-[bannerWobble_0.3s_ease-in-out_infinite]" style={{ transform: 'rotate(-5deg)' }}>
-                      <span className="text-red-600 font-black text-xs uppercase">{b.bannerText}</span>
-                    </div>
-                  </div>
-                )}
-                <style>{`
-                  @keyframes planeDive {
-                    0% { transform: rotate(-8deg); }
-                    50% { transform: rotate(-12deg); }
-                    100% { transform: rotate(-8deg); }
-                  }
-                  @keyframes flicker {
-                    0%, 100% { transform: scale(1); opacity: 0.9; }
-                    50% { transform: scale(1.15); opacity: 0.7; }
-                  }
-                  @keyframes smokeTrail {
-                    0% { transform: translateX(0) scale(1); opacity: 0.6; }
-                    100% { transform: translateX(-40px) scale(1.5); opacity: 0; }
-                  }
-                  @keyframes bannerWobble {
-                    0%, 100% { transform: rotate(-5deg) translateY(0); }
-                    50% { transform: rotate(-8deg) translateY(2px); }
-                  }
-                `}</style>
-              </div>
-            )}
+            <BackgroundEntityRenderer levelId={levelId} b={b} />
           </div>
             );
           })}
 
         {/* Obstacles & Coins */}
         {obstacles.map(obs => (
-          <ObstacleComponent key={obs.id} obstacle={obs} groundY={GROUND_Y} />
+          <ObstacleComponent key={obs.id} obstacle={obs} groundY={groundY} />
         ))}
 
         {/* Particles & Bullets rendered via Canvas for 60fps performance */}
@@ -1652,7 +1406,14 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
         {/* Boss */}
         {boss && (
           <div className="absolute" style={{ left: boss.x, bottom: boss.y, width: boss.width, height: boss.height, zIndex: 30 }}>
-            <SandMonster health={boss.health || 0} maxHealth={boss.maxHealth || 100} facingDirection={bossFacingDirection} isDefeating={bossDefeating} />
+            <Suspense fallback={null}>
+              <BossLazy
+                health={boss.health || 0}
+                maxHealth={boss.maxHealth ?? bossCfg.health}
+                facingDirection={bossFacingDirection}
+                isDefeating={bossDefeating}
+              />
+            </Suspense>
           </div>
         )}
 
@@ -1722,8 +1483,8 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
         <div
           className="absolute transition-transform duration-75"
           style={{
-            left: activePowerUp?.type === 'SUPER_SIZE' ? '40px' : '100px', // Adjust left for centered scaling
-            bottom: `${GROUND_Y + player.y}px`,
+            left: activePowerUp?.type === 'SUPER_SIZE' ? `${playerAnchor.anchorLeftSuperSized}px` : `${playerAnchor.anchorLeft}px`,
+            bottom: `${groundY + player.y}px`,
             filter: player.isHurt ? 'opacity(0.5) sepia(1) saturate(5) hue-rotate(-50deg)' : 'none',
             transform: activePowerUp?.type === 'SUPER_SIZE' ? 'scale(3)' : 'scale(1)',
             transformOrigin: 'center bottom',
@@ -1735,6 +1496,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
             isJumping={player.isJumping}
             isDucking={player.isDucking}
             customUrl={customCatUrl}
+            equippedMatting={equippedCatMatting}
             velocityY={player.vy}
             isHurt={player.isHurt}
           />
@@ -1861,6 +1623,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ initialLives, levelId, startAtB
         </div>
       )}
     </div>
+    </LevelProvider>
   );
 };
 

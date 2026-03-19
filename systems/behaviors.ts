@@ -1,14 +1,26 @@
-import type { WorldEntity } from '../types';
+import type { ObstacleType, WorldEntity } from '../types';
+
+/** Resolved swoop Y anchors (from level `swoop` behavior `config` or defaults). */
+export interface SwoopYParams {
+  swoopStartY: number;
+  swoopLowY: number;
+  swoopEndY: number;
+}
 
 /**
  * Compute the Y position for a swooping seagull based on its X position.
  * Uses ease-in-out cubic easing for smooth dive-and-recover trajectory.
  */
-export function computeSwoopY(obsX: number, screenWidth: number): number {
+export function computeSwoopY(
+  obsX: number,
+  screenWidth: number,
+  params?: Partial<SwoopYParams>
+): number {
+  const swoopStartY = params?.swoopStartY ?? 400;
+  const swoopLowY = params?.swoopLowY ?? 170;
+  const swoopEndY = params?.swoopEndY ?? 280;
+
   const centerX = screenWidth / 2;
-  const swoopStartY = 400;
-  const swoopLowY = 170;
-  const swoopEndY = 280;
 
   const easeInOutCubic = (t: number): number =>
     t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -18,34 +30,50 @@ export function computeSwoopY(obsX: number, screenWidth: number): number {
     const prog = Math.min(distFromCenter / centerX, 1);
     const eased = easeInOutCubic(prog);
     return swoopStartY + (swoopLowY - swoopStartY) * eased;
-  } else {
-    const upProg = (centerX - obsX) / centerX;
-    const eased = easeInOutCubic(upProg);
-    return swoopLowY + (swoopEndY - swoopLowY) * eased;
   }
+  const upProg = (centerX - obsX) / centerX;
+  const eased = easeInOutCubic(upProg);
+  return swoopLowY + (swoopEndY - swoopLowY) * eased;
+}
+
+export interface DropProjectileSpawnSpec {
+  type: ObstacleType;
+  width: number;
+  height: number;
+  poopDelayBase?: number;
+  poopDelayRange?: number;
+  poopDelayBaseLowLives?: number;
+  poopDelayRangeLowLives?: number;
 }
 
 /**
- * Check if a poop-type seagull should drop a projectile this frame.
- * Returns a new SAND_PROJECTILE entity if the drop interval has elapsed, else null.
- * Caller is responsible for:
- *   - pushing the returned entity into the obstacles array
- *   - updating obs.lastPoopTime = now
- *   - updating lastHarmfulSpawnTime = now
+ * Check if a dropProjectile-variant flyer should spawn a falling projectile this frame.
+ * `spec` comes from level config (`resolveDropProjectileSpec`); pass null if the level does not define drops.
  */
 export function checkPoopDrop(
   obs: WorldEntity,
   now: number,
   lowLivesMode: boolean,
-  canSpawnPoop: boolean
+  canSpawnPoop: boolean,
+  spec: DropProjectileSpawnSpec | null
 ): WorldEntity | null {
-  if (obs.type !== 'SEAGULL' || obs.seagullType !== 'poop' || !obs.lastPoopTime || !canSpawnPoop) {
+  if (
+    !spec ||
+    obs.type !== 'SEAGULL' ||
+    obs.seagullType !== 'poop' ||
+    !obs.lastPoopTime ||
+    !canSpawnPoop
+  ) {
     return null;
   }
 
   const timeSinceLastPoop = now - obs.lastPoopTime;
-  const delayBase = lowLivesMode ? 2600 : 2000;
-  const delayRange = lowLivesMode ? 1200 : 1000;
+  const delayBase = lowLivesMode
+    ? spec.poopDelayBaseLowLives ?? 2600
+    : spec.poopDelayBase ?? 2000;
+  const delayRange = lowLivesMode
+    ? spec.poopDelayRangeLowLives ?? 1200
+    : spec.poopDelayRange ?? 1000;
 
   if (timeSinceLastPoop <= delayBase + Math.random() * delayRange) {
     return null;
@@ -56,11 +84,11 @@ export function checkPoopDrop(
 
   return {
     id: Date.now() + Math.random(),
-    type: 'SAND_PROJECTILE',
+    type: spec.type,
     x: seagullX,
     y: seagullY,
-    width: 60,
-    height: 60,
+    width: spec.width,
+    height: spec.height,
     speed: 0,
     vx: 0,
     vy: -(2 + Math.random() * 2),

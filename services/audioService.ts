@@ -1,11 +1,12 @@
 
 // Procedural beach music using Web Audio API
-// Generates a chill, looping soundtrack that responds to game state
+// Generates a chill, looping soundtrack that responds to game state.
+// Timing uses rAF + lookahead scheduling (beats aligned to audio clock, not setInterval drift).
 
 let audioContext: AudioContext | null = null;
 let masterGain: GainNode | null = null;
 let isPlaying = false;
-let loopInterval: number | null = null;
+let rafId: number | null = null;
 
 // Beach-y chord progression (C major pentatonic vibes)
 const NOTES = {
@@ -24,50 +25,57 @@ const CHORD_PROGRESSION = [
 let currentChordIndex = 0;
 let currentBeat = 0;
 let tempo = 120; // BPM
+/** Next beat scheduled on the audio timeline (seconds). */
+let nextBeatTime = 0;
 
-function createOscillator(freq: number, type: OscillatorType, duration: number, volume: number = 0.1): void {
+/** Pending delayed close from stopMusic — cleared on restart so we never close a new AudioContext. */
+let musicCloseTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+function createOscillatorAt(
+  freq: number,
+  type: OscillatorType,
+  duration: number,
+  volume: number,
+  start: number
+): void {
   if (!audioContext || !masterGain) return;
 
   const osc = audioContext.createOscillator();
   const gain = audioContext.createGain();
 
   osc.type = type;
-  osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+  osc.frequency.setValueAtTime(freq, start);
 
-  // Soft attack/release for dreamy sound
-  gain.gain.setValueAtTime(0, audioContext.currentTime);
-  gain.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.05);
-  gain.gain.linearRampToValueAtTime(volume * 0.7, audioContext.currentTime + duration * 0.5);
-  gain.gain.linearRampToValueAtTime(0, audioContext.currentTime + duration);
+  gain.gain.setValueAtTime(0, start);
+  gain.gain.linearRampToValueAtTime(volume, start + 0.05);
+  gain.gain.linearRampToValueAtTime(volume * 0.7, start + duration * 0.5);
+  gain.gain.linearRampToValueAtTime(0, start + duration);
 
   osc.connect(gain);
   gain.connect(masterGain);
 
-  osc.start();
-  osc.stop(audioContext.currentTime + duration + 0.1);
+  osc.start(start);
+  osc.stop(start + duration + 0.1);
 }
 
-function playBeat(): void {
+function playBeatAt(start: number): void {
   if (!audioContext || !isPlaying) return;
 
   const chord = CHORD_PROGRESSION[currentChordIndex];
   const beatDuration = 60 / tempo;
 
-  // Bass note on beat 1 and 3
   if (currentBeat % 2 === 0) {
-    createOscillator(chord[0], 'sine', beatDuration * 1.5, 0.08);
+    createOscillatorAt(chord[0], 'sine', beatDuration * 1.5, 0.08, start);
   }
 
-  // Arpeggio pattern
   const arpeggioNote = chord[1 + (currentBeat % 3)];
   if (arpeggioNote) {
-    createOscillator(arpeggioNote, 'triangle', beatDuration * 0.8, 0.04);
+    createOscillatorAt(arpeggioNote, 'triangle', beatDuration * 0.8, 0.04, start);
   }
 
-  // High sparkle on off-beats
   if (currentBeat % 2 === 1 && Math.random() > 0.5) {
     const sparkleNote = chord[3] || chord[2];
-    createOscillator(sparkleNote * 2, 'sine', beatDuration * 0.3, 0.02);
+    createOscillatorAt(sparkleNote * 2, 'sine', beatDuration * 0.3, 0.02, start);
   }
 
   currentBeat++;
@@ -77,8 +85,30 @@ function playBeat(): void {
   }
 }
 
+const LOOKAHEAD_SEC = 0.08;
+
+function musicScheduler(): void {
+  if (!isPlaying || !audioContext) {
+    rafId = null;
+    return;
+  }
+
+  const secPerBeat = 60 / tempo;
+  while (nextBeatTime < audioContext.currentTime + LOOKAHEAD_SEC) {
+    playBeatAt(nextBeatTime);
+    nextBeatTime += secPerBeat;
+  }
+
+  rafId = requestAnimationFrame(musicScheduler);
+}
+
 export function startMusic(initialTempo: number = 120): void {
   if (isPlaying) return;
+
+  if (musicCloseTimeoutId !== null) {
+    clearTimeout(musicCloseTimeoutId);
+    musicCloseTimeoutId = null;
+  }
 
   try {
     const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
@@ -93,11 +123,9 @@ export function startMusic(initialTempo: number = 120): void {
     isPlaying = true;
     currentBeat = 0;
     currentChordIndex = 0;
+    nextBeatTime = audioContext.currentTime;
 
-    // Start the beat loop
-    const beatInterval = (60 / tempo) * 1000;
-    playBeat();
-    loopInterval = window.setInterval(playBeat, beatInterval);
+    musicScheduler();
   } catch (e) {
     console.error('Failed to start music:', e);
   }
@@ -106,18 +134,27 @@ export function startMusic(initialTempo: number = 120): void {
 export function stopMusic(): void {
   isPlaying = false;
 
-  if (loopInterval) {
-    clearInterval(loopInterval);
-    loopInterval = null;
+  if (musicCloseTimeoutId !== null) {
+    clearTimeout(musicCloseTimeoutId);
+    musicCloseTimeoutId = null;
   }
 
-  if (masterGain && audioContext) {
-    masterGain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.5);
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
   }
 
-  setTimeout(() => {
-    if (audioContext) {
-      audioContext.close();
+  const ctxToClose = audioContext;
+  const gainToFade = masterGain;
+
+  if (gainToFade && ctxToClose) {
+    gainToFade.gain.linearRampToValueAtTime(0, ctxToClose.currentTime + 0.5);
+  }
+
+  musicCloseTimeoutId = setTimeout(() => {
+    musicCloseTimeoutId = null;
+    void ctxToClose?.close();
+    if (audioContext === ctxToClose) {
       audioContext = null;
       masterGain = null;
     }
@@ -125,15 +162,14 @@ export function stopMusic(): void {
 }
 
 export function setMusicTempo(newTempo: number): void {
-  if (!isPlaying || tempo === newTempo) return;
+  if (!isPlaying) return;
 
-  tempo = Math.max(80, Math.min(180, newTempo)); // Clamp between 80-180 BPM
+  const clamped = Math.max(80, Math.min(180, newTempo));
+  if (tempo === clamped) return;
 
-  // Restart the loop with new tempo
-  if (loopInterval) {
-    clearInterval(loopInterval);
-    const beatInterval = (60 / tempo) * 1000;
-    loopInterval = window.setInterval(playBeat, beatInterval);
+  tempo = clamped;
+  if (audioContext) {
+    nextBeatTime = audioContext.currentTime;
   }
 }
 
@@ -143,7 +179,6 @@ export function setMusicVolume(volume: number): void {
   }
 }
 
-// Boss mode - switch to more intense music
 export function setBossMode(isBoss: boolean): void {
   if (isBoss) {
     setMusicTempo(150);

@@ -1,26 +1,15 @@
 import type { TuningProfile } from './systems/tuning/defaultTuning';
 
 export enum GameStatus {
-  START = 'START',
   LEVEL_SELECTION = 'LEVEL_SELECTION',
   PLAYING = 'PLAYING',
-  BOSS_INTRO = 'BOSS_INTRO',
   BOSS_FIGHT = 'BOSS_FIGHT',
   GAMEOVER = 'GAMEOVER',
   CUSTOMIZE = 'CUSTOMIZE',
-  PAUSED = 'PAUSED',
-  VICTORY = 'VICTORY'
+  VICTORY = 'VICTORY',
 }
 
 export type LevelId = 'BEACH';
-
-export interface LevelDef {
-  id: LevelId;
-  name: string;
-  unlocked: boolean;
-  theme: string;
-  requirement: string;
-}
 
 export type ObstacleType = 
   | 'CRAB' | 'BEACHBALL' | 'SEAGULL' | 'SANDCASTLE' | 'SAND_PROJECTILE' | 'TIDEPOOL' | 'PALM_TREE';
@@ -36,7 +25,8 @@ export interface WorldEntity {
   vy?: number;
   vx?: number; // Horizontal velocity for projectiles
   isSwooping?: boolean;
-  seagullType?: 'dive' | 'poop'; // Seagull behavior type
+  /** Runtime variant: `dive` uses swoop physics; `poop` uses dropProjectile (see level obstacle behaviors) */
+  seagullType?: 'dive' | 'poop';
   lastPoopTime?: number; // For tracking poop drops
   width: number;
   height: number;
@@ -56,7 +46,7 @@ export interface Bullet {
   size: number;
 }
 
-export interface Obstacle extends WorldEntity {}
+export type Obstacle = WorldEntity;
 
 export interface Particle {
   id: number;
@@ -107,18 +97,51 @@ export interface GameScore {
   lives: number;
 }
 
+/** Authoritative snapshot from GameEngine when the boss is defeated (avoids stale App React score). */
+export interface VictoryFinalizePayload {
+  levelId: LevelId;
+  /** Display / Hall of Fame score (e.g. Math.floor(internalScore / 10)). */
+  finalScore: number;
+  /** Engine ref snapshot; App merges `high` with persisted best and resets lives on victory. */
+  gameScore: GameScore;
+  wasBossFight: boolean;
+}
+
 export interface HighScoreEntry {
   name: string;
   score: number;
   date: number;
-  catUrl?: string; // Optional custom kitty image URL
+  /** Legacy: full data URL stored in localStorage (older Hall of Fame rows). */
+  catUrl?: string;
+  /** IndexedDB sprite key when using beach-cat-cat-state-v1 (new rows). */
+  catAssetId?: string;
   isVictory?: boolean; // True if player defeated the boss
 }
 
+/** Wardrobe row when using IndexedDB blobs (Phase 2). */
+export interface SavedCatLook {
+  id: string;
+  name: string;
+  assetId: string;
+  createdAt: number;
+  /** SHA-256 (or fallback) of PNG bytes for deduplication */
+  contentKey?: string;
+  /** Sprite was server-matted when saved — skip redundant client matting in thumbnails */
+  mattedOnServer?: boolean;
+}
+
+/** Legacy wardrobe / fallback when IndexedDB is unavailable. */
 export interface Outfit {
   id: string;
   name: string;
   url: string;
+}
+
+/** Persisted JSON in localStorage key `beach-cat-cat-state-v1`. */
+export interface CatCharacterStateV1 {
+  schema: 1;
+  equippedAssetId: string | null;
+  looks: SavedCatLook[];
 }
 
 // ─── Phase 2: Multi-Level Type Foundation ───────────────────────────
@@ -136,11 +159,35 @@ export type BehaviorType =
   | 'dropProjectile' // seagull poop drops
   | 'bounce'         // beachball bounce-on-stomp
   | 'slowOnContact'  // sandcastle/tidepool speed reduction
-  | 'static';        // no special movement (crab, palm tree)
+  | 'static'         // no special movement (crab, palm tree)
+  | 'stomp'          // stomp-from-above (e.g. crab) — distinct from beachball bounce tuning
+  | 'arcProjectile'; // parabolic / aimed projectile physics (e.g. boss sand shot)
+
+/** Registered lazy boss UI ids (see systems/bossComponents.tsx) */
+export type BossComponentId = 'sandMonster';
 
 export interface BehaviorConfig {
   type: BehaviorType;
   config?: Record<string, number>;
+  /** When `type` is `dropProjectile`, obstacle type to spawn (e.g. SAND_PROJECTILE) */
+  projectileType?: ObstacleType;
+}
+
+/** Stomp-from-above / bounce outcome when `bounce` | `stomp` | `arcProjectile` applies. */
+export interface StompCollisionConfig {
+  /** Omit with `BEACHBALL` to use `tuning.bounceForce`; otherwise defaults to 8 */
+  bounceForce?: number;
+  jumpCount: number;
+  markAs: 'collected' | 'passed';
+  particleColor: string;
+  sounds: string[];
+  points?: number;
+}
+
+/** Side-hit slowdown when `slowOnContact` applies. */
+export interface SlowCollisionConfig {
+  durationMs: number;
+  particleColor: string;
 }
 
 /** Per-obstacle shape, behavior, and spawn weighting for a level */
@@ -152,12 +199,19 @@ export interface ObstacleDefinition {
   isHarmful: boolean;
   spawnWeight: number;
   spawnY?: number | { min: number; max: number };
+  stompCollision?: StompCollisionConfig;
+  slowCollision?: SlowCollisionConfig;
 }
+
+/** How the playfield sky reacts to coin progress (see App `getSkyStyle` / sun). */
+export type SkyProgressMode = 'coinsToBoss' | 'static';
 
 /** Visual theme parameters for a level */
 export interface ThemeConfig {
   groundY: number;
   skyGradient: [string, string];
+  /** Omit or `coinsToBoss`: interpolate sky/sun toward boss entry using star count. `static`: fixed gradient only. */
+  skyProgressMode?: SkyProgressMode;
   particleColors: {
     dust: string;
     impact: string;
@@ -165,6 +219,12 @@ export interface ThemeConfig {
   };
   speedLineThreshold: number;
   screenShakeDecay: number;
+  /** Ground kick particles on jump/duck (e.g. beach sand). Omit/false to disable */
+  groundKickParticles?: boolean;
+  /** Left edge of player container in px (default 100). Hitbox uses +24 from this. */
+  playerAnchorLeftPx?: number;
+  /** `left` when SUPER_SIZE power-up (default anchor − 60). */
+  playerAnchorLeftPxSuperSized?: number;
 }
 
 /** Boss projectile tuning */
@@ -192,7 +252,10 @@ export interface BossConfig {
   spawnYOffset: number;
   movement: BossMovementConfig;
   projectile: BossProjectileConfig;
-  componentId?: string;
+  /** Lazy-loaded boss component; defaults to sandMonster when omitted */
+  componentId?: BossComponentId;
+  /** Level obstacle type for boss shots (must define `arcProjectile`); default SAND_PROJECTILE */
+  projectileObstacleType?: ObstacleType;
 }
 
 /** Definition for a single background entity type */
@@ -202,12 +265,26 @@ export interface BackgroundEntityDefinition {
   height: number;
   speedMultiplier: number;
   depth: 'far' | 'mid' | 'near';
+  /** Random Y = innerHeight * (min + rand * (max − min)). */
+  spawnYRange?: { min: number; max: number };
+  /** Default `right` (off-screen east). `left` for westbound spawns (e.g. jetski). */
+  spawnEdge?: 'left' | 'right';
+  /** Default banner text for planes when spawned without override. */
+  defaultBannerText?: string;
 }
 
 /** Background entity pool and spawn timing for a level */
 export interface BackgroundConfig {
   entities: BackgroundEntityDefinition[];
   spawnInterval: { normal: number; boss: number };
+  /** Boss-fight chaos picks (must exist in `entities`). Default: sinking boat + burning plane. */
+  chaosSpawnTypes?: BackgroundEntityType[];
+  /** Equiprobable pool for one mid/far deco spawn each normal tick. Default: boat, surfer, plane, jetski. */
+  midLayerSpawnTypes?: BackgroundEntityType[];
+  /** Probability [0, 1] to attempt a cloud spawn each normal tick. Default 0.3; set 0 to disable. */
+  cloudSpawnChance?: number;
+  /** Key in `entities` for cloud spawns (size jitter). Default CLOUD. */
+  cloudEntityType?: BackgroundEntityType;
 }
 
 /** Top-level level configuration — composes all per-level data */
@@ -221,5 +298,9 @@ export interface LevelConfig {
   boss: BossConfig;
   background: BackgroundConfig;
   tuningOverrides?: Partial<TuningProfile>;
+  /** Coins (stars) to trigger boss; defaults to merged tuning `bossThreshold`. */
+  bossEntryCoinThreshold?: number;
   harmfulTypes?: EntityType[];
+  /** Entity types pulled toward the player while MAGNET is active; default ['COIN'] */
+  magnetAttractTypes?: EntityType[];
 }

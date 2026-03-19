@@ -1,23 +1,5 @@
-import { generateCatWisdom } from '../../server/geminiGateway';
-
-function parseBody(body: unknown): Record<string, unknown> {
-  if (!body) return {};
-  if (typeof body === 'string') {
-    try {
-      return JSON.parse(body) as Record<string, unknown>;
-    } catch {
-      return {};
-    }
-  }
-  if (typeof body === 'object') return body as Record<string, unknown>;
-  return {};
-}
-
-function toScore(value: unknown): number {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return 0;
-  return Math.max(0, Math.floor(parsed));
-}
+import { handleCatWisdom } from '../../server/catApiHandlers';
+import { runCatApiVercelPreflight } from '../../server/catApiVercelPreflight';
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
@@ -25,12 +7,12 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
-  try {
-    const body = parseBody(req.body);
-    const message = await generateCatWisdom(toScore(body.score));
-    res.status(200).json({ message });
-  } catch (error) {
-    console.error('[api/cat/wisdom]', error);
-    res.status(500).json({ error: 'Server error' });
+  const pre = runCatApiVercelPreflight(req.headers, req.body, 'wisdom');
+  if (pre.ok === false) {
+    res.status(pre.status).json(pre.payload);
+    return;
   }
+
+  const { status, body: payload } = await handleCatWisdom(pre.body);
+  res.status(status).json(payload);
 }

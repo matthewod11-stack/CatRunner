@@ -1,4 +1,4 @@
-import type { EntityType } from '../types';
+import type { EntityType, ObstacleDefinition } from '../types';
 import type { TuningProfile } from './tuning/defaultTuning';
 
 export const BOUNCE_POINTS = 10;
@@ -13,14 +13,32 @@ export interface CollisionResult {
   sounds: string[];
 }
 
+function defaultBounceForce(obsType: EntityType, tuning: TuningProfile): number {
+  return obsType === 'BEACHBALL' ? tuning.bounceForce : 8;
+}
+
 /**
  * Handle stomp-from-above collision on bounceable/stompable obstacles.
- * Covers: CRAB, BEACHBALL, SEAGULL (dive), SAND_PROJECTILE.
+ * Prefers `obstacleDef.stompCollision` when present.
  */
 export function handleBounceCollision(
   obsType: EntityType,
-  tuning: TuningProfile
+  tuning: TuningProfile,
+  obstacleDef?: ObstacleDefinition
 ): CollisionResult {
+  const c = obstacleDef?.stompCollision;
+  if (c) {
+    const bounceForce = c.bounceForce ?? defaultBounceForce(obsType, tuning);
+    return {
+      points: c.points ?? BOUNCE_POINTS,
+      bounceForce,
+      jumpCount: c.jumpCount,
+      markAs: c.markAs,
+      particleColor: c.particleColor,
+      sounds: c.sounds,
+    };
+  }
+
   const base = { points: BOUNCE_POINTS };
 
   if (obsType === 'BEACHBALL') {
@@ -56,7 +74,6 @@ export function handleBounceCollision(
     };
   }
 
-  // SAND_PROJECTILE
   return {
     ...base,
     bounceForce: 8,
@@ -68,9 +85,23 @@ export function handleBounceCollision(
 }
 
 /**
- * Handle collision with slow-on-contact obstacles (SANDCASTLE, TIDEPOOL).
+ * Handle collision with slow-on-contact obstacles.
+ * Prefers `obstacleDef.slowCollision` when present.
  */
-export function handleSlowCollision(obsType: EntityType): CollisionResult {
+export function handleSlowCollision(
+  obsType: EntityType,
+  obstacleDef?: ObstacleDefinition
+): CollisionResult {
+  const c = obstacleDef?.slowCollision;
+  if (c) {
+    return {
+      slowDuration: c.durationMs,
+      markAs: 'passed',
+      particleColor: c.particleColor,
+      sounds: ['hit'],
+    };
+  }
+
   return {
     slowDuration: 2000,
     markAs: 'passed',
@@ -79,10 +110,6 @@ export function handleSlowCollision(obsType: EntityType): CollisionResult {
   };
 }
 
-/**
- * Handle harmful collision (non-stomp hit from CRAB, BEACHBALL, PALM_TREE, SAND_PROJECTILE).
- * Engine is responsible for decrementing lives, invincibility, screen shake, etc.
- */
 export function handleHarmfulCollision(): CollisionResult {
   return {
     markAs: 'none',

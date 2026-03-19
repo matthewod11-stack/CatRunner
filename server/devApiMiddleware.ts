@@ -1,32 +1,16 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { generateCatWisdom, generateDeathMessage, generateCustomCatSprite } from './geminiGateway';
+import {
+  handleCatWisdom,
+  handleCatDeathMessage,
+  handleCatGenerate,
+} from './catApiHandlers';
+import {
+  getCatApiClientIdFromIncoming,
+  isCatApiRateLimited,
+  readCatApiJsonBodyBounded,
+} from './catApiProtection';
 
 type NextFn = () => void;
-
-function toScore(value: unknown): number {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return 0;
-  return Math.max(0, Math.floor(parsed));
-}
-
-function toDescription(value: unknown): string {
-  if (typeof value !== 'string') return '';
-  return value.trim().slice(0, 300);
-}
-
-async function readJsonBody(req: IncomingMessage): Promise<Record<string, unknown>> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of req) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-  }
-
-  if (chunks.length === 0) return {};
-  try {
-    return JSON.parse(Buffer.concat(chunks).toString('utf8')) as Record<string, unknown>;
-  } catch {
-    return {};
-  }
-}
 
 function sendJson(res: ServerResponse, statusCode: number, payload: unknown): void {
   res.statusCode = statusCode;
@@ -42,37 +26,70 @@ export function createDevApiMiddleware() {
       return;
     }
 
-    const body = await readJsonBody(req);
+    const clientId = getCatApiClientIdFromIncoming(req);
 
     try {
       if (pathname === '/api/cat/wisdom') {
-        const message = await generateCatWisdom(toScore(body.score));
-        sendJson(res, 200, { message });
+        if (isCatApiRateLimited(clientId, 'wisdom')) {
+          sendJson(res, 429, {
+            ok: false,
+            code: 'RATE_LIMITED',
+            message: 'Too many requests. Wait a moment and try again.',
+          });
+          return;
+        }
+        const read = await readCatApiJsonBodyBounded(req);
+        if (read.ok === false) {
+          sendJson(res, read.status, read.payload);
+          return;
+        }
+        const { status, body: payload } = await handleCatWisdom(read.body);
+        sendJson(res, status, payload);
         return;
       }
 
       if (pathname === '/api/cat/death-message') {
-        const message = await generateDeathMessage(toScore(body.score));
-        sendJson(res, 200, { message });
+        if (isCatApiRateLimited(clientId, 'death')) {
+          sendJson(res, 429, {
+            ok: false,
+            code: 'RATE_LIMITED',
+            message: 'Too many requests. Wait a moment and try again.',
+          });
+          return;
+        }
+        const read = await readCatApiJsonBodyBounded(req);
+        if (read.ok === false) {
+          sendJson(res, read.status, read.payload);
+          return;
+        }
+        const { status, body: payload } = await handleCatDeathMessage(read.body);
+        sendJson(res, status, payload);
         return;
       }
 
       if (pathname === '/api/cat/generate') {
-        const description = toDescription(body.description);
-        if (!description) {
-          sendJson(res, 400, { error: 'description is required' });
+        if (isCatApiRateLimited(clientId, 'generate')) {
+          sendJson(res, 429, {
+            ok: false,
+            code: 'RATE_LIMITED',
+            message: 'Too many cat generations. Try again in a minute.',
+          });
           return;
         }
-
-        const imageDataUrl = await generateCustomCatSprite(description);
-        sendJson(res, 200, { imageDataUrl });
+        const read = await readCatApiJsonBodyBounded(req);
+        if (read.ok === false) {
+          sendJson(res, read.status, read.payload);
+          return;
+        }
+        const { status, body: payload } = await handleCatGenerate(read.body);
+        sendJson(res, status, payload);
         return;
       }
 
       sendJson(res, 404, { error: 'Not found' });
     } catch (error) {
       console.error('[local-gemini-api]', error);
-      sendJson(res, 500, { error: 'Server error' });
+      sendJson(res, 500, { ok: false, code: 'SERVER_ERROR', message: 'Server error' });
     }
   };
 }

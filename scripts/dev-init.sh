@@ -34,9 +34,9 @@ echo ""
 echo -e "${BLUE}Checking project files...${NC}"
 
 REQUIRED_FILES=(
-    "docs/ROADMAP.md"
-    "docs/PROGRESS.md"
-    "docs/KNOWN_ISSUES.md"
+    "ROADMAP_V2.md"
+    "PROGRESS.md"
+    "KNOWN_ISSUES.md"
     "features.json"
     "package.json"
     "types.ts"
@@ -57,13 +57,12 @@ if [ $MISSING -gt 0 ]; then
     echo -e "${YELLOW}Warning: $MISSING required file(s) missing${NC}"
 fi
 
-# 3. Check plan file
-PLAN_FILE="$HOME/.claude/plans/compressed-gathering-kite.md"
+# 3. Check active roadmap
 echo ""
-if [ -f "$PLAN_FILE" ]; then
-    echo -e "${GREEN}✓${NC} Plan file exists: $PLAN_FILE"
+if [ -f "ROADMAP_V2.md" ]; then
+    echo -e "${GREEN}✓${NC} Active roadmap: ROADMAP_V2.md"
 else
-    echo -e "${YELLOW}!${NC} Plan file not found at: $PLAN_FILE"
+    echo -e "${YELLOW}!${NC} ROADMAP_V2.md not found"
 fi
 
 # 4. Install dependencies if needed
@@ -97,34 +96,47 @@ if [ -f "features.json" ]; then
 
     echo -e "${GREEN}Pass:${NC} $PASS | ${RED}Fail:${NC} $FAIL | ${YELLOW}In Progress:${NC} $IN_PROGRESS | Not Started: $NOT_STARTED"
 
-    # Show current phase
-    CURRENT_PHASE=$(grep -B1 '"status": "in-progress"' features.json | grep '"phase-' | head -1 | sed 's/.*"phase-\([0-9]*\)".*/Phase \1/' || echo "Unknown")
+    # Show current phase (phase key precedes status in features.json)
+    CURRENT_PHASE=$(awk '
+        /"phase-[0-9]+"/ {
+            if (match($0, /"phase-[0-9]+"/)) {
+                p = substr($0, RSTART, RLENGTH)
+                gsub(/"/, "", p)
+                sub(/^phase-/, "Phase ", p)
+                ph = p
+            }
+        }
+        /"status": "in-progress"/ {
+            if (ph != "") { print ph; exit }
+        }
+    ' features.json)
+    [ -z "$CURRENT_PHASE" ] && CURRENT_PHASE="(none)"
     echo -e "Current: ${CYAN}$CURRENT_PHASE${NC}"
 fi
 
 # 7. Show recent progress
 echo ""
 echo -e "${BLUE}═══ Recent Progress ═══${NC}"
-if [ -f "docs/PROGRESS.md" ]; then
+if [ -f "PROGRESS.md" ]; then
     # Show the most recent session header and Next Session Should
-    awk '/^## Session [0-9]/{if(found)exit; found=1} found && /^### Next Session Should/{p=1} p{print; if(/^$/ && p>1)exit; p++}' docs/PROGRESS.md | head -10
+    awk '/^## Session:/{if(found)exit; found=1} found && /^### Next Session Should/{p=1} p{print; if(/^$/ && p>1)exit; p++}' PROGRESS.md | head -10
 fi
 
 # 8. Show next tasks from ROADMAP
 echo ""
 echo -e "${BLUE}═══ Next Tasks ═══${NC}"
-if [ -f "docs/ROADMAP.md" ]; then
-    grep -n "\[ \]" docs/ROADMAP.md | head -5 | while read line; do
+if [ -f "ROADMAP_V2.md" ]; then
+    grep -n "\[ \]" ROADMAP_V2.md | head -5 | while read line; do
         echo -e "${YELLOW}○${NC} $(echo $line | cut -d']' -f2-)"
     done
 fi
 
 # 9. Show known issues count
 echo ""
-if [ -f "docs/KNOWN_ISSUES.md" ]; then
+if [ -f "KNOWN_ISSUES.md" ]; then
     # Count actual issues (not format examples)
-    OPEN_ISSUES=$(grep -c "^\*\*Status:\*\* Open$" docs/KNOWN_ISSUES.md 2>/dev/null | tr -d '[:space:]') || OPEN_ISSUES="0"
-    BLOCKERS=$(grep -c "^\*\*Severity:\*\* Blocker$" docs/KNOWN_ISSUES.md 2>/dev/null | tr -d '[:space:]') || BLOCKERS="0"
+    OPEN_ISSUES=$(grep -c "^\*\*Status:\*\* Open$" KNOWN_ISSUES.md 2>/dev/null | tr -d '[:space:]') || OPEN_ISSUES="0"
+    BLOCKERS=$(grep -c "^\*\*Severity:\*\* Blocker$" KNOWN_ISSUES.md 2>/dev/null | tr -d '[:space:]') || BLOCKERS="0"
     # Ensure they're valid numbers
     OPEN_ISSUES=${OPEN_ISSUES:-0}
     BLOCKERS=${BLOCKERS:-0}
@@ -141,10 +153,12 @@ echo ""
 echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
 echo -e "${GREEN}Ready to develop!${NC}"
 echo ""
-echo -e "${YELLOW}▶ FULL PLAN:${NC} ~/.claude/plans/compressed-gathering-kite.md"
+echo -e "${YELLOW}▶ ACTIVE ROADMAP:${NC} ROADMAP_V2.md"
 echo ""
 echo -e "Quick commands:"
-echo -e "  ${YELLOW}cat ~/.claude/plans/compressed-gathering-kite.md${NC} - Read full plan"
-echo -e "  ${YELLOW}npm run dev${NC}      - Start dev server"
-echo -e "  ${YELLOW}npm run build${NC}    - Type check & build"
+echo -e "  ${YELLOW}sed -n '1,220p' ROADMAP_V2.md${NC} - Read active roadmap"
+echo -e "  ${YELLOW}npm run dev${NC}          - Start dev server"
+echo -e "  ${YELLOW}npm run test:run${NC}   - Vitest (CI-style)"
+echo -e "  ${YELLOW}npm run build${NC}      - Type check & build"
+echo -e "  ${YELLOW}npx tsc --noEmit${NC}   - Optional full TS check (includes tests)"
 echo ""
