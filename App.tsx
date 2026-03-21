@@ -53,7 +53,7 @@ import { useDocumentReducedMotionClass } from './hooks/usePrefersReducedMotion';
 import PhaserGame from './components/PhaserGame';
 
 const MAX_LIVES = 9;
-const USE_PHASER_RUNNER = new URLSearchParams(window.location.search).has('phaser');
+const USE_PHASER_RUNNER = !new URLSearchParams(window.location.search).has('dom_runner');
 
 function formatHallOfFameDate(ts: number): string {
   try {
@@ -777,6 +777,30 @@ const App: React.FC = () => {
                     onStatusChange={handleStatusChange}
                     onHudUpdate={handleHudUpdate}
                   />
+                  {/* In-screen HUD */}
+                  <div className="absolute top-3 left-3 z-30 pointer-events-none">
+                    <div className="bg-black/50 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/20 flex items-center gap-4">
+                      <div className="flex flex-col">
+                        <span className="text-[8px] uppercase font-black text-white/50">Score</span>
+                        <span className="text-xl font-black text-white tabular-nums leading-none">{score.current}</span>
+                      </div>
+                      <div className="w-px h-7 bg-white/20" />
+                      <div className="flex flex-col">
+                        <span className="text-[8px] uppercase font-black text-red-300/70">Lives</span>
+                        <span className="text-xl font-black text-red-400 leading-none">{score.lives}</span>
+                      </div>
+                      <div className="w-px h-7 bg-white/20" />
+                      <div className="flex flex-col">
+                        <span className="text-[8px] uppercase font-black text-purple-300/70">Mult</span>
+                        <span className="text-xl font-black text-purple-300 tabular-nums leading-none">x{score.multiplier}</span>
+                      </div>
+                      <div className="w-px h-7 bg-white/20" />
+                      <div className="flex flex-col">
+                        <span className="text-[8px] uppercase font-black text-yellow-300/70">Stars</span>
+                        <span className="text-lg font-black text-yellow-300 tabular-nums leading-none">★{score.coins}<span className="text-[9px] text-yellow-300/40">/{bossCoinTarget}</span></span>
+                      </div>
+                    </div>
+                  </div>
                   {/* Phaser pause overlay */}
                   {phaserPaused && (
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-md z-[100] flex flex-col items-center justify-center animate-[fadeIn_0.2s_ease-out]">
@@ -1001,7 +1025,7 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {(status === GameStatus.PLAYING || status === GameStatus.BOSS_FIGHT) && (
+      {(status === GameStatus.PLAYING || status === GameStatus.BOSS_FIGHT) && !USE_PHASER_RUNNER && (
         <div
           className="absolute top-6 left-6 z-20 flex flex-col gap-4 pointer-events-none animate-[slideDown_0.3s_ease-out]"
           style={{ marginTop: 'env(safe-area-inset-top)', marginLeft: 'env(safe-area-inset-left)' }}
