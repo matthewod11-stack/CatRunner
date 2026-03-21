@@ -734,45 +734,96 @@ const App: React.FC = () => {
 
       {(status === GameStatus.PLAYING || status === GameStatus.BOSS_FIGHT) && (
         USE_PHASER_RUNNER ? (
-          <div className="absolute inset-0 z-10 relative">
-            <PhaserGame
-              levelId={selectedLevel}
-              catSpriteUrl={customCatUrl}
-              sceneInitData={{
-                levelConfig,
-                initialLives: score.lives > 0 ? score.lives : MAX_LIVES,
-                startAtBoss,
-                tuning: mergedTuning,
-                onTelemetryReady: handleTelemetryReady,
-              }}
-              sceneFactory={() => import('./scenes/RunnerScene')}
-              onScoreUpdate={handleScoreUpdate}
-              onLevelComplete={handleLevelComplete}
-              onGameOver={(finalScore: number) => handleGameOver(finalScore)}
-              onStatusChange={handleStatusChange}
-              onHudUpdate={handleHudUpdate}
-            />
-            {/* Phaser pause overlay */}
-            {phaserPaused && (
-              <div className="absolute inset-0 bg-black/60 backdrop-blur-md z-[100] flex flex-col items-center justify-center animate-[fadeIn_0.2s_ease-out]">
-                <h2 className="text-8xl font-black text-white italic tracking-tighter uppercase mb-12 drop-shadow-[0_10px_0_rgba(0,0,0,0.5)]">PAUSED</h2>
-                <div className="flex flex-col gap-6 w-full max-w-sm px-8">
-                  <button
-                    onClick={() => setPhaserPaused(false)}
-                    className="w-full bg-white text-amber-900 font-black py-6 rounded-3xl text-3xl shadow-[0_10px_0_#d97706] hover:shadow-[0_6px_0_#d97706] transition-all active:translate-y-1 active:shadow-none"
-                  >
-                    RESUME
-                  </button>
-                  <button
-                    onClick={() => { setPhaserPaused(false); setStatus(GameStatus.CAMPAIGN); }}
-                    className="w-full bg-red-600 text-white font-black py-6 rounded-3xl text-3xl shadow-[0_10px_0_#7f1d1d] hover:shadow-[0_6px_0_#7f1d1d] transition-all active:translate-y-1 active:shadow-none"
-                  >
-                    MAIN MENU
-                  </button>
+          <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #2d2d44 100%)' }}>
+            {/* Retro TV/VCR Frame */}
+            <div className="relative" style={{ width: '85vw', maxWidth: '1100px', aspectRatio: '4/3' }}>
+              {/* TV body */}
+              <div className="absolute inset-0 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
+                style={{
+                  background: 'linear-gradient(180deg, #b8b8c8 0%, #9898a8 30%, #a8a8b8 70%, #909098 100%)',
+                  padding: '24px 24px 80px 24px',
+                }}>
+                {/* Screen bezel (dark border around screen) */}
+                <div className="w-full h-full rounded-2xl overflow-hidden relative"
+                  style={{
+                    border: '6px solid #2a2a3a',
+                    boxShadow: 'inset 0 0 30px rgba(0,0,0,0.4), 0 0 8px rgba(0,0,0,0.3)',
+                  }}>
+                  {/* CRT scanline overlay */}
+                  <div className="absolute inset-0 z-20 pointer-events-none opacity-[0.04]"
+                    style={{
+                      backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.3) 2px, rgba(0,0,0,0.3) 4px)',
+                    }} />
+                  {/* Screen glare */}
+                  <div className="absolute inset-0 z-20 pointer-events-none"
+                    style={{
+                      background: 'radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.08) 0%, transparent 60%)',
+                    }} />
+                  {/* Phaser canvas */}
+                  <PhaserGame
+                    levelId={selectedLevel}
+                    catSpriteUrl={customCatUrl}
+                    sceneInitData={{
+                      levelConfig,
+                      initialLives: score.lives > 0 ? score.lives : MAX_LIVES,
+                      startAtBoss,
+                      tuning: mergedTuning,
+                      onTelemetryReady: handleTelemetryReady,
+                    }}
+                    sceneFactory={() => import('./scenes/RunnerScene')}
+                    onScoreUpdate={handleScoreUpdate}
+                    onLevelComplete={handleLevelComplete}
+                    onGameOver={(finalScore: number) => handleGameOver(finalScore)}
+                    onStatusChange={handleStatusChange}
+                    onHudUpdate={handleHudUpdate}
+                  />
+                  {/* Phaser pause overlay */}
+                  {phaserPaused && (
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-md z-[100] flex flex-col items-center justify-center animate-[fadeIn_0.2s_ease-out]">
+                      <h2 className="text-6xl font-black text-white italic tracking-tighter uppercase mb-8 drop-shadow-[0_8px_0_rgba(0,0,0,0.5)]">PAUSED</h2>
+                      <div className="flex flex-col gap-4 w-full max-w-xs px-6">
+                        <button
+                          onClick={() => setPhaserPaused(false)}
+                          className="w-full bg-white text-amber-900 font-black py-4 rounded-2xl text-2xl shadow-[0_8px_0_#d97706] hover:shadow-[0_4px_0_#d97706] transition-all active:translate-y-1 active:shadow-none"
+                        >
+                          RESUME
+                        </button>
+                        <button
+                          onClick={() => { setPhaserPaused(false); setStatus(GameStatus.CAMPAIGN); }}
+                          className="w-full bg-red-600 text-white font-black py-4 rounded-2xl text-2xl shadow-[0_8px_0_#7f1d1d] hover:shadow-[0_4px_0_#7f1d1d] transition-all active:translate-y-1 active:shadow-none"
+                        >
+                          MAIN MENU
+                        </button>
+                      </div>
+                      <p className="mt-8 text-white/50 font-bold tracking-widest text-xs uppercase">Press 'P' or 'ESC' to Resume</p>
+                    </div>
+                  )}
                 </div>
-                <p className="mt-12 text-white/50 font-bold tracking-widest text-sm uppercase">Press 'P' or 'ESC' to Resume</p>
               </div>
-            )}
+              {/* VCR section at bottom */}
+              <div className="absolute bottom-0 left-0 right-0 h-[72px] rounded-b-[2.5rem] flex items-center justify-between px-10"
+                style={{ background: 'linear-gradient(180deg, #909098 0%, #80808c 100%)' }}>
+                {/* VCR slot */}
+                <div className="w-48 h-3 rounded-full" style={{ background: '#3a3a4a', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)' }} />
+                {/* Brand + indicator */}
+                <div className="flex items-center gap-4">
+                  <span className="text-[10px] font-black tracking-[0.3em] uppercase" style={{ color: '#5a5a6a' }}>Beach Kitty</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]" />
+                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: '#5a5a6a' }}>Phaser</span>
+                  </div>
+                </div>
+                {/* Buttons */}
+                <div className="flex gap-2">
+                  {['REC', 'PLAY', 'STOP'].map(label => (
+                    <div key={label} className="w-6 h-6 rounded-md flex items-center justify-center"
+                      style={{ background: '#4a4a5a', boxShadow: '0 2px 0 #3a3a4a' }}>
+                      <span className="text-[6px] font-black" style={{ color: '#8a8a9a' }}>{label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <GameEngine

@@ -223,8 +223,9 @@ export default class RunnerScene extends SceneBridge {
     this.themeGroundY = this.levelConfig.theme.groundY;
     this.groundYScreen = height - this.themeGroundY;
 
-    // Sky + ground rendered by React background (transparent Phaser canvas overlays it)
-    // No Phaser sky/ground rectangles needed — keeps visual parity with DOM engine
+    // Ground rectangle (sky is the Phaser backgroundColor)
+    this.add.rectangle(width / 2, this.groundYScreen + this.themeGroundY / 2, width, this.themeGroundY, 0xf5deb3)
+      .setDepth(0);
 
     // ── Player visual (colored rectangle placeholder) ──
     this.playerGraphics = this.add.graphics();
