@@ -117,8 +117,7 @@ export default class RunnerScene extends SceneBridge {
   private keyEsc!: Phaser.Input.Keyboard.Key;
 
   // ── Ground + sky visuals ──
-  private groundRect!: Phaser.GameObjects.Rectangle;
-  private skyRect!: Phaser.GameObjects.Rectangle;
+  // Sky + ground rendered by React background (transparent Phaser canvas)
 
   // ── Obstacle spawning state (Task 1.3) ──
   private obstacles: WorldEntity[] = [];
@@ -224,27 +223,8 @@ export default class RunnerScene extends SceneBridge {
     this.themeGroundY = this.levelConfig.theme.groundY;
     this.groundYScreen = height - this.themeGroundY;
 
-    // ── Sky background ──
-    const [skyTop, skyBottom] = this.levelConfig.theme.skyGradient;
-    // Phaser Graphics gradient fill for sky
-    const skyGfx = this.add.graphics();
-    const topColor = Phaser.Display.Color.HexStringToColor(skyTop).color;
-    const bottomColor = Phaser.Display.Color.HexStringToColor(skyBottom).color;
-    skyGfx.fillGradientStyle(topColor, topColor, bottomColor, bottomColor, 1);
-    skyGfx.fillRect(0, 0, width, this.groundYScreen);
-    // Keep a reference rectangle behind the gradient (used for depth ordering)
-    this.skyRect = this.add.rectangle(width / 2, this.groundYScreen / 2, width, this.groundYScreen);
-    this.skyRect.setVisible(false); // gradient handles the visual
-
-    // ── Ground ──
-    const groundHeight = this.themeGroundY;
-    this.groundRect = this.add.rectangle(
-      width / 2,
-      this.groundYScreen + groundHeight / 2,
-      width,
-      groundHeight,
-      0xf5deb3, // Beach sand color
-    );
+    // Sky + ground rendered by React background (transparent Phaser canvas overlays it)
+    // No Phaser sky/ground rectangles needed — keeps visual parity with DOM engine
 
     // ── Player visual (colored rectangle placeholder) ──
     this.playerGraphics = this.add.graphics();

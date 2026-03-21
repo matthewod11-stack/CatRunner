@@ -72,7 +72,7 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
         parent: container,
         width: container.clientWidth || 800,
         height: container.clientHeight || 600,
-        backgroundColor: '#000000',
+        transparent: true,
         scale: {
           mode: Phaser.Scale.RESIZE,
           autoCenter: Phaser.Scale.CENTER_BOTH,

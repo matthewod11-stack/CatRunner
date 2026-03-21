@@ -734,7 +734,7 @@ const App: React.FC = () => {
 
       {(status === GameStatus.PLAYING || status === GameStatus.BOSS_FIGHT) && (
         USE_PHASER_RUNNER ? (
-          <div className="z-10 w-full h-[80vh] max-w-4xl mx-auto relative">
+          <div className="absolute inset-0 z-10 relative">
             <PhaserGame
               levelId={selectedLevel}
               catSpriteUrl={customCatUrl}
