@@ -95,7 +95,7 @@ export default class RunnerScene extends SceneBridge {
   private audio!: PhaserAudio;
 
   // ── Player visual ──
-  private playerGraphics!: Phaser.GameObjects.Graphics;
+  private playerSprite!: Phaser.GameObjects.Image;
 
   // ── Cached layout values ──
   private playerX = 100; // playerAnchorLeftPx from theme, default 100
@@ -121,7 +121,7 @@ export default class RunnerScene extends SceneBridge {
 
   // ── Obstacle spawning state (Task 1.3) ──
   private obstacles: WorldEntity[] = [];
-  private obstacleGraphics: Map<number, Phaser.GameObjects.Graphics> = new Map();
+  private obstacleGraphics: Map<number, Phaser.GameObjects.Image> = new Map();
   private weightedObstaclePool: ObstacleType[] = [];
   private harmfulTypes: EntityType[] = [];
   private patternQueue: PatternStep[] = [];
@@ -139,7 +139,7 @@ export default class RunnerScene extends SceneBridge {
   // ── Boss fight state (Task 1.7) ──
   private status: GameStatus = GameStatus.PLAYING;
   private boss: WorldEntity | null = null;
-  private bossGraphics: Phaser.GameObjects.Graphics | null = null;
+  private bossSprite: Phaser.GameObjects.Image | null = null;
   private bossHealthBarBg: Phaser.GameObjects.Graphics | null = null;
   private bossHealth = 0;
   private bossMaxHealth = 0;
@@ -167,31 +167,27 @@ export default class RunnerScene extends SceneBridge {
   private bgGraphics: Map<number, Phaser.GameObjects.Graphics> = new Map();
   private lastBackgroundSpawnTime = 0;
 
-  /** Color lookup for placeholder obstacle rendering */
-  private static readonly OBSTACLE_COLORS: Record<string, number> = {
-    COIN: 0xffd700,
-    SHELL: 0xffc0cb,
-    CRAB: 0xef4444,
-    BEACHBALL: 0xfde047,
-    SEAGULL: 0x6b7280,
-    SANDCASTLE: 0xd2b48c,
-    TIDEPOOL: 0x3b82f6,
-    PALM_TREE: 0x22c55e,
-    SAND_PROJECTILE: 0x8b4513,
+  /** Texture key map for obstacle/collectible sprites */
+  private static readonly OBSTACLE_TEXTURE_MAP: Record<string, string> = {
+    CRAB: 'obs-CRAB',
+    COIN: 'obs-COIN',
+    SEAGULL: 'obs-SEAGULL',
+    BEACHBALL: 'obs-BEACHBALL',
+    SHELL: 'obs-SHELL',
+    SANDCASTLE: 'obs-SANDCASTLE',
+    PALM_TREE: 'obs-PALM_TREE',
+    SAND_PROJECTILE: 'obs-COIN',   // reuse coin texture for now
+    SPEED: 'obs-COIN',              // power-ups reuse coin with tinting
+    MAGNET: 'obs-COIN',
+    SUPER_SIZE: 'obs-COIN',
+  };
+
+  /** Tint colors for power-up sprites */
+  private static readonly POWERUP_TINTS: Record<string, number> = {
     SPEED: 0x3b82f6,
     MAGNET: 0x8b5cf6,
     SUPER_SIZE: 0x22c55e,
   };
-
-  /** Types rendered as circles (coins, shells, projectiles, power-ups) */
-  private static readonly CIRCLE_TYPES: ReadonlySet<string> = new Set([
-    'COIN', 'SHELL', 'BEACHBALL', 'SAND_PROJECTILE',
-  ]);
-
-  /** Types rendered as diamond shapes (power-ups) */
-  private static readonly DIAMOND_TYPES: ReadonlySet<string> = new Set([
-    'SPEED', 'MAGNET', 'SUPER_SIZE',
-  ]);
 
   init(data: RunnerSceneInitData): void {
     super.init(data);
@@ -208,9 +204,25 @@ export default class RunnerScene extends SceneBridge {
   }
 
   preload(): void {
+    // Load cat sprite (or custom cat URL)
+    if (this.catSpriteUrl) {
+      this.load.image('cat', this.catSpriteUrl);
+    } else {
+      this.load.image('cat', 'assets/sprites/cat-run.png');
+    }
+
+    // Load obstacle/collectible sprites
+    this.load.image('obs-CRAB', 'assets/sprites/crab.png');
+    this.load.image('obs-COIN', 'assets/sprites/coin.png');
+    this.load.image('obs-SEAGULL', 'assets/sprites/seagull.png');
+    this.load.image('obs-BEACHBALL', 'assets/sprites/beachball.png');
+    this.load.image('obs-SHELL', 'assets/sprites/shell.png');
+    this.load.image('obs-SANDCASTLE', 'assets/sprites/sandcastle.png');
+    this.load.image('obs-PALM_TREE', 'assets/sprites/palm-tree.png');
+    this.load.image('boss', 'assets/sprites/sand-monster.png');
+
     // Shared particle texture for EffectsManager
     EffectsManager.createParticleTexture(this);
-    // Cat sprite, obstacle textures — filled in by later tasks
   }
 
   create(): void {
@@ -227,9 +239,15 @@ export default class RunnerScene extends SceneBridge {
     this.add.rectangle(width / 2, this.groundYScreen + this.themeGroundY / 2, width, this.themeGroundY, 0xf5deb3)
       .setDepth(0);
 
-    // ── Player visual (colored rectangle placeholder) ──
-    this.playerGraphics = this.add.graphics();
-    this.drawPlayer();
+    // ── Player visual (sprite) ──
+    this.playerSprite = this.add.image(
+      this.playerX + RunnerScene.PLAYER_W / 2,
+      this.groundYScreen,
+      'cat',
+    )
+      .setOrigin(0.5, 1) // anchor at bottom center
+      .setDisplaySize(RunnerScene.PLAYER_W, RunnerScene.PLAYER_H_NORMAL)
+      .setDepth(10);
 
     // ── Input: keyboard ──
     const kb = this.input.keyboard!;
@@ -301,8 +319,8 @@ export default class RunnerScene extends SceneBridge {
     // ── Boss fight setup (Task 1.7) ──
     this.status = GameStatus.PLAYING;
     this.boss = null;
-    this.bossGraphics?.destroy();
-    this.bossGraphics = null;
+    this.bossSprite?.destroy();
+    this.bossSprite = null;
     this.bossHealthBarBg?.destroy();
     this.bossHealthBarBg = null;
     this.bossHealth = 0;
@@ -458,8 +476,8 @@ export default class RunnerScene extends SceneBridge {
       this.effects.spawnDust(feetX, feetY, this.speed);
     }
 
-    // ── Redraw player at new position ──
-    this.drawPlayer();
+    // ── Update player sprite position ──
+    this.updatePlayerSprite();
 
     // ── Sync GameScore and emit to HUD ──
     this.gameScore.current = Math.floor(this.score / 10);
@@ -798,11 +816,11 @@ export default class RunnerScene extends SceneBridge {
       });
     }
 
-    // Update graphics positions
+    // Update sprite positions
     for (const obs of this.obstacles) {
-      const gfx = this.obstacleGraphics.get(obs.id);
-      if (gfx) {
-        this.drawObstacle(gfx, obs);
+      const sprite = this.obstacleGraphics.get(obs.id);
+      if (sprite) {
+        this.updateObstacleSprite(sprite, obs);
       }
     }
   }
@@ -1009,103 +1027,76 @@ export default class RunnerScene extends SceneBridge {
     else if (result.markAs === 'passed') obs.isPassed = true;
   }
 
-  // ─── Obstacle rendering (Task 1.3) ────────────────────────────────
+  // ─── Obstacle rendering ────────────────────────────────────────────
 
   /**
-   * Create a Phaser Graphics object for an obstacle and store it in the map.
+   * Get the Phaser texture key for an obstacle type.
    */
-  private createObstacleGraphics(entity: WorldEntity): void {
-    const gfx = this.add.graphics();
-    this.obstacleGraphics.set(entity.id, gfx);
-    this.drawObstacle(gfx, entity);
+  private getObstacleTextureKey(type: string): string {
+    return RunnerScene.OBSTACLE_TEXTURE_MAP[type] || 'obs-COIN';
   }
 
   /**
-   * Redraw a single obstacle's graphics at its current position.
-   * Uses colored shapes as placeholders — proper art comes later.
+   * Create a Phaser Image for an obstacle and store it in the map.
    */
-  private drawObstacle(gfx: Phaser.GameObjects.Graphics, entity: WorldEntity): void {
-    gfx.clear();
-    const color = RunnerScene.OBSTACLE_COLORS[entity.type] ?? 0xaaaaaa;
+  private createObstacleGraphics(entity: WorldEntity): void {
+    const textureKey = this.getObstacleTextureKey(entity.type);
     const entityY = entity.y ?? this.themeGroundY;
 
     // Convert DOM engine coords (y=0 ground, +y up) to Phaser coords (y=0 top, +y down)
     const screenX = entity.x;
     const screenY = this.groundYScreen - entityY - entity.height;
 
-    gfx.fillStyle(color, 1);
+    const sprite = this.add.image(screenX, screenY, textureKey)
+      .setDisplaySize(entity.width, entity.height)
+      .setOrigin(0, 0)
+      .setDepth(5);
 
-    if (RunnerScene.DIAMOND_TYPES.has(entity.type)) {
-      // Diamond shape for power-ups
-      const cx = screenX + entity.width / 2;
-      const cy = screenY + entity.height / 2;
-      const hw = entity.width / 2;
-      const hh = entity.height / 2;
-      gfx.fillTriangle(
-        cx, cy - hh,      // top
-        cx + hw, cy,       // right
-        cx, cy + hh,       // bottom
-      );
-      gfx.fillTriangle(
-        cx, cy - hh,      // top
-        cx - hw, cy,       // left
-        cx, cy + hh,       // bottom
-      );
-    } else if (RunnerScene.CIRCLE_TYPES.has(entity.type)) {
-      // Circle shape
-      const radius = Math.min(entity.width, entity.height) / 2;
-      gfx.fillCircle(screenX + entity.width / 2, screenY + entity.height / 2, radius);
-    } else {
-      // Rectangle shape for ground obstacles
-      gfx.fillRoundedRect(screenX, screenY, entity.width, entity.height, 6);
+    // Apply tinting for power-ups
+    const tint = RunnerScene.POWERUP_TINTS[entity.type];
+    if (tint) {
+      sprite.setTint(tint);
+    }
+
+    this.obstacleGraphics.set(entity.id, sprite);
+  }
+
+  /**
+   * Update a sprite's position and size to match an obstacle's current state.
+   */
+  private updateObstacleSprite(sprite: Phaser.GameObjects.Image, entity: WorldEntity): void {
+    const entityY = entity.y ?? this.themeGroundY;
+
+    // Convert DOM engine coords (y=0 ground, +y up) to Phaser coords (y=0 top, +y down)
+    const screenX = entity.x;
+    const screenY = this.groundYScreen - entityY - entity.height;
+
+    sprite.setPosition(screenX, screenY);
+    sprite.setDisplaySize(entity.width, entity.height);
+
+    // Hide collected obstacles
+    if (entity.isCollected) {
+      sprite.setVisible(false);
     }
   }
 
   // ─── Rendering ──────────────────────────────────────────────────────
 
-  private drawPlayer(): void {
-    this.playerGraphics.clear();
-
+  /**
+   * Update player sprite position and size based on current state.
+   */
+  private updatePlayerSprite(): void {
     const h = this.isDucking ? RunnerScene.PLAYER_H_DUCK : RunnerScene.PLAYER_H_NORMAL;
-    const w = RunnerScene.PLAYER_W;
 
     // Convert DOM engine coords (y=0 ground, +y up) to Phaser coords (y=0 top, +y down)
-    const screenY = this.groundYScreen - this.playerY - h;
+    // Player sprite origin is (0.5, 1) — bottom center
+    const renderY = this.groundYScreen - this.playerY;
 
-    // Cat body color (orange tabby placeholder)
-    this.playerGraphics.fillStyle(0xff8c00, 1);
-    this.playerGraphics.fillRoundedRect(this.playerX, screenY, w, h, 12);
-
-    // Simple face details when not ducking
-    if (!this.isDucking) {
-      // Eyes
-      this.playerGraphics.fillStyle(0xffffff, 1);
-      this.playerGraphics.fillCircle(this.playerX + w * 0.35, screenY + h * 0.3, 12);
-      this.playerGraphics.fillCircle(this.playerX + w * 0.65, screenY + h * 0.3, 12);
-      // Pupils
-      this.playerGraphics.fillStyle(0x1a1a1a, 1);
-      this.playerGraphics.fillCircle(this.playerX + w * 0.38, screenY + h * 0.3, 5);
-      this.playerGraphics.fillCircle(this.playerX + w * 0.68, screenY + h * 0.3, 5);
-      // Nose
-      this.playerGraphics.fillStyle(0xff69b4, 1);
-      this.playerGraphics.fillTriangle(
-        this.playerX + w * 0.5, screenY + h * 0.42,
-        this.playerX + w * 0.45, screenY + h * 0.38,
-        this.playerX + w * 0.55, screenY + h * 0.38,
-      );
-      // Ears (triangles on top)
-      this.playerGraphics.fillStyle(0xff8c00, 1);
-      this.playerGraphics.fillTriangle(
-        this.playerX + 15, screenY,
-        this.playerX + 35, screenY - 25,
-        this.playerX + 55, screenY,
-      );
-      this.playerGraphics.fillTriangle(
-        this.playerX + w - 15, screenY,
-        this.playerX + w - 35, screenY - 25,
-        this.playerX + w - 55, screenY,
-      );
-    }
+    this.playerSprite.setPosition(
+      this.playerX + RunnerScene.PLAYER_W / 2,
+      renderY,
+    );
+    this.playerSprite.setDisplaySize(RunnerScene.PLAYER_W, h);
   }
 
   // ─── Boss fight (Task 1.7) ──────────────────────────────────────────
@@ -1145,9 +1136,13 @@ export default class RunnerScene extends SceneBridge {
       maxHealth: bossCfg.health,
     };
 
-    // Create boss graphics
-    this.bossGraphics = this.add.graphics();
-    this.bossGraphics.setDepth(8);
+    // Create boss sprite
+    const bossY = this.boss.y ?? this.themeGroundY;
+    const bossScreenY = this.groundYScreen - bossY - this.boss.height;
+    this.bossSprite = this.add.image(this.boss.x, bossScreenY, 'boss')
+      .setDisplaySize(bossCfg.width, bossCfg.height)
+      .setOrigin(0, 0)
+      .setDepth(8);
     this.bossHealthBarBg = this.add.graphics();
     this.bossHealthBarBg.setDepth(9);
 
@@ -1231,38 +1226,23 @@ export default class RunnerScene extends SceneBridge {
     this.boss.y = pose.y;
     this.boss.health = this.bossHealth;
 
-    // Draw boss
+    // Update boss sprite and health bar
     this.drawBoss();
   }
 
   /**
-   * Draw the boss entity and health bar.
+   * Update the boss sprite position and health bar.
    */
   private drawBoss(): void {
-    if (!this.boss || !this.bossGraphics || !this.bossHealthBarBg) return;
+    if (!this.boss || !this.bossSprite || !this.bossHealthBarBg) return;
 
     const bossY = this.boss.y ?? this.themeGroundY;
     const screenX = this.boss.x;
     const screenY = this.groundYScreen - bossY - this.boss.height;
 
-    // Boss body (dark brown rectangle)
-    this.bossGraphics.clear();
-    this.bossGraphics.fillStyle(0x5c3317, 1);
-    this.bossGraphics.fillRoundedRect(screenX, screenY, this.boss.width, this.boss.height, 12);
-
-    // Eyes
-    this.bossGraphics.fillStyle(0xff0000, 1);
-    this.bossGraphics.fillCircle(screenX + this.boss.width * 0.3, screenY + this.boss.height * 0.3, 14);
-    this.bossGraphics.fillCircle(screenX + this.boss.width * 0.7, screenY + this.boss.height * 0.3, 14);
-
-    // Mouth
-    this.bossGraphics.fillStyle(0x2d1a0e, 1);
-    this.bossGraphics.fillRect(
-      screenX + this.boss.width * 0.25,
-      screenY + this.boss.height * 0.6,
-      this.boss.width * 0.5,
-      this.boss.height * 0.15,
-    );
+    // Update boss sprite position
+    this.bossSprite.setPosition(screenX, screenY);
+    this.bossSprite.setDisplaySize(this.boss.width, this.boss.height);
 
     // Health bar above boss
     this.bossHealthBarBg.clear();
@@ -1507,8 +1487,8 @@ export default class RunnerScene extends SceneBridge {
 
     if (allLanded && animationElapsed > minAnimationTime) {
       // Clean up boss visuals
-      this.bossGraphics?.destroy();
-      this.bossGraphics = null;
+      this.bossSprite?.destroy();
+      this.bossSprite = null;
       this.bossHealthBarBg?.destroy();
       this.bossHealthBarBg = null;
       this.defeatPoopGraphics.forEach(g => g.destroy());
