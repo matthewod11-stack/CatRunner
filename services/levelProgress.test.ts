@@ -1,35 +1,45 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
+  COMPLETED_LEVELS_STORAGE_KEY,
   DEFEATED_BOSSES_STORAGE_KEY,
+  loadCompletedLevels,
+  saveCompletedLevels,
   loadDefeatedBosses,
   saveDefeatedBosses,
 } from './levelProgress';
 import { isLevelUnlocked, LEVEL_ORDER } from '../levels/catalog';
 
-describe('loadDefeatedBosses / saveDefeatedBosses', () => {
-  const store: Record<string, string> = {};
+/* ── shared localStorage mock ───────────────────────────────── */
 
-  beforeEach(() => {
-    Object.keys(store).forEach((k) => delete store[k]);
-    globalThis.localStorage = {
-      getItem: (k: string) => (k in store ? store[k] : null),
-      setItem: (k: string, v: string) => {
-        store[k] = v;
-      },
-      removeItem: (k: string) => {
-        delete store[k];
-      },
-      clear: () => {
-        Object.keys(store).forEach((k) => delete store[k]);
-      },
-      key: () => null,
-      length: 0,
-    } as Storage;
-  });
+const store: Record<string, string> = {};
 
-  afterEach(() => {
-    delete (globalThis as { localStorage?: Storage }).localStorage;
-  });
+function installMockStorage() {
+  Object.keys(store).forEach((k) => delete store[k]);
+  globalThis.localStorage = {
+    getItem: (k: string) => (k in store ? store[k] : null),
+    setItem: (k: string, v: string) => {
+      store[k] = v;
+    },
+    removeItem: (k: string) => {
+      delete store[k];
+    },
+    clear: () => {
+      Object.keys(store).forEach((k) => delete store[k]);
+    },
+    key: () => null,
+    length: 0,
+  } as Storage;
+}
+
+function teardownMockStorage() {
+  delete (globalThis as { localStorage?: Storage }).localStorage;
+}
+
+/* ── legacy API (deprecated wrappers) ───────────────────────── */
+
+describe('loadDefeatedBosses / saveDefeatedBosses (deprecated)', () => {
+  beforeEach(installMockStorage);
+  afterEach(teardownMockStorage);
 
   it('returns empty object when missing or invalid', () => {
     expect(loadDefeatedBosses()).toEqual({});
@@ -39,13 +49,102 @@ describe('loadDefeatedBosses / saveDefeatedBosses', () => {
     expect(loadDefeatedBosses()).toEqual({});
   });
 
-  it('round-trips defeated flags', () => {
+  it('round-trips defeated flags via new key', () => {
     const state = { BEACH: true as const };
     saveDefeatedBosses(state);
     expect(loadDefeatedBosses()).toEqual(state);
-    expect(localStorage.getItem(DEFEATED_BOSSES_STORAGE_KEY)).toContain('BEACH');
+    // deprecated save writes to the NEW key
+    expect(localStorage.getItem(COMPLETED_LEVELS_STORAGE_KEY)).toContain('BEACH');
   });
 });
+
+/* ── new API: loadCompletedLevels / saveCompletedLevels ──────── */
+
+describe('loadCompletedLevels / saveCompletedLevels', () => {
+  beforeEach(installMockStorage);
+  afterEach(teardownMockStorage);
+
+  it('returns empty object when both keys missing', () => {
+    expect(loadCompletedLevels()).toEqual({});
+  });
+
+  it('reads from new key when it exists', () => {
+    const data = { BEACH: true, ROOFTOPS: true };
+    localStorage.setItem(COMPLETED_LEVELS_STORAGE_KEY, JSON.stringify(data));
+    expect(loadCompletedLevels()).toEqual(data);
+  });
+
+  it('round-trips via save / load', () => {
+    const state = { KITCHEN: true };
+    saveCompletedLevels(state);
+    expect(loadCompletedLevels()).toEqual(state);
+  });
+
+  it('returns empty for corrupt new key', () => {
+    localStorage.setItem(COMPLETED_LEVELS_STORAGE_KEY, 'not-json');
+    expect(loadCompletedLevels()).toEqual({});
+  });
+
+  it('returns empty when new key contains a non-object', () => {
+    localStorage.setItem(COMPLETED_LEVELS_STORAGE_KEY, '42');
+    expect(loadCompletedLevels()).toEqual({});
+  });
+});
+
+/* ── migration from old key to new key ──────────────────────── */
+
+describe('loadCompletedLevels migration', () => {
+  beforeEach(installMockStorage);
+  afterEach(teardownMockStorage);
+
+  it('migrates from old key when new key is missing', () => {
+    const legacy = { BEACH: true, ROOFTOPS: true };
+    localStorage.setItem(DEFEATED_BOSSES_STORAGE_KEY, JSON.stringify(legacy));
+
+    const result = loadCompletedLevels();
+    expect(result).toEqual(legacy);
+  });
+
+  it('removes old key after migration', () => {
+    localStorage.setItem(DEFEATED_BOSSES_STORAGE_KEY, JSON.stringify({ BEACH: true }));
+
+    loadCompletedLevels();
+    expect(localStorage.getItem(DEFEATED_BOSSES_STORAGE_KEY)).toBeNull();
+  });
+
+  it('writes new key during migration', () => {
+    const legacy = { BEACH: true };
+    localStorage.setItem(DEFEATED_BOSSES_STORAGE_KEY, JSON.stringify(legacy));
+
+    loadCompletedLevels();
+    expect(localStorage.getItem(COMPLETED_LEVELS_STORAGE_KEY)).toBe(JSON.stringify(legacy));
+  });
+
+  it('does not re-migrate if new key already exists', () => {
+    const oldData = { BEACH: true };
+    const newData = { BEACH: true, ROOFTOPS: true };
+    localStorage.setItem(DEFEATED_BOSSES_STORAGE_KEY, JSON.stringify(oldData));
+    localStorage.setItem(COMPLETED_LEVELS_STORAGE_KEY, JSON.stringify(newData));
+
+    const result = loadCompletedLevels();
+    // Should use new key data, ignoring old key
+    expect(result).toEqual(newData);
+    // Old key should still be present (not touched)
+    expect(localStorage.getItem(DEFEATED_BOSSES_STORAGE_KEY)).toBe(JSON.stringify(oldData));
+  });
+
+  it('handles corrupt old key gracefully', () => {
+    localStorage.setItem(DEFEATED_BOSSES_STORAGE_KEY, '{{{bad-json');
+    expect(loadCompletedLevels()).toEqual({});
+  });
+
+  it('handles non-object old key gracefully', () => {
+    localStorage.setItem(DEFEATED_BOSSES_STORAGE_KEY, '"just-a-string"');
+    expect(loadCompletedLevels()).toEqual({});
+  });
+});
+
+/* ── unlock persistence integration ─────────────────────────── */
 
 describe('unlock persistence integration', () => {
   it('after recording beach boss defeat, first campaign level stays unlocked', () => {

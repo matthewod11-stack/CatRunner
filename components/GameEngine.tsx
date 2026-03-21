@@ -1612,7 +1612,7 @@ const GameEngine: React.FC<GameEngineProps> = ({
               RESUME
             </button>
             <button 
-              onClick={() => onStatusChange?.(GameStatus.LEVEL_SELECTION)}
+              onClick={() => onStatusChange?.(GameStatus.CAMPAIGN)}
               className="w-full bg-red-600 text-white font-black py-6 rounded-3xl text-3xl shadow-[0_10px_0_#7f1d1d] hover:shadow-[0_6px_0_#7f1d1d] transition-all active:translate-y-1 active:shadow-none"
             >
               MAIN MENU

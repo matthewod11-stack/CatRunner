@@ -10,7 +10,7 @@ import {
   VictoryFinalizePayload,
 } from './types';
 import GameEngine from './components/GameEngine';
-import LevelSelection from './components/LevelSelection';
+import CampaignScreen from './components/LevelSelection';
 import CatCustomizer from './components/CatCustomizer';
 import AnimatedWater from './components/AnimatedWater';
 import { getCatWisdom, getDeathMessage } from './services/geminiService';
@@ -38,17 +38,19 @@ import {
   getBossEntryCoinThreshold,
   mergeLevelTuning,
 } from './levels';
-import { loadDefeatedBosses, saveDefeatedBosses } from './services/levelProgress';
+import { loadCompletedLevels, saveCompletedLevels } from './services/levelProgress';
 import {
   HALL_OF_FAME_STORAGE_KEY,
   mergeHallOfFameAfterRun,
-  nextDefeatedBossesAfterVictory,
+  nextCompletedLevelsAfterWin,
   nextGameScoreAfterVictory,
 } from './services/runOutcome';
 import { useTuningStore } from './systems/tuning/useTuningStore';
 import { useDocumentReducedMotionClass } from './hooks/usePrefersReducedMotion';
+import PhaserGame from './components/PhaserGame';
 
 const MAX_LIVES = 9;
+const PHASER_TEST = new URLSearchParams(window.location.search).has('phaser_test');
 
 function formatHallOfFameDate(ts: number): string {
   try {
@@ -61,13 +63,13 @@ function formatHallOfFameDate(ts: number): string {
 const App: React.FC = () => {
   const prefersReducedMotion = useDocumentReducedMotionClass();
 
-  const [status, setStatus] = useState<GameStatus>(GameStatus.LEVEL_SELECTION);
+  const [status, setStatus] = useState<GameStatus>(GameStatus.CAMPAIGN);
   const [score, setScore] = useState<GameScore>({ current: 0, high: 0, coins: 0, multiplier: 1, streak: 0, lives: MAX_LIVES });
   const [highScores, setHighScores] = useState<HighScoreEntry[]>([]);
   const [wisdom, setWisdom] = useState<string>("Ready to pounce?");
   const [deathMsg, setDeathMsg] = useState<string>("");
   const [startAtBoss, setStartAtBoss] = useState<boolean>(false);
-  const [defeatedBosses, setDefeatedBosses] = useState(() => loadDefeatedBosses());
+  const [defeatedBosses, setDefeatedBosses] = useState(() => loadCompletedLevels());
   const [selectedLevel, setSelectedLevel] = useState<LevelId>(() => LEVEL_ORDER[0]);
 
   const { tuning } = useTuningStore();
@@ -143,7 +145,7 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    saveDefeatedBosses(defeatedBosses);
+    saveCompletedLevels(defeatedBosses);
   }, [defeatedBosses]);
 
   useEffect(() => {
@@ -319,7 +321,7 @@ const App: React.FC = () => {
       } catch {
         /* ignore */
       }
-      setStatus(GameStatus.LEVEL_SELECTION);
+      setStatus(GameStatus.CAMPAIGN);
     },
     [savedLooks, revokeEquippedObjectUrl]
   );
@@ -373,6 +375,7 @@ const App: React.FC = () => {
           name: kittyName,
           score: finalScore,
           date: Date.now(),
+          levelId: selectedLevel,
           ...(useIndexedCatAssets
             ? { catAssetId: equippedAssetId ?? undefined }
             : { catUrl: customCatUrl || undefined }),
@@ -399,19 +402,20 @@ const App: React.FC = () => {
       const msg = await getDeathMessage(finalScore);
       setDeathMsg(msg);
     },
-    [kittyName, customCatUrl, useIndexedCatAssets, equippedAssetId]
+    [kittyName, customCatUrl, useIndexedCatAssets, equippedAssetId, selectedLevel]
   );
 
   const handleVictoryFinalize = useCallback(
     (payload: VictoryFinalizePayload) => {
       const { finalScore, levelId: levelBeat, gameScore } = payload;
-      setDefeatedBosses((prev) => nextDefeatedBossesAfterVictory(prev, levelBeat));
+      setDefeatedBosses((prev) => nextCompletedLevelsAfterWin(prev, levelBeat));
 
       setHighScores((prev) => {
         const newEntry: HighScoreEntry = {
           name: kittyName,
           score: finalScore,
           date: Date.now(),
+          levelId: levelBeat,
           ...(useIndexedCatAssets
             ? { catAssetId: equippedAssetId ?? undefined }
             : { catUrl: customCatUrl || undefined }),
@@ -487,7 +491,7 @@ const App: React.FC = () => {
       console.error('[Kitty Closet] Save error:', error);
     }
 
-    setStatus(GameStatus.LEVEL_SELECTION);
+    setStatus(GameStatus.CAMPAIGN);
   };
 
   useEffect(() => {
@@ -500,7 +504,7 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (status === GameStatus.LEVEL_SELECTION) fetchWisdom();
+    if (status === GameStatus.CAMPAIGN) fetchWisdom();
   }, [status]);
 
   useEffect(() => {
@@ -518,7 +522,7 @@ const App: React.FC = () => {
   const isBossMoment = status === GameStatus.BOSS_FIGHT;
 
   const getSkyStyle = () => {
-    if (status === GameStatus.LEVEL_SELECTION || status === GameStatus.CUSTOMIZE || isBossMoment) {
+    if (status === GameStatus.CAMPAIGN || status === GameStatus.CUSTOMIZE || isBossMoment) {
       return {};
     }
 
@@ -558,7 +562,7 @@ const App: React.FC = () => {
       aria-label="Beach Kitty game"
       className={`relative w-full h-screen-safe flex flex-col items-center justify-center overflow-hidden font-sans transition-all duration-2000 ${
         isBossMoment ? 'bg-orange-300' : 
-        status === GameStatus.LEVEL_SELECTION ? 'bg-amber-50' : 
+        status === GameStatus.CAMPAIGN ? 'bg-amber-50' : 
         status === GameStatus.CUSTOMIZE ? 'bg-amber-100' : 
         'bg-sky-300'
       }`}
@@ -567,7 +571,7 @@ const App: React.FC = () => {
       
       {/* Background Decor */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        {status !== GameStatus.LEVEL_SELECTION && status !== GameStatus.CUSTOMIZE && (
+        {status !== GameStatus.CAMPAIGN && status !== GameStatus.CUSTOMIZE && (
           <>
             {/* Animated Sun - moves and changes color based on star collection */}
             {(() => {
@@ -618,7 +622,7 @@ const App: React.FC = () => {
                 />
               );
             })()}
-            {status !== GameStatus.LEVEL_SELECTION && status !== GameStatus.CUSTOMIZE && (
+            {status !== GameStatus.CAMPAIGN && status !== GameStatus.CUSTOMIZE && (
               <>
                 <AnimatedWater isBossMoment={isBossMoment} />
                 <div className="absolute bottom-0 w-full h-1/4 bg-amber-100 border-t-4 border-amber-200" />
@@ -628,181 +632,22 @@ const App: React.FC = () => {
         )}
       </div>
 
-      {status === GameStatus.LEVEL_SELECTION && (
-        <main className="z-10 w-full max-w-5xl px-4 md:px-12 animate-[fadeIn_0.5s_ease-out]">
-          <header className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-6">
-            <div className="flex flex-col gap-1">
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-800/80">Campaign</p>
-              <h1 className="text-4xl md:text-5xl font-black text-amber-900 uppercase italic tracking-tighter leading-tight">
-                Beach Kitty
-              </h1>
-              <p className="text-amber-800/90 font-bold text-base max-w-md leading-snug">
-                Run the shore, collect stars, face the boss — unlock the next beach when you win.
-              </p>
-              <span className="text-amber-700 font-bold uppercase tracking-widest text-sm mt-1">
-                Playing as <span className="text-amber-900">{kittyName}</span>
-              </span>
-            </div>
-            <div
-              className="bg-white/80 px-4 py-3 min-h-[44px] rounded-2xl border-2 border-amber-200 shadow-sm flex items-center gap-2 self-start sm:self-auto"
-              aria-live="polite"
-            >
-              <span className="text-amber-800 font-black text-xs uppercase tracking-widest">Lives</span>
-              <span className="text-2xl font-black text-amber-900 tabular-nums" aria-hidden>
-                🐾
-              </span>
-              <span className="text-2xl font-black text-amber-900 tabular-nums">
-                {score.lives > 0 ? score.lives : MAX_LIVES}
-              </span>
-            </div>
-          </header>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-          {/* LEFT: Character Card - Vertical layout matching Hall of Fame */}
-          <div className="bg-white/90 p-8 rounded-[3rem] border-4 border-amber-300 shadow-2xl flex flex-col">
-            {/* Kitty Name & Stats */}
-            <div className="text-center mb-6">
-              <h2 className="text-3xl font-black text-amber-900 uppercase italic tracking-tighter mb-3">{kittyName}</h2>
-              <span className="inline-block bg-amber-200 text-amber-900 px-5 py-2 rounded-full text-sm font-black uppercase tracking-widest">
-                {(useIndexedCatAssets ? savedLooks.length : legacyOutfits.length)}{' '}
-                {(useIndexedCatAssets ? savedLooks.length : legacyOutfits.length) === 1 ? 'Outfit' : 'Outfits'}
-              </span>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col gap-3 mb-6">
-              <button
-                type="button"
-                onClick={() => {
-                  setClosetSession((s) => s + 1);
-                  setStatus(GameStatus.CUSTOMIZE);
-                }}
-                className="w-full min-h-[48px] bg-amber-500 hover:bg-amber-600 text-white p-4 rounded-2xl font-black text-lg uppercase shadow-lg shadow-amber-200 transition-all active:scale-95 flex items-center justify-center gap-3"
-                aria-label="Open Kitty Closet to customize your cat"
-              >
-                <span className="text-2xl" aria-hidden>
-                  👗
-                </span>
-                <span>Kitty Closet</span>
-              </button>
-
-              <LevelSelection
-                levelOrder={LEVEL_ORDER}
-                defeatedBosses={defeatedBosses}
-                selectedLevel={selectedLevel}
-                onSelectLevel={setSelectedLevel}
-                className="mb-1"
-              />
-
-              <button
-                type="button"
-                onClick={() => startGame(false)}
-                className="w-full min-h-[48px] bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-2xl font-black text-lg uppercase shadow-lg shadow-blue-200 transition-all active:scale-95 flex items-center justify-center gap-2"
-                aria-label={`Start run on ${levelConfig.name}`}
-              >
-                <span className="text-xl" aria-hidden>
-                  🏃
-                </span>
-                <span>Run!</span>
-              </button>
-
-              {/* Boss button hidden but preserved for testing - set to true to re-enable */}
-              {false && (
-                <button
-                  onClick={() => startGame(true)}
-                  className="w-full bg-red-500 hover:bg-red-600 text-white p-3 rounded-xl font-black text-sm uppercase shadow-md transition-transform active:scale-95"
-                >
-                  👹 BOSS
-                </button>
-              )}
-            </div>
-
-            {/* Large Kitty Hero Image - Bottom */}
-            <div className="flex-grow flex items-center justify-center mt-auto">
-              <div className="w-96 h-96 bg-gradient-to-br from-amber-50 to-amber-100 rounded-[2rem] border-4 border-amber-200 shadow-inner flex items-center justify-center overflow-hidden relative">
-                {customCatUrl ? (
-                  <MatteCatImage
-                    src={customCatUrl}
-                    alt={kittyName}
-                    className="w-full h-full"
-                    imgClassName="w-full h-full object-contain scale-110 drop-shadow-md"
-                    mattedFromParent={equippedMattedState}
-                  />
-                ) : (
-                  <div className="text-9xl">🐾</div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-amber-200/30 to-transparent pointer-events-none" />
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT: High Scores & Wisdom */}
-          <section
-            className="bg-white/90 p-8 rounded-[3rem] border-4 border-amber-300 shadow-2xl flex flex-col"
-            aria-labelledby="hof-heading"
-          >
-              <div className="mb-2">
-                <h2 id="hof-heading" className="text-3xl font-black text-amber-600 uppercase italic tracking-widest">
-                  Hall of Fame
-                </h2>
-                <p className="text-sm text-amber-800/80 font-medium mt-1">Top 5 scores on this device. Boss wins show a trophy.</p>
-              </div>
-              
-              {highScores.length > 0 ? (
-                <ul className="flex flex-col gap-4 flex-grow list-none p-0 m-0" role="list">
-                  {highScores.map((entry, idx) => (
-                    <li
-                      key={`${entry.date}-${idx}`}
-                      className="flex items-center justify-between bg-amber-50 p-4 rounded-2xl border-2 border-amber-100 shadow-sm gap-3"
-                    >
-                      <div className="flex items-center gap-4 min-w-0">
-                        <span
-                          className={`shrink-0 w-9 h-9 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-full font-black text-white text-sm ${idx === 0 ? 'bg-yellow-500' : 'bg-slate-400'}`}
-                          aria-hidden
-                        >
-                          {idx + 1}
-                        </span>
-                        <HallOfFameCatAvatar entry={entry} storageReady={catAssetsReady} />
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-lg sm:text-xl font-bold text-slate-700 leading-tight flex items-center gap-2 flex-wrap">
-                            <span className="truncate">{entry.name}</span>
-                            {entry.isVictory && (
-                              <span className="text-yellow-500 shrink-0" title="Boss defeated" aria-label="Boss defeated">
-                                🏆
-                              </span>
-                            )}
-                          </span>
-                          {entry.date ? (
-                            <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wide mt-0.5">
-                              {formatHallOfFameDate(entry.date)}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-                      <span className="text-2xl sm:text-3xl font-black text-amber-900 tabular-nums shrink-0">{entry.score}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="flex-grow flex flex-col items-center justify-center text-slate-400 italic py-8">
-                  <span className="text-5xl mb-4" aria-hidden>
-                    🏆
-                  </span>
-                  <p className="text-center font-bold text-slate-500 not-italic">No runs saved yet. Finish a game to land here.</p>
-                </div>
-              )}
-
-              <div className="mt-8 pt-6 border-t-4 border-amber-100 text-center">
-                <p
-                  className="text-slate-500 font-bold italic text-lg leading-snug"
-                  aria-live="polite"
-                >
-                  &ldquo;{wisdom}&rdquo;
-                </p>
-                <span className="text-xs uppercase text-amber-800 font-black tracking-widest block mt-2">— {kittyName}</span>
-              </div>
-            </section>
-          </div>
+      {status === GameStatus.CAMPAIGN && (
+        <main className="z-10 w-full animate-[fadeIn_0.5s_ease-out]">
+          <CampaignScreen
+            defeatedBosses={defeatedBosses}
+            selectedLevel={selectedLevel}
+            onSelectLevel={setSelectedLevel}
+            onPlay={() => startGame(false)}
+            onOpenCloset={() => {
+              setClosetSession((s) => s + 1);
+              setStatus(GameStatus.CUSTOMIZE);
+            }}
+            highScores={highScores}
+            kittyName={kittyName}
+            wisdom={wisdom}
+            lives={score.lives > 0 ? score.lives : MAX_LIVES}
+          />
         </main>
       )}
 
@@ -820,7 +665,7 @@ const App: React.FC = () => {
             onSave={handleIndexedSave}
             onClosetLookDelete={handleClosetLookDelete}
             playerDisplayName={kittyName}
-            onCancel={() => setStatus(GameStatus.LEVEL_SELECTION)}
+            onCancel={() => setStatus(GameStatus.CAMPAIGN)}
           />
         ) : (
           <CatCustomizer
@@ -830,25 +675,38 @@ const App: React.FC = () => {
             currentName={kittyName}
             savedOutfits={legacyOutfits}
             onSave={saveLegacyCustomLook}
-            onCancel={() => setStatus(GameStatus.LEVEL_SELECTION)}
+            onCancel={() => setStatus(GameStatus.CAMPAIGN)}
           />
         ))}
 
       {(status === GameStatus.PLAYING || status === GameStatus.BOSS_FIGHT) && (
-        <GameEngine
-          key={selectedLevel}
-          initialLives={score.lives}
-          levelId={selectedLevel}
-          levelConfig={levelConfig}
-          startAtBoss={startAtBoss}
-          customCatUrl={customCatUrl}
-          equippedCatMatting={equippedMattedState}
-          onGameOver={handleGameOver}
-          onScoreUpdate={handleScoreUpdate}
-          onVictoryFinalize={handleVictoryFinalize}
-          onStatusChange={handleStatusChange}
-          onTelemetryReady={handleTelemetryReady}
-        />
+        PHASER_TEST ? (
+          <div className="z-10 w-full h-[80vh] max-w-4xl mx-auto">
+            <PhaserGame
+              levelId={selectedLevel}
+              catSpriteUrl={customCatUrl}
+              sceneInitData={{}}
+              sceneFactory={() => import('./scenes/TestScene')}
+              onScoreUpdate={handleScoreUpdate}
+              onStatusChange={handleStatusChange}
+            />
+          </div>
+        ) : (
+          <GameEngine
+            key={selectedLevel}
+            initialLives={score.lives}
+            levelId={selectedLevel}
+            levelConfig={levelConfig}
+            startAtBoss={startAtBoss}
+            customCatUrl={customCatUrl}
+            equippedCatMatting={equippedMattedState}
+            onGameOver={handleGameOver}
+            onScoreUpdate={handleScoreUpdate}
+            onVictoryFinalize={handleVictoryFinalize}
+            onStatusChange={handleStatusChange}
+            onTelemetryReady={handleTelemetryReady}
+          />
+        )
       )}
 
       {status === GameStatus.GAMEOVER && (
@@ -882,7 +740,7 @@ const App: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => setStatus(GameStatus.LEVEL_SELECTION)}
+            onClick={() => setStatus(GameStatus.CAMPAIGN)}
             className="w-full min-h-[44px] text-slate-500 font-black text-lg uppercase tracking-widest hover:text-slate-800 transition py-3"
           >
             CAMPAIGN MENU
@@ -984,7 +842,7 @@ const App: React.FC = () => {
                 if (nextId !== null && isLevelUnlocked(defeatedBosses, nextId)) {
                   setSelectedLevel(nextId);
                 }
-                setStatus(GameStatus.LEVEL_SELECTION);
+                setStatus(GameStatus.CAMPAIGN);
               }}
               className="w-full min-h-[48px] bg-yellow-500 hover:bg-yellow-600 text-white font-black py-6 px-8 rounded-3xl text-3xl transform transition active:scale-95 shadow-[0_10px_0_rgb(217,119,6)] hover:shadow-[0_8px_0_rgb(217,119,6)]"
             >
@@ -993,7 +851,7 @@ const App: React.FC = () => {
             
             <button
               type="button"
-              onClick={() => setStatus(GameStatus.LEVEL_SELECTION)}
+              onClick={() => setStatus(GameStatus.CAMPAIGN)}
               className="w-full min-h-[44px] text-slate-500 font-black text-lg uppercase tracking-widest hover:text-slate-800 transition py-3"
             >
               MAIN MENU

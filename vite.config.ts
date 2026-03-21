@@ -29,6 +29,9 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
     },
     plugins: [react(), localApiPlugin()],
+    optimizeDeps: {
+      include: ['phaser'],
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

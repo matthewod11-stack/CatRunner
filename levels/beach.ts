@@ -4,6 +4,10 @@ export const BEACH_LEVEL_CONFIG: LevelConfig = {
   id: 'BEACH',
   name: 'Sunny Shore',
   description: 'Dodge crabs, beachballs, and seagulls on a sunny beach run!',
+  genre: 'runner',
+  catPose: 'runner',
+  victoryCondition: { type: 'boss', bossId: 'sandMonster' },
+  starThresholds: [100, 300, 500],
 
   obstacles: [
     {

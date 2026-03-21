@@ -58,6 +58,10 @@ describe('resolveDropProjectileSpec', () => {
     id: 'BEACH',
     name: 't',
     description: 't',
+    genre: 'runner',
+    catPose: 'runner',
+    victoryCondition: { type: 'boss', bossId: 'test' },
+    starThresholds: [100, 300, 500],
     obstacles: [
       {
         type: 'SEAGULL',

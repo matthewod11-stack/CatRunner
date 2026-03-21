@@ -77,6 +77,14 @@ Set `GEMINI_API_KEY` in `.env.local` for AI features (custom cat generation, wis
 - **Music:** Web Audio procedural beats; tempo vs game speed; boss mode. **rAF + lookahead** scheduling (`nextBeatTime`) instead of `setInterval`.
 - **SFX:** `sfxService` — file-backed + procedural fallbacks; `GameEngine` preloads and routes `playSound` through it.
 
+### Phaser 3 Integration (V3)
+- **`components/PhaserGame.tsx`** — React wrapper that mounts a `Phaser.Game` inside a div. Accepts `sceneFactory` (lazy import), `levelId`, `catSpriteUrl`, `sceneInitData`, and callback props for bridge events. Full Phaser restart on `levelId` change; `applyRuntimePatch` for mid-run tuning updates.
+- **`scenes/shared/SceneBridge.ts`** — Abstract base class extending `Phaser.Scene`. All genre scenes extend this. Defines 6 bridge events: `SCORE_UPDATE`, `LIVES_CHANGED`, `LEVEL_COMPLETE`, `GAME_OVER`, `STATUS_CHANGE`, `HUD_UPDATE`. Protocol constants and interfaces live in `scenes/shared/bridgeProtocol.ts` (importable without Phaser browser globals).
+- **`scenes/shared/SpriteLoader.ts`** — Loads cat sprite blob URL into Phaser texture cache during `preload()`.
+- **Rendering rule:** Phaser owns gameplay rendering; React owns UI (menus, HUD, campaign screen, cutscenes).
+- **Code splitting rule:** Never statically import all scene classes. Use `sceneFactory: () => import('./scenes/BeachScene')` for lazy loading.
+- **`CAMPAIGN_LEVEL_META` vs `LEVEL_REGISTRY`:** `CAMPAIGN_LEVEL_META` (in `levels/catalog.ts`) lists all 9 levels with display metadata for the campaign screen. `LEVEL_REGISTRY` (in `levels/index.ts`) only contains levels with actual runtime configs. The campaign screen reads from meta; `getLevelConfig()` reads from the registry and throws for unimplemented levels.
+
 ## Roadmap V2 and known gaps
 
 See **[ROADMAP_V2.md](./ROADMAP_V2.md)** and **[KNOWN_ISSUES.md](./KNOWN_ISSUES.md)** for the active backlog. Short summary for agents:

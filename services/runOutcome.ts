@@ -1,5 +1,5 @@
 import type { GameScore, HighScoreEntry, LevelId } from '../types';
-import type { DefeatedBossesState } from './levelProgress';
+import type { CompletedLevelsState, DefeatedBossesState } from './levelProgress';
 
 export const HALL_OF_FAME_STORAGE_KEY = 'beach-cat-scores-v2';
 
@@ -14,11 +14,19 @@ export function mergeHallOfFameAfterRun(
   return [...prev, newEntry].sort((a, b) => b.score - a.score).slice(0, maxEntries);
 }
 
+export function nextCompletedLevelsAfterWin(
+  prev: CompletedLevelsState,
+  levelBeat: LevelId
+): CompletedLevelsState {
+  return { ...prev, [levelBeat]: true };
+}
+
+/** @deprecated Use `nextCompletedLevelsAfterWin` */
 export function nextDefeatedBossesAfterVictory(
   prev: DefeatedBossesState,
   levelBeat: LevelId
 ): DefeatedBossesState {
-  return { ...prev, [levelBeat]: true };
+  return nextCompletedLevelsAfterWin(prev, levelBeat);
 }
 
 /**

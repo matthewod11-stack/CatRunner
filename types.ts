@@ -1,15 +1,26 @@
 import type { TuningProfile } from './systems/tuning/defaultTuning';
 
 export enum GameStatus {
-  LEVEL_SELECTION = 'LEVEL_SELECTION',
+  CAMPAIGN = 'CAMPAIGN',
+  CUSTOMIZE = 'CUSTOMIZE',
+  CUTSCENE = 'CUTSCENE',
   PLAYING = 'PLAYING',
   BOSS_FIGHT = 'BOSS_FIGHT',
   GAMEOVER = 'GAMEOVER',
-  CUSTOMIZE = 'CUSTOMIZE',
   VICTORY = 'VICTORY',
+  CAMPAIGN_COMPLETE = 'CAMPAIGN_COMPLETE',
 }
 
-export type LevelId = 'BEACH';
+export type LevelId =
+  | 'BEACH'
+  | 'ROOFTOPS'
+  | 'KITCHEN'
+  | 'SPACE'
+  | 'YARN'
+  | 'STREET'
+  | 'GARDEN_WHACK'
+  | 'GARDEN_SNAKE'
+  | 'CAT_TREE';
 
 export type ObstacleType = 
   | 'CRAB' | 'BEACHBALL' | 'SEAGULL' | 'SANDCASTLE' | 'SAND_PROJECTILE' | 'TIDEPOOL' | 'PALM_TREE';
@@ -111,6 +122,8 @@ export interface HighScoreEntry {
   name: string;
   score: number;
   date: number;
+  /** Level this score was achieved on. Optional for backwards compatibility with legacy entries. */
+  levelId?: LevelId;
   /** Legacy: full data URL stored in localStorage (older Hall of Fame rows). */
   catUrl?: string;
   /** IndexedDB sprite key when using beach-cat-cat-state-v1 (new rows). */
@@ -287,11 +300,75 @@ export interface BackgroundConfig {
   cloudEntityType?: BackgroundEntityType;
 }
 
-/** Top-level level configuration — composes all per-level data */
-export interface LevelConfig {
+// ─── V3: Nine Lives Campaign Types ──────────────────────────────────
+
+export type LevelGenre = 'runner' | 'platformer' | 'launcher' | 'shooter'
+                       | 'breakout' | 'frogger' | 'whack' | 'snake' | 'climber';
+
+export type CatPoseId =
+  | 'runner'      // side-running, current default
+  | 'platformer'  // side-view idle/walk/jump
+  | 'pilot'       // forward-facing in cardboard box ship
+  | 'launcher'    // sitting, tail-flick for launch
+  | 'paddle'      // paw only (breakout)
+  | 'hopper'      // top-down-ish (frogger)
+  | 'swatter'     // paw with claws (whack)
+  | 'slitherer'   // head for snake
+  | 'climber';    // side-view arms-up
+
+export type VictoryCondition =
+  | { type: 'boss'; bossId: string }
+  | { type: 'goal'; description: string }
+  | { type: 'score'; target: number }
+  | { type: 'survive'; durationMs: number }
+  | { type: 'clear'; description: string };
+
+export interface CutsceneFrame {
+  type: 'text' | 'video';
+  text?: string;
+  image?: string;
+  /** Path to video file. Produced via demo-video-factory-catrunner/ pipeline
+   *  (DaVinci Resolve → export → assets/cutscenes/). */
+  videoSrc?: string;
+  subtitles?: string;
+  durationMs?: number;
+  transition?: 'fade' | 'slide' | 'cut';
+}
+
+export interface CutsceneConfig {
+  frames: CutsceneFrame[];
+}
+
+/** Emitted by any Phaser scene when the level is completed. Additive — does NOT replace VictoryFinalizePayload. */
+export interface LevelCompletePayload {
+  levelId: LevelId;
+  /** Raw genre-specific score. NOT normalized (0-999 normalization is deferred). */
+  finalScore: number;
+  gameScore: GameScore;
+  victoryType: VictoryCondition['type'];
+}
+
+export interface LevelResult {
+  levelId: LevelId;
+  score: number;
+  stars: 1 | 2 | 3;
+}
+
+/** Shared campaign metadata — every genre implements this. */
+export interface CampaignLevelMeta {
   id: LevelId;
   name: string;
   description: string;
+  genre: LevelGenre;
+  catPose: CatPoseId;
+  victoryCondition: VictoryCondition;
+  starThresholds: [number, number, number];
+  cutscene?: { intro?: CutsceneConfig; outro?: CutsceneConfig };
+}
+
+/** Runner-specific level config. The existing LevelConfig IS this. */
+export interface RunnerLevelConfig extends CampaignLevelMeta {
+  genre: 'runner';
   obstacles: ObstacleDefinition[];
   patterns: PatternStep[][];
   theme: ThemeConfig;
@@ -304,3 +381,9 @@ export interface LevelConfig {
   /** Entity types pulled toward the player while MAGNET is active; default ['COIN'] */
   magnetAttractTypes?: EntityType[];
 }
+
+/** Discriminated union — grows as genres are added. */
+export type AnyLevelConfig = RunnerLevelConfig; // | PlatformerLevelConfig | ...
+
+/** @deprecated Use RunnerLevelConfig or AnyLevelConfig. Alias kept for migration. */
+export type LevelConfig = RunnerLevelConfig;

@@ -5,17 +5,18 @@ export { BEACH_LEVEL_CONFIG } from './beach';
 export { BeachObstacleIcon, isBeachObstacleType } from './beach/obstacles';
 export { BackgroundEntityRenderer, BACKGROUND_ENTITY_VIEW_BY_LEVEL } from './levelBackgroundViews';
 
-export const LEVEL_REGISTRY: Record<LevelId, LevelConfig> = {
+export const LEVEL_REGISTRY: Partial<Record<LevelId, LevelConfig>> = {
   BEACH: BEACH_LEVEL_CONFIG,
 };
 
 export function getLevelConfig(id: LevelId): LevelConfig {
   const config = LEVEL_REGISTRY[id];
-  if (!config) throw new Error(`Unknown level: ${id}`);
+  if (!config) throw new Error(`Level "${id}" is not yet implemented`);
   return config;
 }
 
 export {
+  CAMPAIGN_LEVEL_META,
   LEVEL_ORDER,
   isLevelUnlocked,
   getNextLevelId,
