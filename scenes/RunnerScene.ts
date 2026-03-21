@@ -202,7 +202,9 @@ export default class RunnerScene extends SceneBridge {
     this.startAtBoss = data.startAtBoss;
 
     if (data.onTelemetryReady) {
-      // Telemetry wiring — filled in when telemetry is ported
+      // Provide empty getter for now — BalancePanel export path won't crash
+      // TODO: implement full RunnerScene telemetry
+      data.onTelemetryReady(() => []);
     }
   }
 

@@ -8,6 +8,7 @@ import {
   SavedCatLook,
   LevelId,
   VictoryFinalizePayload,
+  LevelCompletePayload,
 } from './types';
 import GameEngine from './components/GameEngine';
 import CampaignScreen from './components/LevelSelection';
@@ -33,11 +34,13 @@ import { useMatteCatUrl } from './hooks/useMatteCatUrl';
 import {
   getLevelConfig,
   LEVEL_ORDER,
+  CAMPAIGN_LEVEL_META,
   isLevelUnlocked,
   getNextLevelId,
   getBossEntryCoinThreshold,
   mergeLevelTuning,
 } from './levels';
+import { saveLevelResult, computeStars } from './services/levelCompletion';
 import { loadCompletedLevels, saveCompletedLevels } from './services/levelProgress';
 import {
   HALL_OF_FAME_STORAGE_KEY,
@@ -50,7 +53,7 @@ import { useDocumentReducedMotionClass } from './hooks/usePrefersReducedMotion';
 import PhaserGame from './components/PhaserGame';
 
 const MAX_LIVES = 9;
-const PHASER_TEST = new URLSearchParams(window.location.search).has('phaser_test');
+const USE_PHASER_RUNNER = new URLSearchParams(window.location.search).has('phaser');
 
 function formatHallOfFameDate(ts: number): string {
   try {
@@ -69,6 +72,7 @@ const App: React.FC = () => {
   const [wisdom, setWisdom] = useState<string>("Ready to pounce?");
   const [deathMsg, setDeathMsg] = useState<string>("");
   const [startAtBoss, setStartAtBoss] = useState<boolean>(false);
+  const [phaserPaused, setPhaserPaused] = useState(false);
   const [defeatedBosses, setDefeatedBosses] = useState(() => loadCompletedLevels());
   const [selectedLevel, setSelectedLevel] = useState<LevelId>(() => LEVEL_ORDER[0]);
 
@@ -438,6 +442,55 @@ const App: React.FC = () => {
     [kittyName, customCatUrl, useIndexedCatAssets, equippedAssetId]
   );
 
+  // Phaser bridge: level complete (victory via RunnerScene)
+  const handleLevelComplete = useCallback(
+    (payload: LevelCompletePayload) => {
+      const { finalScore, levelId: levelBeat, gameScore } = payload;
+
+      // Update completed levels (useEffect persists via saveCompletedLevels)
+      setDefeatedBosses(prev => nextCompletedLevelsAfterWin(prev, levelBeat));
+
+      // Save per-level result with stars
+      const meta = CAMPAIGN_LEVEL_META.find(m => m.id === levelBeat);
+      if (meta) {
+        saveLevelResult({
+          levelId: levelBeat,
+          score: finalScore,
+          stars: computeStars(finalScore, meta.starThresholds),
+        });
+      }
+
+      // Hall of Fame entry
+      setHighScores(prev => {
+        const newEntry: HighScoreEntry = {
+          name: kittyName,
+          score: finalScore,
+          date: Date.now(),
+          levelId: levelBeat,
+          ...(useIndexedCatAssets
+            ? { catAssetId: equippedAssetId ?? undefined }
+            : { catUrl: customCatUrl || undefined }),
+          isVictory: true,
+        };
+        const next = mergeHallOfFameAfterRun(prev, newEntry);
+        try { localStorage.setItem(HALL_OF_FAME_STORAGE_KEY, JSON.stringify(next)); } catch {}
+        return next;
+      });
+
+      // Reuse existing helper for authoritative score + lives reset
+      localStorage.setItem('beach-cat-lives', MAX_LIVES.toString());
+      setScore(prev => nextGameScoreAfterVictory(gameScore, finalScore, MAX_LIVES, prev.high));
+
+      setStatus(GameStatus.VICTORY);
+    },
+    [kittyName, customCatUrl, useIndexedCatAssets, equippedAssetId]
+  );
+
+  // Phaser bridge: HUD updates (pause state)
+  const handleHudUpdate = useCallback((data: Record<string, unknown>) => {
+    if ('isPaused' in data) setPhaserPaused(!!data.isPaused);
+  }, []);
+
   const startGame = (bossMode: boolean = false) => {
     if (!isLevelUnlocked(defeatedBosses, selectedLevel)) return;
     const currentLives = score.lives <= 0 ? MAX_LIVES : score.lives;
@@ -680,16 +733,46 @@ const App: React.FC = () => {
         ))}
 
       {(status === GameStatus.PLAYING || status === GameStatus.BOSS_FIGHT) && (
-        PHASER_TEST ? (
-          <div className="z-10 w-full h-[80vh] max-w-4xl mx-auto">
+        USE_PHASER_RUNNER ? (
+          <div className="z-10 w-full h-[80vh] max-w-4xl mx-auto relative">
             <PhaserGame
               levelId={selectedLevel}
               catSpriteUrl={customCatUrl}
-              sceneInitData={{}}
-              sceneFactory={() => import('./scenes/TestScene')}
+              sceneInitData={{
+                levelConfig,
+                initialLives: score.lives > 0 ? score.lives : MAX_LIVES,
+                startAtBoss,
+                tuning: mergedTuning,
+                onTelemetryReady: handleTelemetryReady,
+              }}
+              sceneFactory={() => import('./scenes/RunnerScene')}
               onScoreUpdate={handleScoreUpdate}
+              onLevelComplete={handleLevelComplete}
+              onGameOver={(finalScore: number) => handleGameOver(finalScore)}
               onStatusChange={handleStatusChange}
+              onHudUpdate={handleHudUpdate}
             />
+            {/* Phaser pause overlay */}
+            {phaserPaused && (
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-md z-[100] flex flex-col items-center justify-center animate-[fadeIn_0.2s_ease-out]">
+                <h2 className="text-8xl font-black text-white italic tracking-tighter uppercase mb-12 drop-shadow-[0_10px_0_rgba(0,0,0,0.5)]">PAUSED</h2>
+                <div className="flex flex-col gap-6 w-full max-w-sm px-8">
+                  <button
+                    onClick={() => setPhaserPaused(false)}
+                    className="w-full bg-white text-amber-900 font-black py-6 rounded-3xl text-3xl shadow-[0_10px_0_#d97706] hover:shadow-[0_6px_0_#d97706] transition-all active:translate-y-1 active:shadow-none"
+                  >
+                    RESUME
+                  </button>
+                  <button
+                    onClick={() => { setPhaserPaused(false); setStatus(GameStatus.CAMPAIGN); }}
+                    className="w-full bg-red-600 text-white font-black py-6 rounded-3xl text-3xl shadow-[0_10px_0_#7f1d1d] hover:shadow-[0_6px_0_#7f1d1d] transition-all active:translate-y-1 active:shadow-none"
+                  >
+                    MAIN MENU
+                  </button>
+                </div>
+                <p className="mt-12 text-white/50 font-bold tracking-widest text-sm uppercase">Press 'P' or 'ESC' to Resume</p>
+              </div>
+            )}
           </div>
         ) : (
           <GameEngine
