@@ -895,18 +895,23 @@ const App: React.FC = () => {
                       }} />
                     </div>
 
-                    {/* Right: Transport buttons */}
+                    {/* Right: Transport buttons (functional) */}
                     <div className="flex items-center gap-1">
-                      {['REC/ITR', 'REW', 'PLAY', 'FF', 'STOP'].map(label => (
-                        <div key={label} className="flex items-center justify-center" style={{
-                          width: label === 'REC/ITR' ? '36px' : '28px',
+                      {[
+                        { label: '▶ PLAY', action: () => setPhaserPaused(false) },
+                        { label: '⏸ PAUSE', action: () => setPhaserPaused(true) },
+                        { label: '⏏ EJECT', action: () => { setPhaserPaused(false); setStatus(GameStatus.CAMPAIGN); } },
+                      ].map(({ label, action }) => (
+                        <button key={label} onClick={action} className="flex items-center justify-center cursor-pointer hover:brightness-90 active:translate-y-px" style={{
+                          width: label.includes('EJECT') ? '36px' : '32px',
                           height: '20px',
                           background: 'linear-gradient(180deg, #d5d2cc, #c8c5c0)',
                           borderRadius: '2px',
+                          border: 'none',
                           boxShadow: '0 1px 0 #b8b5b0, inset 0 1px 0 rgba(255,255,255,0.3)',
                         }}>
                           <span style={{ fontSize: '5px', fontWeight: 800, color: '#6b6860', letterSpacing: '0.5px' }}>{label}</span>
-                        </div>
+                        </button>
                       ))}
                     </div>
 
