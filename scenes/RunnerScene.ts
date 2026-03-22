@@ -109,6 +109,8 @@ export default class RunnerScene extends SceneBridge {
   private static readonly PLAYER_H_NORMAL = 200;
   private static readonly PLAYER_H_DUCK = 90;
 
+  private static readonly ENTITY_SCALE = 0.6;
+
   // ── Input keys ──
   private keySpace!: Phaser.Input.Keyboard.Key;
   private keyUp!: Phaser.Input.Keyboard.Key;
@@ -240,13 +242,14 @@ export default class RunnerScene extends SceneBridge {
       .setDepth(0);
 
     // ── Player visual (sprite) ──
+    const scale = RunnerScene.ENTITY_SCALE;
     this.playerSprite = this.add.image(
-      this.playerX + RunnerScene.PLAYER_W / 2,
+      this.playerX + (RunnerScene.PLAYER_W * scale) / 2,
       this.groundYScreen,
       'cat',
     )
       .setOrigin(0.5, 1) // anchor at bottom center
-      .setDisplaySize(RunnerScene.PLAYER_W, RunnerScene.PLAYER_H_NORMAL)
+      .setDisplaySize(RunnerScene.PLAYER_W * scale, RunnerScene.PLAYER_H_NORMAL * scale)
       .setDepth(10);
 
     // ── Input: keyboard ──
@@ -430,6 +433,7 @@ export default class RunnerScene extends SceneBridge {
 
     // ── Game speed ramp ──
     this.speed += this.tuning.speedIncrement * frames;
+    this.speed = Math.min(this.speed, this.tuning.maxSpeed);
 
     // ── Boss entry trigger (Task 1.7) ──
     if (this.status === GameStatus.PLAYING && this.gameScore.coins >= this.bossEntryCoins) {
@@ -675,7 +679,7 @@ export default class RunnerScene extends SceneBridge {
       const entity: WorldEntity = {
         id: Date.now() + Math.random(),
         type: selectedType,
-        x: this.canvasWidth + 200,
+        x: this.canvasWidth + 300,
         y,
         isSwooping,
         seagullType,
@@ -702,7 +706,7 @@ export default class RunnerScene extends SceneBridge {
     const entity: WorldEntity = {
       id: Date.now() + Math.random(),
       type: selectedType,
-      x: this.canvasWidth + 200,
+      x: this.canvasWidth + 300,
       y,
       width,
       height,
@@ -860,14 +864,15 @@ export default class RunnerScene extends SceneBridge {
    * Matches the DOM engine's collision loop (GameEngine.tsx lines 1125-1267).
    */
   private updateCollisions(now: number): void {
+    const scale = RunnerScene.ENTITY_SCALE;
     const isSuperSized = this.activePowerUp?.type === 'SUPER_SIZE';
-    const baseW = RunnerScene.PLAYER_W;
-    const baseH = this.isDucking ? RunnerScene.PLAYER_H_DUCK : RunnerScene.PLAYER_H_NORMAL;
+    const baseW = RunnerScene.PLAYER_W * scale;
+    const baseH = (this.isDucking ? RunnerScene.PLAYER_H_DUCK : RunnerScene.PLAYER_H_NORMAL) * scale;
     const kittyW = isSuperSized ? baseW * 3 : baseW;
     const kittyH = isSuperSized ? baseH * 3 : baseH;
 
     // Player hitbox in DOM engine coords (y=0 ground, +y up)
-    const hitboxLeft = this.playerX + 24 - (isSuperSized ? baseW : 0);
+    const hitboxLeft = this.playerX + (24 * scale) - (isSuperSized ? baseW : 0);
     const kittyL = hitboxLeft;
     const kittyR = hitboxLeft + kittyW;
     const kittyB = this.themeGroundY + this.playerY;
@@ -882,16 +887,16 @@ export default class RunnerScene extends SceneBridge {
       const hPadding = 10;
       const vPadding = 5;
       const oL = obs.x + hPadding;
-      const oR = obs.x + obs.width - hPadding;
+      const oR = obs.x + obs.width * scale - hPadding;
       const oB = oY + vPadding;
-      const oT = oY + obs.height - vPadding;
+      const oT = oY + obs.height * scale - vPadding;
 
       const overlaps = kittyR > oL && kittyL < oR && kittyT > oB && kittyB < oT;
       if (!overlaps) continue;
 
-      // ── Screen-space positions for effects ──
-      const obsCenterX = obs.x + obs.width / 2;
-      const obsScreenY = this.groundYScreen - oY - obs.height;
+      // ── Screen-space positions for effects (scaled to match visual size) ──
+      const obsCenterX = obs.x + (obs.width * scale) / 2;
+      const obsScreenY = this.groundYScreen - oY - (obs.height * scale);
 
       // ── SHELL collection ──
       if (obs.type === 'SHELL') {
@@ -901,7 +906,7 @@ export default class RunnerScene extends SceneBridge {
         this.score += 50 * this.gameScore.multiplier;
         obs.isCollected = true;
         // Effects
-        this.effects.spawnParticles(obsCenterX, obsScreenY + obs.height / 2, 0xfbbf24, 16);
+        this.effects.spawnParticles(obsCenterX, obsScreenY + (obs.height * scale) / 2, 0xfbbf24, 16);
         this.effects.floatingScore(obsCenterX, obsScreenY, `+${5 * this.gameScore.multiplier}`, '#fbbf24');
         continue;
       }
@@ -914,7 +919,7 @@ export default class RunnerScene extends SceneBridge {
         this.score += 10 * this.gameScore.multiplier;
         obs.isCollected = true;
         // Effects
-        this.effects.spawnParticles(obsCenterX, obsScreenY + obs.height / 2, 0xfacc15, 12);
+        this.effects.spawnParticles(obsCenterX, obsScreenY + (obs.height * scale) / 2, 0xfacc15, 12);
         this.effects.floatingScore(obsCenterX, obsScreenY, `+${this.gameScore.multiplier}`, '#facc15');
         continue;
       }
@@ -924,7 +929,7 @@ export default class RunnerScene extends SceneBridge {
         this.audio.playSfx('powerup');
         this.activePowerUp = { type: obs.type, endTime: now + 10000 };
         obs.isCollected = true;
-        this.effects.spawnParticles(obsCenterX, obsScreenY + obs.height / 2, 0x8b5cf6, 14);
+        this.effects.spawnParticles(obsCenterX, obsScreenY + (obs.height * scale) / 2, 0x8b5cf6, 14);
         continue;
       }
 
@@ -1065,14 +1070,15 @@ export default class RunnerScene extends SceneBridge {
    * Update a sprite's position and size to match an obstacle's current state.
    */
   private updateObstacleSprite(sprite: Phaser.GameObjects.Image, entity: WorldEntity): void {
+    const scale = RunnerScene.ENTITY_SCALE;
     const entityY = entity.y ?? this.themeGroundY;
 
     // Convert DOM engine coords (y=0 ground, +y up) to Phaser coords (y=0 top, +y down)
     const screenX = entity.x;
-    const screenY = this.groundYScreen - entityY - entity.height;
+    const screenY = this.groundYScreen - entityY - (entity.height * scale);
 
     sprite.setPosition(screenX, screenY);
-    sprite.setDisplaySize(entity.width, entity.height);
+    sprite.setDisplaySize(entity.width * scale, entity.height * scale);
 
     // Hide collected obstacles
     if (entity.isCollected) {
@@ -1086,6 +1092,7 @@ export default class RunnerScene extends SceneBridge {
    * Update player sprite position and size based on current state.
    */
   private updatePlayerSprite(): void {
+    const scale = RunnerScene.ENTITY_SCALE;
     const h = this.isDucking ? RunnerScene.PLAYER_H_DUCK : RunnerScene.PLAYER_H_NORMAL;
 
     // Convert DOM engine coords (y=0 ground, +y up) to Phaser coords (y=0 top, +y down)
@@ -1093,10 +1100,10 @@ export default class RunnerScene extends SceneBridge {
     const renderY = this.groundYScreen - this.playerY;
 
     this.playerSprite.setPosition(
-      this.playerX + RunnerScene.PLAYER_W / 2,
+      this.playerX + (RunnerScene.PLAYER_W * scale) / 2,
       renderY,
     );
-    this.playerSprite.setDisplaySize(RunnerScene.PLAYER_W, h);
+    this.playerSprite.setDisplaySize(RunnerScene.PLAYER_W * scale, h * scale);
   }
 
   // ─── Boss fight (Task 1.7) ──────────────────────────────────────────
