@@ -118,8 +118,12 @@ export default class RunnerScene extends SceneBridge {
   private keyP!: Phaser.Input.Keyboard.Key;
   private keyEsc!: Phaser.Input.Keyboard.Key;
 
-  // ── Ground + sky visuals ──
-  // Sky + ground rendered by React background (transparent Phaser canvas)
+  // ── Environment layer refs (for resize) ──
+  private envSky!: Phaser.GameObjects.Image;
+  private envSun!: Phaser.GameObjects.Image;
+  private envOcean!: Phaser.GameObjects.TileSprite;
+  private envFoam!: Phaser.GameObjects.TileSprite;
+  private envSand!: Phaser.GameObjects.TileSprite;
 
   // ── Obstacle spawning state (Task 1.3) ──
   private obstacles: WorldEntity[] = [];
@@ -268,28 +272,31 @@ export default class RunnerScene extends SceneBridge {
     this.groundYScreen = height - this.themeGroundY;
 
     // Layer 0: Sky background (full canvas)
-    this.add.image(width / 2, height / 2, 'env-sky')
+    this.envSky = this.add.image(width / 2, height / 2, 'env-sky')
       .setDisplaySize(width, height)
       .setDepth(0);
 
     // Layer 1: Sun
-    const sun = this.add.image(width * 0.35, height * 0.12, 'env-sun')
+    this.envSun = this.add.image(width * 0.35, height * 0.12, 'env-sun')
       .setDisplaySize(80, 80)
       .setDepth(1);
-    this.tweens.add({ targets: sun, scaleX: sun.scaleX * 1.05, scaleY: sun.scaleY * 1.05, yoyo: true, repeat: -1, duration: 2000, ease: 'Sine.easeInOut' });
+    this.tweens.add({ targets: this.envSun, scaleX: this.envSun.scaleX * 1.05, scaleY: this.envSun.scaleY * 1.05, yoyo: true, repeat: -1, duration: 2000, ease: 'Sine.easeInOut' });
 
     // Layer 4: Ocean (below sky, above sand)
     const oceanY = this.groundYScreen - 80;
-    this.add.tileSprite(width / 2, oceanY, width, 100, 'env-ocean')
+    this.envOcean = this.add.tileSprite(width / 2, oceanY, width, 100, 'env-ocean')
       .setDepth(4);
 
     // Layer 5: Waterline foam
-    this.add.tileSprite(width / 2, this.groundYScreen - 4, width, 16, 'env-foam')
+    this.envFoam = this.add.tileSprite(width / 2, this.groundYScreen - 4, width, 16, 'env-foam')
       .setDepth(5);
 
     // Layer 6: Sand ground
-    this.add.tileSprite(width / 2, this.groundYScreen + this.themeGroundY / 2, width, this.themeGroundY, 'env-sand')
+    this.envSand = this.add.tileSprite(width / 2, this.groundYScreen + this.themeGroundY / 2, width, this.themeGroundY, 'env-sand')
       .setDepth(6);
+
+    // Listen for canvas resize
+    this.scale.on('resize', this.handleResize, this);
 
     // ── Player visual (sprite) ──
     const scale = RunnerScene.ENTITY_SCALE;
@@ -1787,6 +1794,23 @@ export default class RunnerScene extends SceneBridge {
     CLOUD: 'env-cloud-1',
   };
 
+
+  // ─── Canvas resize handling ──────────────────────────────────────────
+
+  private handleResize(gameSize: Phaser.Structs.Size): void {
+    const width = gameSize.width;
+    const height = gameSize.height;
+    this.canvasWidth = width;
+    this.canvasHeight = height;
+    this.groundYScreen = height - this.themeGroundY;
+
+    // Reposition environment layers
+    this.envSky.setPosition(width / 2, height / 2).setDisplaySize(width, height);
+    this.envSun.setPosition(width * 0.35, height * 0.12);
+    this.envOcean.setPosition(width / 2, this.groundYScreen - 80).setSize(width, 100);
+    this.envFoam.setPosition(width / 2, this.groundYScreen - 4).setSize(width, 16);
+    this.envSand.setPosition(width / 2, this.groundYScreen + this.themeGroundY / 2).setSize(width, this.themeGroundY);
+  }
 
   // ─── Runtime patching (dev balance panel) ───────────────────────────
 
