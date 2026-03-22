@@ -34,6 +34,40 @@ sed -n '1,100p' ROADMAP_V3.md
 Most recent session should be first.
 -->
 
+## Session: 2026-03-22 13:00 (Phase 1.5: Beach Polish — Implementation)
+
+### Completed
+- [x] Generated 13 environment sprites via nanobanana MCP (sand, ocean, foam, sky, sun, clouds, boats, planes, surfer, jetski)
+- [x] Generated 2 gameplay sprite variants (crab-2, seagull-2) with green-screen chroma key pipeline
+- [x] Added PhasedPattern type, maxSpeed tuning (8.5), reduced speedIncrement (0.0003), HudUpdatePayload
+- [x] Converted beach patterns to phase-tagged format (early/mid/late/any), boss HP 20, coin threshold 25, cloud Y fix
+- [x] Fixed render-anchoring with ENTITY_SCALE 0.6 — sprites 40% smaller, collision hitboxes scaled to match
+- [x] Sprite-based environment layers (sky gradient, ocean, waterline foam, textured sand, pulsing sun, cloud variants)
+- [x] Background entities now use Image sprites instead of Graphics rectangles (boats bob, planes have variants)
+- [x] JVC CRT/VHS combo TV frame restyle (boxy gray plastic, black CRT bezel, scanlines, green OSD, VCR section, speaker grille)
+- [x] Shell ammo boss fight system (shells = ammo not coins, 5-hit boss, discoverability hint, HUD counter, boss-phase shell spawns)
+- [x] Phase-weighted pattern selection (early <20s, mid <40s, late 40s+), speed clamped at maxSpeed
+- [x] All ship checks pass: `tsc --noEmit` clean, 76 tests passing, build clean
+
+### Key Commits (branch: phase-1.5-beach-polish)
+1. `4171773` art: add environment sprites for Phase 1.5 beach polish
+2. `7311ae9` art: add crab and seagull sprite variants
+3. `016275b` types+tuning: PhasedPattern, HudUpdatePayload, maxSpeed 8.5, speedIncrement 0.0003
+4. `8f9faa6` config: phase-tagged patterns, boss HP 20, coin threshold 25, cloud Y fix
+5. `7a8e7a7` fix: render-anchor ground alignment, ENTITY_SCALE 0.6, speed clamp, wider spawn margin
+6. `3078f45` feat: sprite-based environment layers with parallax and entity variants
+7. `b13abf9` style: restyle TV frame to JVC CRT/VHS combo aesthetic
+8. `85d9f14` feat: shell ammo boss fight system with HUD, 5-hit boss, discoverability hint
+9. `324f388` feat: phase-weighted pattern selection, elapsed-time difficulty curve
+10. `3da1aa0` fix: catalog test for bossEntryCoinThreshold
+
+### Next Session Should
+- Playtest the beach level end-to-end with the new visuals and boss fight
+- Merge `phase-1.5-beach-polish` into main after playtesting
+- Begin Phase 2: next genre level implementation
+
+---
+
 ## Session: 2026-03-22 11:00 (Phase 1.5: Beach Polish — Design & Planning)
 
 ### Completed
