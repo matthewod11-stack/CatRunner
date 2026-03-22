@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { SceneBridge } from './shared/SceneBridge';
-import type { RunnerSceneInitData } from './shared/bridgeProtocol';
+import { BRIDGE_EVENTS, type RunnerSceneInitData, type HudUpdatePayload } from './shared/bridgeProtocol';
 import { GameStatus } from '../types';
 import type {
   ActivePowerUp,
@@ -150,10 +150,16 @@ export default class RunnerScene extends SceneBridge {
   private bossEntryCoins = 50;
   private bossProjectileObstacleType: ObstacleType = 'SAND_PROJECTILE';
 
-  // Player bullets (poop projectiles at boss)
+  // Player bullets (shell projectiles at boss)
   private bullets: Bullet[] = [];
   private bulletGraphics: Map<number, Phaser.GameObjects.Graphics> = new Map();
+  private bulletSprites = new Map<number, Phaser.GameObjects.Image>();
   private lastShotTime = 0;
+
+  // Shell ammo system
+  private shellAmmo = 0;
+  private lastBossShellSpawn = 0;
+  private bossAttackStartTime = 0;
 
   // Boss defeat animation
   private defeatPoops: Array<{
@@ -504,6 +510,31 @@ export default class RunnerScene extends SceneBridge {
       this.updateBossDefeatAnimation(now, frames);
     }
 
+    // ── Boss-phase shell spawning (ammo replenishment) ──
+    if (this.status === GameStatus.BOSS_FIGHT && !this.bossDefeating) {
+      const now2 = Date.now();
+      if (!this.lastBossShellSpawn || now2 - this.lastBossShellSpawn > 3500) {
+        this.lastBossShellSpawn = now2;
+        const scale = RunnerScene.ENTITY_SCALE;
+        const shell: WorldEntity = {
+          id: Date.now() + Math.random(),
+          type: 'SHELL',
+          x: this.canvasWidth + 100,
+          y: 0,
+          width: 40,
+          height: 40,
+          isCollected: false,
+          isPassed: false,
+          speed: this.speed,
+        };
+        this.obstacles.push(shell);
+        const sprite = this.add.image(shell.x, this.groundYScreen, this.getObstacleTextureKey('SHELL'))
+          .setDisplaySize(shell.width * scale, shell.height * scale)
+          .setDepth(10);
+        this.obstacleGraphics.set(shell.id, sprite);
+      }
+    }
+
     // ── Bullet update (Task 1.7) ──
     this.updateBullets();
 
@@ -543,7 +574,7 @@ export default class RunnerScene extends SceneBridge {
   private performDuck(ducking: boolean): void {
     // During boss fight, duck = shoot poop at boss
     if (this.status === GameStatus.BOSS_FIGHT) {
-      if (ducking) this.shootPoop();
+      if (ducking) this.shootShell();
       return;
     }
     if (ducking) {
@@ -942,13 +973,14 @@ export default class RunnerScene extends SceneBridge {
       // ── SHELL collection ──
       if (obs.type === 'SHELL') {
         this.audio.playSfx('coin');
-        this.gameScore.coins += 5;
-        this.coinCounter += 5;
+        // Shells give display score + ammo, but NOT coins (coins gate boss entry)
         this.score += 50 * this.gameScore.multiplier;
+        this.shellAmmo += 1;
         obs.isCollected = true;
-        // Effects
         this.effects.spawnParticles(obsCenterX, obsScreenY + (obs.height * scale) / 2, 0xfbbf24, 16);
         this.effects.floatingScore(obsCenterX, obsScreenY, `+${5 * this.gameScore.multiplier}`, '#fbbf24');
+        // Update HUD with shell count
+        this.events.emit(BRIDGE_EVENTS.HUD_UPDATE, { shellAmmo: this.shellAmmo } satisfies HudUpdatePayload);
         continue;
       }
 
@@ -1198,6 +1230,44 @@ export default class RunnerScene extends SceneBridge {
     this.bossHealthBarBg = this.add.graphics();
     this.bossHealthBarBg.setDepth(9);
 
+    // Guarantee starting ammo — spawn emergency shells AFTER the clear
+    const needsEmergencyShells = this.shellAmmo === 0;
+    if (needsEmergencyShells) {
+      const scale = RunnerScene.ENTITY_SCALE;
+      for (let i = 0; i < 3; i++) {
+        const shell: WorldEntity = {
+          id: Date.now() + Math.random() + i,
+          type: 'SHELL',
+          x: this.canvasWidth * 0.3 + i * 120,
+          y: 0,
+          width: 40,
+          height: 40,
+          isCollected: false,
+          isPassed: false,
+          speed: 0,
+        };
+        this.obstacles.push(shell);
+        const sprite = this.add.image(shell.x, this.groundYScreen, this.getObstacleTextureKey('SHELL'))
+          .setDisplaySize(shell.width * scale, shell.height * scale)
+          .setDepth(10);
+        this.obstacleGraphics.set(shell.id, sprite);
+      }
+    }
+
+    // 2-second intro delay before boss attacks
+    this.bossAttackStartTime = Date.now() + (needsEmergencyShells ? 2000 : 0);
+
+    // Discoverability hint
+    const hint = this.add.text(this.canvasWidth / 2, this.canvasHeight / 3, 'Press DOWN to throw shells!', {
+      fontSize: '24px',
+      fontFamily: 'Arial',
+      color: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 4,
+    }).setOrigin(0.5).setDepth(100);
+
+    this.tweens.add({ targets: hint, alpha: 0, delay: 2500, duration: 500, onComplete: () => hint.destroy() });
+
     this.audio.playSfx('boss_alert');
     this.effects.shake(0.02, 200);
     this.audio.setBossMode(true);
@@ -1209,6 +1279,7 @@ export default class RunnerScene extends SceneBridge {
    */
   private updateBossProjectileSpawning(now: number): void {
     if (!this.boss || this.bossDefeating) return;
+    if (Date.now() < this.bossAttackStartTime) return;
 
     const bossCfg = this.levelConfig.boss;
     const healthPercent = this.bossHealth / bossCfg.health;
@@ -1318,27 +1389,40 @@ export default class RunnerScene extends SceneBridge {
   }
 
   /**
-   * Player shoots a poop bullet toward the boss (triggered by duck/ArrowDown during BOSS_FIGHT).
+   * Player shoots a shell bullet toward the boss (triggered by duck/ArrowDown during BOSS_FIGHT).
+   * Consumes one shell ammo per shot.
    */
-  private shootPoop(): void {
+  private shootShell(): void {
+    if (this.shellAmmo <= 0) return;
     const now = Date.now();
-    if (now - this.lastShotTime < 150) return; // Rate limit
+    if (now - this.lastShotTime < 150) return;
     this.lastShotTime = now;
+    this.shellAmmo -= 1;
 
     this.audio.playSfx('shoot');
 
+    const scale = RunnerScene.ENTITY_SCALE;
+    const bulletSize = 20 * scale;
+
     const bullet: Bullet = {
       id: now + Math.random(),
-      x: this.playerX + 100,
-      y: this.themeGroundY + this.playerY + 50,
+      x: this.playerX + (100 * scale),
+      y: this.themeGroundY + this.playerY + (30 * scale),
       speed: 18,
-      size: 20,
+      size: bulletSize,
     };
 
     this.bullets.push(bullet);
-    const gfx = this.add.graphics();
-    gfx.setDepth(10);
-    this.bulletGraphics.set(bullet.id, gfx);
+
+    // Render at screen coords
+    const screenY = this.groundYScreen - bullet.y;
+    const img = this.add.image(bullet.x, screenY, 'obs-SHELL')
+      .setDisplaySize(bulletSize, bulletSize)
+      .setDepth(12);
+    this.bulletSprites.set(bullet.id, img);
+
+    // Update HUD
+    this.events.emit(BRIDGE_EVENTS.HUD_UPDATE, { shellAmmo: this.shellAmmo } satisfies HudUpdatePayload);
   }
 
   /**
@@ -1411,22 +1495,19 @@ export default class RunnerScene extends SceneBridge {
       const removeSet = new Set(removeIds);
       this.bullets = this.bullets.filter(b => {
         if (removeSet.has(b.id)) {
-          const gfx = this.bulletGraphics.get(b.id);
-          if (gfx) { gfx.destroy(); this.bulletGraphics.delete(b.id); }
+          const sprite = this.bulletSprites.get(b.id);
+          if (sprite) { sprite.destroy(); this.bulletSprites.delete(b.id); }
           return false;
         }
         return true;
       });
     }
 
-    // Redraw bullet graphics
+    // Update bullet sprite positions
     for (const b of this.bullets) {
-      const gfx = this.bulletGraphics.get(b.id);
-      if (gfx) {
-        gfx.clear();
-        const screenY = this.groundYScreen - b.y;
-        gfx.fillStyle(0x8b4513, 1);
-        gfx.fillCircle(b.x, screenY, b.size / 2);
+      const sprite = this.bulletSprites.get(b.id);
+      if (sprite) {
+        sprite.setPosition(b.x, this.groundYScreen - b.y);
       }
     }
   }

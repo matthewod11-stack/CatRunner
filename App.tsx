@@ -51,6 +51,7 @@ import {
 import { useTuningStore } from './systems/tuning/useTuningStore';
 import { useDocumentReducedMotionClass } from './hooks/usePrefersReducedMotion';
 import PhaserGame from './components/PhaserGame';
+import type { HudUpdatePayload } from './scenes/shared/bridgeProtocol';
 
 const MAX_LIVES = 9;
 const USE_PHASER_RUNNER = !new URLSearchParams(window.location.search).has('dom_runner');
@@ -73,6 +74,7 @@ const App: React.FC = () => {
   const [deathMsg, setDeathMsg] = useState<string>("");
   const [startAtBoss, setStartAtBoss] = useState<boolean>(false);
   const [phaserPaused, setPhaserPaused] = useState(false);
+  const [shellAmmo, setShellAmmo] = useState<number | undefined>(undefined);
   const [defeatedBosses, setDefeatedBosses] = useState(() => loadCompletedLevels());
   const [selectedLevel, setSelectedLevel] = useState<LevelId>(() => LEVEL_ORDER[0]);
 
@@ -486,9 +488,10 @@ const App: React.FC = () => {
     [kittyName, customCatUrl, useIndexedCatAssets, equippedAssetId]
   );
 
-  // Phaser bridge: HUD updates (pause state)
-  const handleHudUpdate = useCallback((data: Record<string, unknown>) => {
-    if ('isPaused' in data) setPhaserPaused(!!data.isPaused);
+  // Phaser bridge: HUD updates (pause state + shell ammo)
+  const handleHudUpdate = useCallback((data: HudUpdatePayload) => {
+    if (data.isPaused !== undefined) setPhaserPaused(data.isPaused);
+    if (data.shellAmmo !== undefined) setShellAmmo(data.shellAmmo);
   }, []);
 
   const startGame = (bossMode: boolean = false) => {
@@ -496,12 +499,13 @@ const App: React.FC = () => {
     const currentLives = score.lives <= 0 ? MAX_LIVES : score.lives;
     setStartAtBoss(bossMode);
     setStatus(GameStatus.PLAYING);
-    setScore(prev => ({ 
-      ...prev, 
-      current: 0, 
-      coins: bossMode ? bossCoinTarget : 0, 
-      multiplier: 1, 
-      streak: 0, 
+    setShellAmmo(undefined);
+    setScore(prev => ({
+      ...prev,
+      current: 0,
+      coins: bossMode ? bossCoinTarget : 0,
+      multiplier: 1,
+      streak: 0,
       lives: currentLives
     }));
     localStorage.setItem('beach-cat-lives', currentLives.toString());
@@ -824,6 +828,17 @@ const App: React.FC = () => {
                               <span className="text-[8px] uppercase font-black text-yellow-300/70">Stars</span>
                               <span className="text-lg font-black text-yellow-300 tabular-nums leading-none">★{score.coins}<span className="text-[9px] text-yellow-300/40">/{bossCoinTarget}</span></span>
                             </div>
+                            {status === GameStatus.BOSS_FIGHT && shellAmmo !== undefined && (
+                              <>
+                                <div className="w-px h-7 bg-white/20" />
+                                <div className="flex flex-col">
+                                  <span className="text-[8px] uppercase font-black text-pink-300/70">Shells</span>
+                                  <span className={`text-xl font-black tabular-nums leading-none ${shellAmmo === 0 ? 'text-red-400 animate-pulse' : 'text-pink-300'}`}>
+                                    {shellAmmo}
+                                  </span>
+                                </div>
+                              </>
+                            )}
                           </div>
                         </div>
                         {/* Phaser pause overlay */}
