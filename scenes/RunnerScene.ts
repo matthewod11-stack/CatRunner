@@ -119,7 +119,7 @@ export default class RunnerScene extends SceneBridge {
   private keyEsc!: Phaser.Input.Keyboard.Key;
 
   // ── Environment layer refs (for resize) ──
-  private envSky!: Phaser.GameObjects.Image;
+  private envSky!: Phaser.GameObjects.Graphics;
   private envSun!: Phaser.GameObjects.Image;
   private envOcean!: Phaser.GameObjects.TileSprite;
   private envFoam!: Phaser.GameObjects.TileSprite;
@@ -240,7 +240,6 @@ export default class RunnerScene extends SceneBridge {
     EffectsManager.createParticleTexture(this);
 
     // Environment sprites
-    this.load.image('env-sky', 'assets/sprites/sky-gradient.png');
     this.load.image('env-sand', 'assets/sprites/sand-tile.png');
     this.load.image('env-ocean', 'assets/sprites/ocean-tile.png');
     this.load.image('env-foam', 'assets/sprites/waterline-foam.png');
@@ -272,9 +271,18 @@ export default class RunnerScene extends SceneBridge {
     this.groundYScreen = height - this.themeGroundY;
 
     // Layer 0: Sky background (full canvas)
-    this.envSky = this.add.image(width / 2, height / 2, 'env-sky')
-      .setDisplaySize(width, height)
-      .setDepth(0);
+    this.envSky = this.add.graphics().setDepth(0);
+    this.envSky.fillGradientStyle(
+      0x8ed8ff,
+      0x8ed8ff,
+      0xffefc4,
+      0xffefc4,
+      1,
+      1,
+      1,
+      1,
+    );
+    this.envSky.fillRect(0, 0, width, height);
 
     // Layer 1: Sun
     this.envSun = this.add.image(width * 0.35, height * 0.12, 'env-sun')
