@@ -100,14 +100,19 @@ export const BEACH_LEVEL_CONFIG: LevelConfig = {
   ],
 
   patterns: [
-    [{ type: 'CRAB', delay: 700 }, { type: 'COIN', delay: 400, y: 200 }],
-    [{ type: 'BEACHBALL', delay: 800 }, { type: 'COIN', delay: 400, y: 200 }, { type: 'BEACHBALL', delay: 800 }],
-    [{ type: 'CRAB', delay: 600 }, { type: 'COIN', delay: 400, y: 220 }, { type: 'SEAGULL', delay: 700 }],
-    [{ type: 'BEACHBALL', delay: 700 }, { type: 'SANDCASTLE', delay: 900 }, { type: 'COIN', delay: 400, y: 200 }],
-    [{ type: 'CRAB', delay: 600 }, { type: 'SEAGULL', delay: 500, y: 150 }, { type: 'COIN', delay: 300, y: 250 }],
-    [{ type: 'CRAB', delay: 600 }, { type: 'BEACHBALL', delay: 500 }, { type: 'CRAB', delay: 600 }, { type: 'COIN', delay: 400, y: 200 }],
-    [{ type: 'SEAGULL', delay: 700, y: 180 }, { type: 'CRAB', delay: 600 }, { type: 'SEAGULL', delay: 700, y: 200 }, { type: 'COIN', delay: 400, y: 250 }],
-    [{ type: 'CRAB', delay: 550 }, { type: 'SEAGULL', delay: 450, y: 140 }, { type: 'BEACHBALL', delay: 600 }, { type: 'SEAGULL', delay: 500, y: 160 }, { type: 'COIN', delay: 350, y: 240 }],
+    // Early phase — single obstacles, generous gaps
+    { phase: 'early', steps: [{ type: 'CRAB', delay: 700 }, { type: 'COIN', delay: 400, y: 200 }] },
+    { phase: 'early', steps: [{ type: 'BEACHBALL', delay: 800 }, { type: 'COIN', delay: 400, y: 200 }] },
+    { phase: 'any', steps: [{ type: 'BEACHBALL', delay: 800 }, { type: 'COIN', delay: 400, y: 200 }, { type: 'BEACHBALL', delay: 800 }] },
+    // Mid phase — combos
+    { phase: 'mid', steps: [{ type: 'CRAB', delay: 600 }, { type: 'COIN', delay: 400, y: 220 }, { type: 'SEAGULL', delay: 700 }] },
+    { phase: 'mid', steps: [{ type: 'BEACHBALL', delay: 700 }, { type: 'SANDCASTLE', delay: 900 }, { type: 'COIN', delay: 400, y: 200 }] },
+    { phase: 'any', steps: [{ type: 'CRAB', delay: 600 }, { type: 'SEAGULL', delay: 500, y: 150 }, { type: 'COIN', delay: 300, y: 250 }] },
+    // Late phase — dense gauntlets
+    { phase: 'late', steps: [{ type: 'CRAB', delay: 600 }, { type: 'BEACHBALL', delay: 500 }, { type: 'CRAB', delay: 600 }, { type: 'COIN', delay: 400, y: 200 }] },
+    { phase: 'late', steps: [{ type: 'SEAGULL', delay: 700, y: 180 }, { type: 'CRAB', delay: 600 }, { type: 'SEAGULL', delay: 700, y: 200 }, { type: 'COIN', delay: 400, y: 250 }] },
+    // Dense 5-step gauntlet (carried from original pattern 8)
+    { phase: 'late', steps: [{ type: 'CRAB', delay: 550 }, { type: 'SEAGULL', delay: 450, y: 140 }, { type: 'BEACHBALL', delay: 600 }, { type: 'SEAGULL', delay: 500, y: 160 }, { type: 'COIN', delay: 350, y: 240 }] },
   ],
 
   theme: {
@@ -123,8 +128,8 @@ export const BEACH_LEVEL_CONFIG: LevelConfig = {
   },
 
   boss: {
-    health: 100,
-    damagePerHit: 4,
+    health: 20,        // Was 100 — now 5-hit fight
+    damagePerHit: 4,   // Unchanged
     width: 320,
     height: 320,
     spawnYOffset: 100,
@@ -136,6 +141,8 @@ export const BEACH_LEVEL_CONFIG: LevelConfig = {
 
   magnetAttractTypes: ['COIN'],
 
+  bossEntryCoinThreshold: 25,
+
   background: {
     entities: [
       {
@@ -144,7 +151,7 @@ export const BEACH_LEVEL_CONFIG: LevelConfig = {
         height: 60,
         speedMultiplier: 0.1,
         depth: 'far',
-        spawnYRange: { min: 0.55, max: 0.7 },
+        spawnYRange: { min: 0.05, max: 0.25 },   // Was { min: 0.55, max: 0.7 }
       },
       {
         type: 'BOAT',
