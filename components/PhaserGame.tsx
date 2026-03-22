@@ -56,21 +56,21 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
       if (destroyed) return;
       const SceneClass = 'default' in imported ? imported.default : imported;
 
-      // Wait two frames for CSS layout to settle
-      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-      if (destroyed) return;
-
-      // Fixed canvas size — measured once from container, never resized
-      const w = container.clientWidth || 800;
-      const h = container.clientHeight || 600;
+      // Fixed internal resolution — Phaser renders at this size,
+      // Scale.FIT stretches the canvas to fill the container via CSS.
+      const GAME_W = 960;
+      const GAME_H = 540;
 
       const game = new Phaser.Game({
         type: Phaser.AUTO,
         parent: container,
-        width: w,
-        height: h,
+        width: GAME_W,
+        height: GAME_H,
         backgroundColor: '#87CEEB',
-        scale: { mode: Phaser.Scale.NONE },
+        scale: {
+          mode: Phaser.Scale.FIT,
+          autoCenter: Phaser.Scale.CENTER_BOTH,
+        },
         scene: [],
       });
 

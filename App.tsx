@@ -766,8 +766,8 @@ const App: React.FC = () => {
                       {/* CRT Glass — the actual screen */}
                       <div className="relative overflow-hidden" style={{
                         borderRadius: '8px',
-                        aspectRatio: '4/3',
                         boxShadow: 'inset 0 0 40px rgba(0,0,0,0.3)',
+                        minHeight: '300px',
                       }}>
                         {/* CRT reflections */}
                         <div className="absolute inset-0 z-20 pointer-events-none" style={{
