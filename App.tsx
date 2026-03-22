@@ -797,6 +797,7 @@ const App: React.FC = () => {
                             initialLives: score.lives > 0 ? score.lives : MAX_LIVES,
                             startAtBoss,
                             tuning: mergedTuning,
+                            isPaused: phaserPaused,
                             onTelemetryReady: handleTelemetryReady,
                           }}
                           sceneFactory={() => import('./scenes/RunnerScene')}
