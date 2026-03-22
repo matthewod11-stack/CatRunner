@@ -166,7 +166,7 @@ export default class RunnerScene extends SceneBridge {
 
   // ── Background parallax state (Task 1.9) ──
   private backgroundEntities: BackgroundEntity[] = [];
-  private bgGraphics: Map<number, Phaser.GameObjects.Graphics> = new Map();
+  private bgSprites = new Map<number, Phaser.GameObjects.Image>();
   private lastBackgroundSpawnTime = 0;
 
   /** Texture key map for obstacle/collectible sprites */
@@ -225,6 +225,27 @@ export default class RunnerScene extends SceneBridge {
 
     // Shared particle texture for EffectsManager
     EffectsManager.createParticleTexture(this);
+
+    // Environment sprites
+    this.load.image('env-sky', 'assets/sprites/sky-gradient.png');
+    this.load.image('env-sand', 'assets/sprites/sand-tile.png');
+    this.load.image('env-ocean', 'assets/sprites/ocean-tile.png');
+    this.load.image('env-foam', 'assets/sprites/waterline-foam.png');
+    this.load.image('env-sun', 'assets/sprites/sun.png');
+    this.load.image('env-cloud-1', 'assets/sprites/cloud-1.png');
+    this.load.image('env-cloud-2', 'assets/sprites/cloud-2.png');
+
+    // Background entity sprites
+    this.load.image('bg-boat', 'assets/sprites/boat.png');
+    this.load.image('bg-boat-sinking', 'assets/sprites/boat-sinking.png');
+    this.load.image('bg-airplane', 'assets/sprites/airplane.png');
+    this.load.image('bg-airplane-fire', 'assets/sprites/airplane-fire.png');
+    this.load.image('bg-surfer', 'assets/sprites/surfer.png');
+    this.load.image('bg-jetski', 'assets/sprites/jetski.png');
+
+    // Gameplay variant sprites
+    this.load.image('obs-CRAB-2', 'assets/sprites/crab-2.png');
+    this.load.image('obs-SEAGULL-2', 'assets/sprites/seagull-2.png');
   }
 
   create(): void {
@@ -237,9 +258,29 @@ export default class RunnerScene extends SceneBridge {
     this.themeGroundY = this.levelConfig.theme.groundY;
     this.groundYScreen = height - this.themeGroundY;
 
-    // Ground rectangle (sky is the Phaser backgroundColor)
-    this.add.rectangle(width / 2, this.groundYScreen + this.themeGroundY / 2, width, this.themeGroundY, 0xf5deb3)
+    // Layer 0: Sky background (full canvas)
+    this.add.image(width / 2, height / 2, 'env-sky')
+      .setDisplaySize(width, height)
       .setDepth(0);
+
+    // Layer 1: Sun
+    const sun = this.add.image(width * 0.35, height * 0.12, 'env-sun')
+      .setDisplaySize(80, 80)
+      .setDepth(1);
+    this.tweens.add({ targets: sun, scaleX: sun.scaleX * 1.05, scaleY: sun.scaleY * 1.05, yoyo: true, repeat: -1, duration: 2000, ease: 'Sine.easeInOut' });
+
+    // Layer 4: Ocean (below sky, above sand)
+    const oceanY = this.groundYScreen - 80;
+    this.add.tileSprite(width / 2, oceanY, width, 100, 'env-ocean')
+      .setDepth(4);
+
+    // Layer 5: Waterline foam
+    this.add.tileSprite(width / 2, this.groundYScreen - 4, width, 16, 'env-foam')
+      .setDepth(5);
+
+    // Layer 6: Sand ground
+    this.add.tileSprite(width / 2, this.groundYScreen + this.themeGroundY / 2, width, this.themeGroundY, 'env-sand')
+      .setDepth(6);
 
     // ── Player visual (sprite) ──
     const scale = RunnerScene.ENTITY_SCALE;
@@ -344,8 +385,8 @@ export default class RunnerScene extends SceneBridge {
 
     // ── Background parallax setup (Task 1.9) ──
     this.backgroundEntities = [];
-    this.bgGraphics.forEach(g => g.destroy());
-    this.bgGraphics.clear();
+    this.bgSprites.forEach(g => g.destroy());
+    this.bgSprites.clear();
     this.lastBackgroundSpawnTime = 0;
 
     // ── Initialize obstacle spawning (Task 1.3) ──
@@ -1041,23 +1082,27 @@ export default class RunnerScene extends SceneBridge {
     return RunnerScene.OBSTACLE_TEXTURE_MAP[type] || 'obs-COIN';
   }
 
+  private getObstacleTextureKeyWithVariant(type: string): string {
+    if (type === 'CRAB' && Math.random() < 0.5) return 'obs-CRAB-2';
+    if (type === 'SEAGULL' && Math.random() < 0.5) return 'obs-SEAGULL-2';
+    return this.getObstacleTextureKey(type);
+  }
+
   /**
    * Create a Phaser Image for an obstacle and store it in the map.
    */
   private createObstacleGraphics(entity: WorldEntity): void {
-    const textureKey = this.getObstacleTextureKey(entity.type);
+    const textureKey = this.getObstacleTextureKeyWithVariant(entity.type);
+    const scale = RunnerScene.ENTITY_SCALE;
     const entityY = entity.y ?? this.themeGroundY;
-
-    // Convert DOM engine coords (y=0 ground, +y up) to Phaser coords (y=0 top, +y down)
     const screenX = entity.x;
-    const screenY = this.groundYScreen - entityY - entity.height;
+    const screenY = this.groundYScreen - entityY - (entity.height * scale);
 
     const sprite = this.add.image(screenX, screenY, textureKey)
-      .setDisplaySize(entity.width, entity.height)
+      .setDisplaySize(entity.width * scale, entity.height * scale)
       .setOrigin(0, 0)
       .setDepth(5);
 
-    // Apply tinting for power-ups
     const tint = RunnerScene.POWERUP_TINTS[entity.type];
     if (tint) {
       sprite.setTint(tint);
@@ -1559,10 +1604,28 @@ export default class RunnerScene extends SceneBridge {
 
     for (const ent of spawned) {
       this.backgroundEntities.push(ent);
-      const gfx = this.add.graphics();
-      this.drawBackgroundEntity(gfx, ent);
-      this.bgGraphics.set(ent.id, gfx);
+      this.spawnBgSprite(ent);
     }
+  }
+
+  private spawnBgSprite(ent: BackgroundEntity): void {
+    let textureKey = RunnerScene.BG_SPRITE_MAP[ent.type] ?? 'env-cloud-1';
+    if (ent.type === 'CLOUD' && Math.random() < 0.5) textureKey = 'env-cloud-2';
+
+    const depth = RunnerScene.BG_DEPTH[ent.depth ?? 'mid'] ?? 2;
+    const alpha = ent.isChaos ? 0.8 : 0.5;
+
+    const sprite = this.add.image(ent.x, ent.y, textureKey)
+      .setDisplaySize(ent.width, ent.height)
+      .setDepth(depth)
+      .setAlpha(alpha);
+
+    // Boats bob gently
+    if (ent.type === 'BOAT' || ent.type === 'BOAT_SINKING') {
+      this.tweens.add({ targets: sprite, y: sprite.y + 3, yoyo: true, repeat: -1, duration: 2000, ease: 'Sine.easeInOut' });
+    }
+
+    this.bgSprites.set(ent.id, sprite);
   }
 
   /**
@@ -1588,19 +1651,19 @@ export default class RunnerScene extends SceneBridge {
       const removeSet = new Set(removeIds);
       this.backgroundEntities = this.backgroundEntities.filter(bg => {
         if (removeSet.has(bg.id)) {
-          const gfx = this.bgGraphics.get(bg.id);
-          if (gfx) { gfx.destroy(); this.bgGraphics.delete(bg.id); }
+          const sprite = this.bgSprites.get(bg.id);
+          if (sprite) { sprite.destroy(); this.bgSprites.delete(bg.id); }
           return false;
         }
         return true;
       });
     }
 
-    // Redraw at new positions
+    // Update sprite positions
     for (const bg of this.backgroundEntities) {
-      const gfx = this.bgGraphics.get(bg.id);
-      if (gfx) {
-        this.drawBackgroundEntity(gfx, bg);
+      const sprite = this.bgSprites.get(bg.id);
+      if (sprite) {
+        sprite.setPosition(bg.x, bg.y);
       }
     }
   }
@@ -1612,65 +1675,16 @@ export default class RunnerScene extends SceneBridge {
     near: 3,
   };
 
-  /** Color lookup for background entity types */
-  private static readonly BG_COLORS: Record<string, number> = {
-    BOAT: 0x8b4513,
-    SURFER: 0x3b82f6,
-    AIRPLANE: 0x9ca3af,
-    CLOUD: 0xffffff,
-    JETSKI: 0xfde047,
-    BOAT_SINKING: 0xcc3333,
-    AIRPLANE_FIRE: 0xff4500,
+  private static readonly BG_SPRITE_MAP: Record<string, string> = {
+    BOAT: 'bg-boat',
+    BOAT_SINKING: 'bg-boat-sinking',
+    AIRPLANE: 'bg-airplane',
+    AIRPLANE_FIRE: 'bg-airplane-fire',
+    SURFER: 'bg-surfer',
+    JETSKI: 'bg-jetski',
+    CLOUD: 'env-cloud-1',
   };
 
-  /**
-   * Draw a single background entity as a simple colored shape.
-   */
-  private drawBackgroundEntity(gfx: Phaser.GameObjects.Graphics, ent: BackgroundEntity): void {
-    gfx.clear();
-    const color = RunnerScene.BG_COLORS[ent.type] ?? 0xaaaaaa;
-    const alpha = ent.isChaos ? 0.8 : 0.5;
-    const depth = RunnerScene.BG_DEPTH[ent.depth ?? 'mid'] ?? 2;
-    gfx.setDepth(depth);
-
-    // y is in screen coords for background (comes from spawnBackgroundEntities)
-    const screenX = ent.x;
-    const screenY = ent.y;
-
-    gfx.fillStyle(color, alpha);
-
-    switch (ent.type) {
-      case 'CLOUD':
-        // Ellipse
-        gfx.fillEllipse(screenX + ent.width / 2, screenY + ent.height / 2, ent.width, ent.height);
-        break;
-      case 'AIRPLANE':
-      case 'AIRPLANE_FIRE':
-        // Triangle (pointing left)
-        gfx.fillTriangle(
-          screenX, screenY + ent.height / 2,
-          screenX + ent.width, screenY,
-          screenX + ent.width, screenY + ent.height,
-        );
-        break;
-      case 'SURFER':
-      case 'JETSKI':
-        // Small rectangle
-        gfx.fillRoundedRect(screenX, screenY, ent.width, ent.height, 4);
-        break;
-      default:
-        // Rectangle (boats, etc.)
-        gfx.fillRoundedRect(screenX, screenY, ent.width, ent.height, 6);
-        break;
-    }
-
-    // Banner text for airplanes
-    if (ent.bannerText) {
-      // Simple text indicator (small rectangle trailing the plane)
-      gfx.fillStyle(0xffffff, 0.7);
-      gfx.fillRect(screenX + ent.width + 5, screenY + ent.height / 2 - 5, 40, 10);
-    }
-  }
 
   // ─── Runtime patching (dev balance panel) ───────────────────────────
 
