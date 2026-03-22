@@ -762,10 +762,99 @@ const App: React.FC = () => {
                       background: '#0a0a0a',
                       borderRadius: '10px',
                       padding: '6px',
+                      display: 'flex',
+                      flexDirection: 'column',
                     }}>
+                      {/* ── VFD-style HUD shelf (built into TV frame) ── */}
+                      <div className="flex items-center justify-between pointer-events-none" style={{
+                        height: '28px',
+                        padding: '0 8px',
+                        marginBottom: '4px',
+                        background: 'linear-gradient(180deg, #0f0f0f 0%, #1a1a1a 50%, #111 100%)',
+                        borderRadius: '4px 4px 0 0',
+                        borderBottom: '1px solid #222',
+                        fontFamily: "'Courier New', 'Consolas', monospace",
+                      }}>
+                        {/* Score — green VFD glow */}
+                        <div className="flex items-center gap-1.5">
+                          <span style={{ fontSize: '8px', fontWeight: 700, color: '#555', letterSpacing: '1px' }}>SCORE</span>
+                          <span style={{
+                            fontSize: '16px', fontWeight: 900, letterSpacing: '1px',
+                            color: '#4ade80',
+                            textShadow: '0 0 6px rgba(74,222,128,0.6), 0 0 12px rgba(74,222,128,0.2)',
+                            fontVariantNumeric: 'tabular-nums',
+                          }}>{String(score.current).padStart(6, '0')}</span>
+                        </div>
+
+                        {/* Lives — red LED dots */}
+                        <div className="flex items-center gap-1.5">
+                          <span style={{ fontSize: '8px', fontWeight: 700, color: '#555', letterSpacing: '1px' }}>LIVES</span>
+                          <div className="flex gap-0.5">
+                            {Array.from({ length: Math.max(score.lives, 0) }, (_, i) => (
+                              <div key={i} style={{
+                                width: '7px', height: '7px', borderRadius: '50%',
+                                background: '#ef4444',
+                                boxShadow: '0 0 4px rgba(239,68,68,0.7), 0 0 8px rgba(239,68,68,0.3)',
+                              }} />
+                            ))}
+                            {Array.from({ length: Math.max(9 - score.lives, 0) }, (_, i) => (
+                              <div key={`e-${i}`} style={{
+                                width: '7px', height: '7px', borderRadius: '50%',
+                                background: '#2a1a1a',
+                                boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.5)',
+                              }} />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Multiplier — amber VFD */}
+                        <div className="flex items-center gap-1.5">
+                          <span style={{ fontSize: '8px', fontWeight: 700, color: '#555', letterSpacing: '1px' }}>MULT</span>
+                          <span style={{
+                            fontSize: '14px', fontWeight: 900,
+                            color: score.multiplier > 1 ? '#fbbf24' : '#665500',
+                            textShadow: score.multiplier > 1 ? '0 0 6px rgba(251,191,36,0.6)' : 'none',
+                            fontVariantNumeric: 'tabular-nums',
+                          }}>x{score.multiplier}</span>
+                        </div>
+
+                        {/* Stars / boss coins — yellow VFD */}
+                        <div className="flex items-center gap-1.5">
+                          <span style={{ fontSize: '8px', fontWeight: 700, color: '#555', letterSpacing: '1px' }}>★</span>
+                          <span style={{
+                            fontSize: '14px', fontWeight: 900,
+                            color: '#fbbf24',
+                            textShadow: '0 0 6px rgba(251,191,36,0.4)',
+                            fontVariantNumeric: 'tabular-nums',
+                          }}>{score.coins}<span style={{ color: '#554400', fontSize: '10px' }}>/{bossCoinTarget}</span></span>
+                        </div>
+
+                        {/* Shell ammo — pink VFD (boss fight only) */}
+                        {status === GameStatus.BOSS_FIGHT && shellAmmo !== undefined && (
+                          <div className="flex items-center gap-1.5">
+                            <span style={{ fontSize: '8px', fontWeight: 700, color: '#555', letterSpacing: '1px' }}>AMMO</span>
+                            <span style={{
+                              fontSize: '14px', fontWeight: 900,
+                              color: shellAmmo === 0 ? '#ef4444' : '#f472b6',
+                              textShadow: shellAmmo === 0 ? '0 0 8px rgba(239,68,68,0.8)' : '0 0 6px rgba(244,114,182,0.5)',
+                              fontVariantNumeric: 'tabular-nums',
+                              animation: shellAmmo === 0 ? 'pulse 1s infinite' : 'none',
+                            }}>{shellAmmo}</span>
+                          </div>
+                        )}
+
+                        {/* CH indicator (was inside screen) */}
+                        <span style={{
+                          fontSize: '10px', fontWeight: 700,
+                          color: '#4ade80',
+                          textShadow: '0 0 6px rgba(74,222,128,0.4)',
+                          letterSpacing: '2px',
+                        }}>CH03</span>
+                      </div>
+
                       {/* CRT Glass — the actual screen */}
                       <div className="relative overflow-hidden" style={{
-                        borderRadius: '8px',
+                        borderRadius: '6px',
                         boxShadow: 'inset 0 0 40px rgba(0,0,0,0.3)',
                         aspectRatio: '4/3',
                       }}>
@@ -777,17 +866,8 @@ const App: React.FC = () => {
                         <div className="absolute inset-0 z-20 pointer-events-none opacity-[0.06]" style={{
                           backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.4) 2px, rgba(0,0,0,0.4) 4px)',
                         }} />
-                        {/* Green OSD — CH 03 */}
-                        <div className="absolute top-2 right-3 z-30 pointer-events-none" style={{
-                          fontFamily: "'Courier New', monospace",
-                          fontSize: '14px',
-                          fontWeight: 700,
-                          color: '#4ade80',
-                          textShadow: '0 0 8px rgba(74,222,128,0.5)',
-                          letterSpacing: '2px',
-                        }}>CH 03</div>
 
-                        {/* === GAME CONTENT (preserved from original) === */}
+                        {/* === GAME CONTENT === */}
                         {/* Phaser canvas */}
                         <PhaserGame
                           levelId={selectedLevel}
@@ -807,41 +887,6 @@ const App: React.FC = () => {
                           onStatusChange={handleStatusChange}
                           onHudUpdate={handleHudUpdate}
                         />
-                        {/* In-screen HUD */}
-                        <div className="absolute top-3 left-3 z-30 pointer-events-none">
-                          <div className="bg-black/50 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/20 flex items-center gap-4">
-                            <div className="flex flex-col">
-                              <span className="text-[8px] uppercase font-black text-white/50">Score</span>
-                              <span className="text-xl font-black text-white tabular-nums leading-none">{score.current}</span>
-                            </div>
-                            <div className="w-px h-7 bg-white/20" />
-                            <div className="flex flex-col">
-                              <span className="text-[8px] uppercase font-black text-red-300/70">Lives</span>
-                              <span className="text-xl font-black text-red-400 leading-none">{score.lives}</span>
-                            </div>
-                            <div className="w-px h-7 bg-white/20" />
-                            <div className="flex flex-col">
-                              <span className="text-[8px] uppercase font-black text-purple-300/70">Mult</span>
-                              <span className="text-xl font-black text-purple-300 tabular-nums leading-none">x{score.multiplier}</span>
-                            </div>
-                            <div className="w-px h-7 bg-white/20" />
-                            <div className="flex flex-col">
-                              <span className="text-[8px] uppercase font-black text-yellow-300/70">Stars</span>
-                              <span className="text-lg font-black text-yellow-300 tabular-nums leading-none">★{score.coins}<span className="text-[9px] text-yellow-300/40">/{bossCoinTarget}</span></span>
-                            </div>
-                            {status === GameStatus.BOSS_FIGHT && shellAmmo !== undefined && (
-                              <>
-                                <div className="w-px h-7 bg-white/20" />
-                                <div className="flex flex-col">
-                                  <span className="text-[8px] uppercase font-black text-pink-300/70">Shells</span>
-                                  <span className={`text-xl font-black tabular-nums leading-none ${shellAmmo === 0 ? 'text-red-400 animate-pulse' : 'text-pink-300'}`}>
-                                    {shellAmmo}
-                                  </span>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        </div>
                         {/* Phaser pause overlay */}
                         {phaserPaused && (
                           <div className="absolute inset-0 bg-black/60 backdrop-blur-md z-[100] flex flex-col items-center justify-center animate-[fadeIn_0.2s_ease-out]">
