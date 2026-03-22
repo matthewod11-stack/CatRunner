@@ -179,6 +179,61 @@ Cross-genre score normalization is **deferred** (not in V3 scope). This has cons
 
 ---
 
+## Character Sprite System
+
+Each level requires the cat in genre-specific poses and animations. A single static sprite can't convey life across 9 genres. The sprite system generates **per-level sprite sets** from the player's character design.
+
+### Architecture
+
+1. **Character identity = base prompt.** The closet stores the player's cat description and a reference image. This is the seed for all per-level sprite generation.
+2. **Each level declares `requiredSprites: SpriteSpec[]`** in its config — the list of poses/animations that level needs (e.g., Beach runner needs: run-cycle, jump, duck, hit, idle).
+3. **Generation happens per-sprite, per-level** — not a batch sprite sheet. Gemini generates one pose at a time using the base character description + a pose-specific prompt addendum defined by the level.
+4. **Timing: on level start (lazy) or from closet (eager).** Sprites generate the first time a level is entered with a given cat design. Cached in IndexedDB for replay. Optional "generate all" button in closet for players who want everything ready upfront.
+5. **Fallback: base sprite always works.** If generation fails or hasn't run yet, the level uses the single equipped sprite. The game is always playable — multi-sprite is enhancement, not gate.
+
+### Storage Model
+
+```
+IndexedDB: beach-kitty-assets / sprites
+  Key format: {catDesignId}:{levelId}:{poseId}
+  Value: PNG Blob
+
+Example keys:
+  cat-abc123:BEACH:run
+  cat-abc123:BEACH:jump
+  cat-abc123:ROOFTOPS:idle
+  cat-abc123:ROOFTOPS:walk
+```
+
+`SavedCatLook.assetId` remains the base sprite key. Level-specific sprites are keyed as derivatives. Deleting a cat design from the closet cascades to delete all its level sprites (prefix match on `{catDesignId}:`).
+
+### Per-Level Sprite Contract
+
+Each level phase in this roadmap includes a **Sprite Requirements** section that defines:
+
+| Field | Description |
+|-------|-------------|
+| `requiredSprites` | List of `{ poseId, description }` tuples — what the cat needs to do in this genre |
+| `promptAddendum` | Pose-specific prompt text appended to the base character description |
+| `fallbackBehavior` | What happens when a sprite is missing (use base sprite, use placeholder, skip animation) |
+
+**These are defined during level implementation, not upfront.** Movement lists emerge from building the level — you can't spec "jump" until you know the jump mechanic.
+
+### Replaces Phase 3: catPoseTransforms
+
+The original Phase 3 proposed programmatic canvas transforms (crop/flip) on a single sprite to produce pose variants. This approach is superseded by AI generation of purpose-built sprites per level. The `catPoseTransforms.ts` service and its tests are no longer needed. Phase 3 becomes: **build the sprite generation pipeline + closet integration for multi-sprite storage**.
+
+### Integration with Closet (Kitty Closet)
+
+The closet evolves from "pick one look" to "manage a character design that spawns level sprites":
+
+- **Closet stores:** base description, reference image, player name — the character identity
+- **Closet shows:** generated level sprites as a gallery under each saved cat (expandable)
+- **Closet actions:** regenerate a specific level sprite, generate all missing sprites, delete a cat + all derivatives
+- **On equip:** the base sprite is immediate; level sprites generate lazily or on demand
+
+---
+
 ## File Map
 
 ### New files
@@ -202,7 +257,7 @@ Cross-genre score normalization is **deferred** (not in V3 scope). This has cons
 | `components/CampaignScreen.tsx` | Nine Lives cat tree level selector (replaces LevelSelection.tsx) |
 | `components/CutscenePlayer.tsx` | Between-level story beat player (text frames + DaVinci Resolve video via `demo-video-factory-catrunner/`) |
 | `services/levelCompletion.ts` | `LevelCompletePayload`, `LevelResult`, star calculation, best-score merge, persistence |
-| `services/catPoseTransforms.ts` | Programmatic cat pose variants per genre (canvas crop/rotate/overlay) |
+| `services/catSpriteGenerator.ts` | Per-level sprite generation via Gemini — cache-first, fallback to base sprite |
 | `scenes/shared/SpriteLoader.ts` | Load cat sprite from blob URL into a Phaser texture (handles IndexedDB blob URL lifecycle) |
 | `levels/rooftops.ts` | Level 2 config |
 | `levels/kitchen.ts` | Level 3 config |
@@ -1827,6 +1882,37 @@ git commit -m "feat(v3/phase1): wire App to PhaserGame, replace GameEngine for B
 
 ---
 
+### Task 1.14: Beach Sprite Requirements
+
+> **Sprite contract for Level 1 — Beach Runner.** See "Character Sprite System" section for the shared architecture.
+
+**Required sprites for runner genre:**
+
+| `poseId` | Description | Used for |
+|----------|-------------|----------|
+| `run` | Side-running with legs in motion cycle (2–4 frames) | Default ground locomotion |
+| `jump` | Legs tucked, body arched upward | Jump / double-jump apex |
+| `duck` | Crouched low, body compressed horizontally | Duck under seagulls |
+| `hit` | Flinch/tumble, expressive pain reaction | Taking damage |
+| `idle` | Standing still, tail swish or blink | Pre-game, pause, level intro |
+
+**Prompt strategy:**
+- Base prompt = equipped cat's description + "same character, same colors, same art style"
+- Pose addendum = per-row description above (e.g., "side view, running with legs mid-stride, 128×128 transparent PNG")
+- Art style constraint: pixel-art or clean cartoon at game scale (128×128 or 256×256) — determined during implementation
+
+**Validation criteria:**
+- [ ] Each generated sprite reads clearly at 960×720 game resolution
+- [ ] Character is recognizably the same cat across all 5 poses
+- [ ] Transparent background (server matting pipeline handles cleanup)
+- [ ] Sprites load into Phaser texture cache via `SpriteLoader`
+
+**Fallback:** If any pose is missing, the base equipped sprite is used for that animation state. Game is always playable with a single sprite.
+
+**Scope note:** This task defines the sprite list and validates generation quality. The sprite generation pipeline itself (IndexedDB multi-key storage, closet UI for level sprites, lazy generation on level start) is built in Phase 3, which now replaces the old `catPoseTransforms` approach. Beach can ship Phase 1 with single-sprite fallback; multi-sprite enhances it afterward.
+
+---
+
 ### Task 1.13: Archive GameEngine and old audio services (CONDITIONAL — do not rush)
 
 > **GATE:** This task is blocked until BOTH conditions are met:
@@ -1998,107 +2084,100 @@ git commit -m "chore(v3/phase2): archive LevelSelection — replaced by Campaign
 
 ---
 
-## Chunk 4: Phase 3 — Character Pose System
+## Chunk 4: Phase 3 — Character Sprite Generation Pipeline
 
-**Goal:** Build infrastructure for genre-specific cat appearances.
+**Goal:** Build the infrastructure for AI-generated, per-level sprite sets. Replaces the original `catPoseTransforms` approach (programmatic crop/flip) with purpose-built sprite generation from the player's character design.
 
-### Task 3.1: Create catPoseTransforms service
+### Task 3.1: Extend IndexedDB storage for level sprites
 
 **Files:**
-- Create: `services/catPoseTransforms.ts`
-- Test: `services/catPoseTransforms.test.ts`
+- Modify: `services/catAssetStore.ts`
+- Test: `services/catAssetStore.test.ts`
 
-- [ ] **Step 1: Write test for pose transform**
+- [ ] **Step 1: Add compound-key sprite storage**
+
+Extend the existing `putCatSprite` / `getCatSprite` / `deleteCatSprite` to support level-scoped keys:
 
 ```typescript
-import { describe, it, expect, beforeAll } from 'vitest';
-import { transformCatPose } from './catPoseTransforms';
+// Key format: {catDesignId}:{levelId}:{poseId}
+// e.g., "cat-abc123:BEACH:run"
+export function levelSpriteKey(catDesignId: string, levelId: string, poseId: string): string {
+  return `${catDesignId}:${levelId}:${poseId}`;
+}
 
-// Create a minimal 2x2 red PNG for testing
-let testImageBlob: Blob;
-beforeAll(() => {
-  // Minimal valid PNG (1x1 red pixel)
-  const pngBytes = new Uint8Array([
-    0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG header
-    // ... (use a real minimal PNG or generate via OffscreenCanvas in test setup)
-  ]);
-  testImageBlob = new Blob([pngBytes], { type: 'image/png' });
-});
+// Get all level sprites for a cat design (prefix scan)
+export async function getLevelSprites(db: IDBDatabase, catDesignId: string, levelId: string): Promise<Map<string, Blob>>;
 
-describe('catPoseTransforms', () => {
-  it('returns the original image for runner pose', async () => {
-    const result = await transformCatPose(testImageBlob, 'runner');
-    expect(result).toBe(testImageBlob); // no-op for default pose
-  });
-
-  it('returns a blob for non-default poses', async () => {
-    const result = await transformCatPose(testImageBlob, 'pilot');
-    expect(result).toBeInstanceOf(Blob);
-  });
-});
+// Delete all derivatives when a cat design is removed from closet
+export async function deleteCatDesignSprites(db: IDBDatabase, catDesignId: string): Promise<void>;
 ```
 
-Note: Full canvas-based pose tests require `OffscreenCanvas` support in the test environment. If Vitest runs in Node without canvas, these tests may need `@napi-rs/canvas` or should be limited to the identity case.
+- [ ] **Step 2: Write tests for compound-key operations**
+- [ ] **Step 3: Commit**
 
-- [ ] **Step 2: Implement catPoseTransforms.ts**
+### Task 3.2: Create sprite generation service
+
+**Files:**
+- Create: `services/catSpriteGenerator.ts`
+- Test: `services/catSpriteGenerator.test.ts`
+
+- [ ] **Step 1: Define SpriteSpec type and generation interface**
 
 ```typescript
-import type { CatPoseId } from '../types';
+export interface SpriteSpec {
+  poseId: string;
+  description: string;       // Human-readable ("side-running with legs mid-stride")
+  promptAddendum: string;    // Appended to base character prompt for Gemini
+  dimensions?: { width: number; height: number };  // Default: 256×256
+}
 
-export async function transformCatPose(sourceBlob: Blob, pose: CatPoseId): Promise<Blob> {
-  if (pose === 'runner') return sourceBlob; // default, no transform
-
-  const img = await createImageBitmap(sourceBlob);
-  const canvas = new OffscreenCanvas(img.width, img.height);
-  const ctx = canvas.getContext('2d')!;
-
-  switch (pose) {
-    case 'paddle':
-    case 'swatter':
-      // Crop to bottom-right quadrant (paw region)
-      ctx.drawImage(img, img.width/2, img.height/2, img.width/2, img.height/2, 0, 0, img.width, img.height);
-      break;
-    case 'pilot':
-      // Flip horizontally (forward-facing)
-      ctx.scale(-1, 1);
-      ctx.drawImage(img, -img.width, 0);
-      break;
-    case 'slitherer':
-      // Crop to head (top half)
-      ctx.drawImage(img, 0, 0, img.width, img.height/2, 0, 0, img.width, img.height);
-      break;
-    default:
-      // platformer, launcher, hopper, climber — use full sprite, maybe rotated
-      ctx.drawImage(img, 0, 0);
-      break;
-  }
-
-  return canvas.convertToBlob({ type: 'image/png' });
+export interface SpriteGenerationResult {
+  poseId: string;
+  blob: Blob | null;           // null on failure
+  cached: boolean;             // true if loaded from IndexedDB
+  error?: string;
 }
 ```
 
-- [ ] **Step 3: Run tests**
+- [ ] **Step 2: Implement generation — one pose at a time through existing `/api/cat/generate` pipeline**
 
-```bash
-npm run test:run -- services/catPoseTransforms.test.ts
-```
+The generator reuses the existing Gemini image generation endpoint. The base cat description + pose-specific prompt addendum form the full prompt. Server matting pipeline applies as usual.
 
-- [ ] **Step 4: Integrate with PhaserGame bridge**
-
-In `PhaserGame.tsx`, before passing `catSpriteUrl` to the scene, apply the pose transform:
-
-```typescript
-const posedUrl = await getPosedCatUrl(catSpriteUrl, levelConfig.catPose);
-```
-
-The `SceneInitData` receives the transformed URL.
-
+- [ ] **Step 3: Implement cache-first loading** — check IndexedDB before calling Gemini
+- [ ] **Step 4: Write tests (mock Gemini calls, verify caching)**
 - [ ] **Step 5: Commit**
 
-```bash
-git add services/catPoseTransforms.ts services/catPoseTransforms.test.ts components/PhaserGame.tsx
-git commit -m "feat(v3/phase3): add catPoseTransforms — programmatic pose variants per genre"
-```
+### Task 3.3: Integrate with PhaserGame bridge
+
+**Files:**
+- Modify: `components/PhaserGame.tsx`
+- Modify: `scenes/shared/SpriteLoader.ts`
+
+- [ ] **Step 1: SpriteLoader accepts multiple sprite URLs** (keyed by poseId)
+- [ ] **Step 2: PhaserGame resolves level sprites before scene boot** — loads from cache or falls back to base sprite
+- [ ] **Step 3: Scene receives a sprite map** (`Record<string, string>` of poseId → blob URLs) in init data
+- [ ] **Step 4: Commit**
+
+### Task 3.4: Update Closet UI for multi-sprite awareness
+
+**Files:**
+- Modify: `components/CatCustomizer.tsx`
+
+- [ ] **Step 1: Show generated level sprites** under each saved cat (collapsible gallery)
+- [ ] **Step 2: Add "generate for level" action** — lets player pre-generate sprites for a specific level
+- [ ] **Step 3: Cascade delete** — removing a cat design deletes all its level sprites
+- [ ] **Step 4: Commit**
+
+### Task 3.5: Level config declares requiredSprites
+
+**Files:**
+- Modify: `types.ts` — add `SpriteSpec[]` to level config types
+- Modify: `levels/beach.ts` — add Beach runner sprite specs (from Task 1.14)
+
+- [ ] **Step 1: Add `requiredSprites` field to level config type**
+- [ ] **Step 2: Populate Beach config with runner sprite specs**
+- [ ] **Step 3: Verify Beach level loads with multi-sprite pipeline (sprites generate or fallback)**
+- [ ] **Step 4: Run full test suite, commit**
 
 ---
 
@@ -2111,15 +2190,24 @@ git commit -m "feat(v3/phase3): add catPoseTransforms — programmatic pose vari
 Every new level follows this structure:
 
 1. **Create level config** (`levels/<name>.ts`) — define `LevelConfigBase` + genre-specific fields
-2. **Create Phaser scene** (`scenes/<Name>Scene.ts`) — extend `SceneBridge`, implement `preload`/`create`/`update`
-3. **Implement core mechanic** — the unique gameplay system for this genre
-4. **Add art** — Phaser graphics primitives + Gemini-generated sprites where needed
-5. **Add boss/victory condition** — genre-appropriate win state
-6. **Wire into App** — add scene factory to `PhaserGame`, add to `LEVEL_ORDER`, register in `LEVEL_REGISTRY`
-7. **Write cutscene** — placeholder intro/outro text
-8. **QA + commit**
+2. **Define sprite requirements** — what poses/animations does the cat need in this genre? Add `requiredSprites` to config, write prompt addendums, validate generation quality (see "Character Sprite System" section)
+3. **Create Phaser scene** (`scenes/<Name>Scene.ts`) — extend `SceneBridge`, implement `preload`/`create`/`update`
+4. **Implement core mechanic** — the unique gameplay system for this genre
+5. **Add art** — Phaser graphics primitives + Gemini-generated sprites where needed
+6. **Add boss/victory condition** — genre-appropriate win state
+7. **Wire into App** — add scene factory to `PhaserGame`, add to `LEVEL_ORDER`, register in `LEVEL_REGISTRY`
+8. **Write cutscene** — placeholder intro/outro text
+9. **QA + commit** — verify sprites load, animations play, fallback works
 
 ### Task 4.1: Level 2 config + PlatformerScene skeleton
+
+**Sprite Requirements (defined during implementation):**
+- `idle` — standing on rooftop, alert posture
+- `walk` — side-view walking cycle
+- `jump` — mid-air leap between rooftops
+- `land` — landing crouch
+- `hit` — knocked back by pigeon/obstacle
+- _Exact list finalized when platformer mechanics are built._
 
 **Files:**
 - Create: `levels/rooftops.ts`
@@ -2269,6 +2357,13 @@ git commit -m "feat(v3/phase4): complete Level 2 — Rooftop Prowl platformer"
 
 **Files:** `levels/kitchen.ts`, `scenes/LauncherScene.ts`
 
+**Sprite Requirements (defined during implementation):**
+- `sit` — sitting on counter, tail curled, ready to launch
+- `aim` — leaning back with paw cocked
+- `launch` — swatting motion, paw extended
+- `celebrate` — happy pose after good hit
+- _Exact list finalized when launcher mechanics are built._
+
 **Genre-specific systems:**
 - [ ] Drag-to-aim input (mousedown → drag → release fires projectile)
 - [ ] Projectile physics (parabolic arc, Arcade Physics gravity)
@@ -2283,6 +2378,13 @@ git commit -m "feat(v3/phase4): complete Level 2 — Rooftop Prowl platformer"
 ### Task 6: Level 4 — Cosmic Kitty (Space Shooter)
 
 **Files:** `levels/space.ts`, `scenes/ShooterScene.ts`
+
+**Sprite Requirements (defined during implementation):**
+- `pilot` — forward-facing in cardboard spaceship
+- `shoot` — firing furball (paw flash)
+- `hit` — ship damage reaction
+- `powerup` — glowing/enhanced after pickup
+- _Exact list finalized when shooter mechanics are built._
 
 **Genre-specific systems:**
 - [ ] Player horizontal movement at screen bottom
@@ -2300,6 +2402,12 @@ git commit -m "feat(v3/phase4): complete Level 2 — Rooftop Prowl platformer"
 
 **Files:** `levels/yarn.ts`, `scenes/BreakoutScene.ts`
 
+**Sprite Requirements (defined during implementation):**
+- `paddle` — paw extended as paddle (side view or top-down)
+- `stretch` — wide paw for power-up
+- `miss` — disappointed reaction when ball is lost
+- _Exact list finalized when breakout mechanics are built._
+
 **Genre-specific systems:**
 - [ ] Paddle (paw) at bottom, keyboard/mouse controlled
 - [ ] Ball (yarn) physics with angle reflection
@@ -2314,6 +2422,12 @@ git commit -m "feat(v3/phase4): complete Level 2 — Rooftop Prowl platformer"
 
 **Files:** `levels/street.ts`, `scenes/FroggerScene.ts`
 
+**Sprite Requirements (defined during implementation):**
+- `hop-up` / `hop-down` / `hop-left` / `hop-right` — directional hop frames
+- `idle` — waiting between hops
+- `splat` — hit by vehicle
+- _Exact list finalized when frogger mechanics are built._
+
 **Genre-specific systems:**
 - [ ] Lane system with moving hazards
 - [ ] River section with floating platforms
@@ -2327,6 +2441,12 @@ git commit -m "feat(v3/phase4): complete Level 2 — Rooftop Prowl platformer"
 ### Task 9: Level 7 — Mouse Hunt (Whack-a-Mole)
 
 **Files:** `levels/garden-whack.ts`, `scenes/WhackScene.ts`
+
+**Sprite Requirements (defined during implementation):**
+- `swat` — paw slamming down with claws
+- `ready` — paw raised, waiting to strike
+- `miss` — whiffed swing
+- _Exact list finalized when whack mechanics are built._
 
 **Genre-specific systems:**
 - [ ] Grid of holes, mice pop with random timing
@@ -2343,6 +2463,12 @@ git commit -m "feat(v3/phase4): complete Level 2 — Rooftop Prowl platformer"
 
 **Files:** `levels/garden-snake.ts`, `scenes/SnakeScene.ts`
 
+**Sprite Requirements (defined during implementation):**
+- `head-up` / `head-down` / `head-left` / `head-right` — directional head sprites
+- `body` — tail segment (may be simpler, repeated)
+- `chomp` — eating catnip
+- _Exact list finalized when snake mechanics are built._
+
 **Genre-specific systems:**
 - [ ] Grid-based continuous movement (head leads, tail follows)
 - [ ] Catnip pickups grow tail
@@ -2358,6 +2484,13 @@ git commit -m "feat(v3/phase4): complete Level 2 — Rooftop Prowl platformer"
 ### Task 11: Level 9 — The Cat Tree (Vertical Climber)
 
 **Files:** `levels/cattree.ts`, `scenes/ClimberScene.ts`
+
+**Sprite Requirements (defined during implementation):**
+- `climb` — arms-up climbing pose
+- `jump` — springing upward from platform
+- `fall` — tumbling downward
+- `cling` — gripping a platform edge
+- _Exact list finalized when climber mechanics are built._
 
 **Genre-specific systems:**
 - [ ] Vertical auto-scroll upward (camera rises, fall off = death)
