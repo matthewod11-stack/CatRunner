@@ -1003,7 +1003,7 @@ export default class RunnerScene extends SceneBridge {
 
       // ── Screen-space positions for effects (scaled to match visual size) ──
       const obsCenterX = obs.x + (obs.width * scale) / 2;
-      const obsScreenY = this.groundYScreen - oY - (obs.height * scale);
+      const obsScreenY = this.groundYScreen - (oY - this.themeGroundY) - (obs.height * scale);
 
       // ── SHELL collection ──
       if (obs.type === 'SHELL') {
@@ -1163,7 +1163,9 @@ export default class RunnerScene extends SceneBridge {
     const scale = RunnerScene.ENTITY_SCALE;
     const entityY = entity.y ?? this.themeGroundY;
     const screenX = entity.x;
-    const screenY = this.groundYScreen - entityY - (entity.height * scale);
+    // DOM engine: y=groundY means "at ground level", y>groundY means airborne.
+    // Subtract groundY so ground-level entities sit ON the ground line.
+    const screenY = this.groundYScreen - (entityY - this.themeGroundY) - (entity.height * scale);
 
     const sprite = this.add.image(screenX, screenY, textureKey)
       .setDisplaySize(entity.width * scale, entity.height * scale)
@@ -1185,9 +1187,10 @@ export default class RunnerScene extends SceneBridge {
     const scale = RunnerScene.ENTITY_SCALE;
     const entityY = entity.y ?? this.themeGroundY;
 
-    // Convert DOM engine coords (y=0 ground, +y up) to Phaser coords (y=0 top, +y down)
+    // Convert DOM engine coords (y=groundY at ground, +y up) to Phaser coords (y=0 top, +y down)
+    // Subtract groundY so ground-level entities sit ON the ground line.
     const screenX = entity.x;
-    const screenY = this.groundYScreen - entityY - (entity.height * scale);
+    const screenY = this.groundYScreen - (entityY - this.themeGroundY) - (entity.height * scale);
 
     sprite.setPosition(screenX, screenY);
     sprite.setDisplaySize(entity.width * scale, entity.height * scale);
@@ -1257,7 +1260,7 @@ export default class RunnerScene extends SceneBridge {
 
     // Create boss sprite
     const bossY = this.boss.y ?? this.themeGroundY;
-    const bossScreenY = this.groundYScreen - bossY - this.boss.height;
+    const bossScreenY = this.groundYScreen - (bossY - this.themeGroundY) - this.boss.height;
     this.bossSprite = this.add.image(this.boss.x, bossScreenY, 'boss')
       .setDisplaySize(bossCfg.width, bossCfg.height)
       .setOrigin(0, 0)
@@ -1358,7 +1361,7 @@ export default class RunnerScene extends SceneBridge {
 
       const bossFaceX = this.boss.x + this.boss.width * 0.5;
       const bossFaceY = this.boss.y + this.boss.height * 0.85;
-      const bossFaceScreenY = this.groundYScreen - bossFaceY;
+      const bossFaceScreenY = this.groundYScreen - (bossFaceY - this.themeGroundY);
       this.effects.spawnParticles(bossFaceX, bossFaceScreenY, 0x8b4513, 8);
       this.audio.playSfx('poop_launch');
       this.effects.shake(0.005, 60);
@@ -1396,7 +1399,7 @@ export default class RunnerScene extends SceneBridge {
 
     const bossY = this.boss.y ?? this.themeGroundY;
     const screenX = this.boss.x;
-    const screenY = this.groundYScreen - bossY - this.boss.height;
+    const screenY = this.groundYScreen - (bossY - this.themeGroundY) - this.boss.height;
 
     // Update boss sprite position
     this.bossSprite.setPosition(screenX, screenY);
