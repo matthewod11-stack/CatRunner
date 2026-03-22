@@ -56,10 +56,8 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
       if (destroyed) return;
       const SceneClass = 'default' in imported ? imported.default : imported;
 
-      // Fixed internal resolution — Phaser renders at this size,
-      // Scale.FIT stretches the canvas to fill the container via CSS.
       const GAME_W = 960;
-      const GAME_H = 720;  // 4:3 — matches CRT aspect ratio
+      const GAME_H = 720;
 
       const game = new Phaser.Game({
         type: Phaser.AUTO,
@@ -67,12 +65,15 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
         width: GAME_W,
         height: GAME_H,
         backgroundColor: '#87CEEB',
-        scale: {
-          mode: Phaser.Scale.FIT,
-          autoCenter: Phaser.Scale.CENTER_BOTH,
-        },
+        scale: { mode: Phaser.Scale.NONE },
         scene: [],
       });
+
+      // Force canvas to fill container — override any Phaser sizing
+      const canvas = container.querySelector('canvas');
+      if (canvas) {
+        canvas.style.cssText = 'width:100%!important;height:100%!important;display:block!important;';
+      }
 
       if (destroyed) { game.destroy(true); return; }
       gameRef.current = game;
