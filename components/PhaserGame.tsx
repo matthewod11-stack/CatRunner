@@ -59,7 +59,7 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
       // Fixed internal resolution — Phaser renders at this size,
       // Scale.FIT stretches the canvas to fill the container via CSS.
       const GAME_W = 960;
-      const GAME_H = 540;
+      const GAME_H = 720;  // 4:3 — matches CRT aspect ratio
 
       const game = new Phaser.Game({
         type: Phaser.AUTO,
