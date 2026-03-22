@@ -304,13 +304,13 @@ The closet evolves from "pick one look" to "manage a character design that spawn
 - Modify: `package.json`
 - Modify: `vite.config.ts`
 
-- [ ] **Step 1: Install Phaser**
+- [x] **Step 1: Install Phaser**
 
 ```bash
 npm install phaser
 ```
 
-- [ ] **Step 2: Update vite.config.ts — add Phaser to optimizeDeps**
+- [x] **Step 2: Update vite.config.ts — add Phaser to optimizeDeps**
 
 In `vite.config.ts`, inside the returned config object, add:
 
@@ -322,7 +322,7 @@ optimizeDeps: {
 
 This tells Vite to pre-bundle Phaser during dev (avoids slow on-demand optimization of Phaser's large bundle).
 
-- [ ] **Step 3: Verify dev server starts**
+- [x] **Step 3: Verify dev server starts**
 
 ```bash
 npm run dev
@@ -330,7 +330,7 @@ npm run dev
 
 Expected: Dev server starts on port 3000. No errors. Existing game works unchanged.
 
-- [ ] **Step 4: Verify production build**
+- [x] **Step 4: Verify production build**
 
 ```bash
 npm run build
@@ -338,7 +338,7 @@ npm run build
 
 Expected: Build succeeds. Check output — Phaser chunk should appear in the `dist/assets/` directory. Note its size (~1MB gzipped).
 
-- [ ] **Step 5: Verify tests still pass**
+- [x] **Step 5: Verify tests still pass**
 
 ```bash
 npm run test:run
@@ -346,7 +346,7 @@ npm run test:run
 
 Expected: All existing tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add package.json package-lock.json vite.config.ts
@@ -361,7 +361,7 @@ git commit -m "chore: add phaser dependency and configure Vite optimizeDeps"
 - Modify: `types.ts`
 - Test: `types.ts` is purely types — verified by `npx tsc --noEmit`
 
-- [ ] **Step 1: Add V3 types to types.ts**
+- [x] **Step 1: Add V3 types to types.ts**
 
 At the bottom of `types.ts`, after the existing `LevelConfig` interface, add:
 
@@ -421,7 +421,7 @@ export interface LevelResult {
 }
 ```
 
-- [ ] **Step 2: Expand LevelId**
+- [x] **Step 2: Expand LevelId**
 
 Change the existing `LevelId` type:
 
@@ -438,7 +438,7 @@ export type LevelId =
   | 'CAT_TREE';
 ```
 
-- [ ] **Step 3: Update GameStatus enum**
+- [x] **Step 3: Update GameStatus enum**
 
 Replace the existing `GameStatus` enum:
 
@@ -455,11 +455,11 @@ export enum GameStatus {
 }
 ```
 
-- [ ] **Step 4: Add levelId to HighScoreEntry**
+- [x] **Step 4: Add levelId to HighScoreEntry**
 
 Add `levelId?: LevelId;` to the `HighScoreEntry` interface (optional for backwards compatibility with legacy entries).
 
-- [ ] **Step 5: Type-check**
+- [x] **Step 5: Type-check**
 
 ```bash
 npx tsc --noEmit
@@ -467,11 +467,11 @@ npx tsc --noEmit
 
 Expected: Type errors in files that reference `LEVEL_SELECTION` (now `CAMPAIGN`), and in `levels/index.ts` where `Record<LevelId, LevelConfig>` now requires 9 keys but only has `BEACH`.
 
-- [ ] **Step 6: Fix GameStatus references**
+- [x] **Step 6: Fix GameStatus references**
 
 Search for `LEVEL_SELECTION` in `App.tsx` and replace with `CAMPAIGN`. This is a rename — same behavior, new name.
 
-- [ ] **Step 7: Make LEVEL_REGISTRY partial**
+- [x] **Step 7: Make LEVEL_REGISTRY partial**
 
 In `levels/index.ts`, change:
 ```typescript
@@ -491,7 +491,7 @@ export function getLevelConfig(id: LevelId): LevelConfig {
 }
 ```
 
-- [ ] **Step 8: Create `CampaignLevelMeta` and rename existing config to `RunnerLevelConfig`**
+- [x] **Step 8: Create `CampaignLevelMeta` and rename existing config to `RunnerLevelConfig`**
 
 Do NOT add optional genre fields to the existing `LevelConfig`. Instead, split campaign metadata from genre runtime config now — this prevents the "god config" anti-pattern where one interface absorbs fields from every genre.
 
@@ -558,7 +558,7 @@ export type LevelConfig = RunnerLevelConfig;
 
 This alias lets existing code compile while the rename propagates incrementally. Remove it when all references are updated.
 
-- [ ] **Step 9: Type-check again**
+- [x] **Step 9: Type-check again**
 
 ```bash
 npx tsc --noEmit
@@ -566,7 +566,7 @@ npx tsc --noEmit
 
 Expected: Fewer errors. Remaining errors should be limited to the `GameStatus.LEVEL_SELECTION` rename downstream — those are caught in subsequent commits.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add types.ts App.tsx levels/index.ts levels/beach.ts
@@ -583,7 +583,7 @@ git commit -m "feat(v3): add V3 type foundations — LevelGenre, VictoryConditio
 
 This is the base class all 9 Phaser scenes extend. It defines the event protocol for Phaser→React communication.
 
-- [ ] **Step 1: Write test for SceneBridge event emission**
+- [x] **Step 1: Write test for SceneBridge event emission**
 
 Create `scenes/shared/SceneBridge.test.ts`:
 
@@ -607,7 +607,7 @@ describe('SceneBridge event protocol', () => {
 
 Note: This test uses ESM `import` (the project is `"type": "module"`). On the first "red" run, the import will fail because `SceneBridge.ts` doesn't exist yet — that's the expected TDD failure.
 
-- [ ] **Step 2: Run test — verify it fails**
+- [x] **Step 2: Run test — verify it fails**
 
 ```bash
 npm run test:run -- scenes/shared/SceneBridge.test.ts
@@ -615,7 +615,7 @@ npm run test:run -- scenes/shared/SceneBridge.test.ts
 
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Create SceneBridge (genre-agnostic base)**
+- [x] **Step 3: Create SceneBridge (genre-agnostic base)**
 
 Create `scenes/shared/SceneBridge.ts`. **The base class carries ONLY shared concerns.** Runner-specific fields (`initialLives`, `startAtBoss`, `tuning`) do NOT belong here — they go in `RunnerSceneInitData` (see Task 0.3b below).
 
@@ -685,7 +685,7 @@ export abstract class SceneBridge extends Phaser.Scene {
 }
 ```
 
-- [ ] **Step 3b: Create RunnerSceneInitData (temporary BEACH shim)**
+- [x] **Step 3b: Create RunnerSceneInitData (temporary BEACH shim)**
 
 Runner-specific init data lives alongside the scene, not in the shared bridge:
 
@@ -708,7 +708,7 @@ export interface RunnerSceneInitData extends SceneInitData {
 
 **This is a temporary BEACH shim**, not the long-term shared API. When Level 2 (Platformer) is built, it will define `PlatformerSceneInitData extends SceneInitData` with its own fields.
 
-- [ ] **Step 4: Run test — verify it passes**
+- [x] **Step 4: Run test — verify it passes**
 
 ```bash
 npm run test:run -- scenes/shared/SceneBridge.test.ts
@@ -716,7 +716,7 @@ npm run test:run -- scenes/shared/SceneBridge.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add scenes/shared/SceneBridge.ts scenes/shared/SceneBridge.test.ts
@@ -732,7 +732,7 @@ git commit -m "feat(v3): add SceneBridge base class with event protocol"
 
 This component mounts a `Phaser.Game` instance inside a div, handles lazy scene registration, resize, and cleanup. It wires bridge events to React callbacks.
 
-- [ ] **Step 1: Create PhaserGame.tsx (genre-agnostic wrapper)**
+- [x] **Step 1: Create PhaserGame.tsx (genre-agnostic wrapper)**
 
 The wrapper is **generic** — it does not know about runner-specific fields. Genre-specific init data is passed as an opaque bag via `sceneInitData`.
 
@@ -848,7 +848,7 @@ export default PhaserGame;
 - **Code splitting:** `sceneFactory` is called once during boot, not on every render.
 - **Web Audio forced:** `audio: { disableWebAudio: false }` ensures single AudioContext.
 
-- [ ] **Step 2: Add runtime update handling**
+- [x] **Step 2: Add runtime update handling**
 
 **`propsRef` is NOT sufficient** for values the scene reads in its update loop (see "React → Phaser Runtime Sync Rules" above). Add a `useEffect` that forwards tuning/config changes to the running scene:
 
@@ -875,7 +875,7 @@ This calls `SceneBridge.applyRuntimePatch()` (default no-op). `RunnerScene` over
 | Pause from React | Call `sceneRef.current.scene.pause()` / `.resume()` directly, or emit a custom bridge event |
 | Cat appearance mid-game | Full scene remount (change `levelId` key or add a `sceneKey` prop) |
 
-- [ ] **Step 3: Verify type-check**
+- [x] **Step 3: Verify type-check**
 
 ```bash
 npx tsc --noEmit
@@ -883,7 +883,7 @@ npx tsc --noEmit
 
 Expected: No new errors from PhaserGame.tsx (some existing errors from the GameStatus rename are expected and will be fixed later).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add components/PhaserGame.tsx
@@ -899,7 +899,7 @@ git commit -m "feat(v3): add PhaserGame React wrapper with lazy scene loading an
 
 A minimal scene that renders a colored rectangle and emits a score event — proving the full React→Phaser→React pipeline works.
 
-- [ ] **Step 1: Create TestScene**
+- [x] **Step 1: Create TestScene**
 
 Create `scenes/TestScene.ts`:
 
@@ -957,11 +957,11 @@ export default class TestScene extends SceneBridge {
 }
 ```
 
-- [ ] **Step 2: Temporarily wire TestScene into App for manual verification**
+- [x] **Step 2: Temporarily wire TestScene into App for manual verification**
 
 In App.tsx, add a temporary test route: when `selectedLevel === 'BEACH'` and a flag is set, render `PhaserGame` with `sceneFactory={() => import('./scenes/TestScene')}` instead of `GameEngine`. This is a manual smoke test — remove after verification.
 
-- [ ] **Step 3: Manual verification**
+- [x] **Step 3: Manual verification**
 
 ```bash
 npm run dev
@@ -974,7 +974,7 @@ Open browser → Start game → Verify:
 4. Browser console has no errors
 5. Resizing the window resizes the Phaser canvas
 
-- [ ] **Step 4: Verify production build works**
+- [x] **Step 4: Verify production build works**
 
 ```bash
 npm run build && npm run preview
@@ -982,9 +982,9 @@ npm run build && npm run preview
 
 Expected: Same behavior in production mode. Phaser chunk is a separate file in `dist/assets/`.
 
-- [ ] **Step 5: Revert App.tsx test wiring, keep TestScene for future dev use**
+- [x] **Step 5: Revert App.tsx test wiring, keep TestScene for future dev use**
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add scenes/TestScene.ts
@@ -999,7 +999,7 @@ git commit -m "feat(v3): add TestScene — verifies Phaser bridge end-to-end"
 - Modify: `CLAUDE.md`
 - Modify: `AGENTS.md` (twin doc — must stay in sync per `AGENTS.md:3`)
 
-- [ ] **Step 1: Add Phaser architecture section to CLAUDE.md and AGENTS.md**
+- [x] **Step 1: Add Phaser architecture section to CLAUDE.md and AGENTS.md**
 
 Add a new section after "Architecture" in CLAUDE.md:
 
@@ -1012,11 +1012,11 @@ Add a new section after "Architecture" in CLAUDE.md:
 - **Code splitting:** Each scene is a dynamic import. `PhaserGame` receives `sceneFactory: () => Promise<...>`. Never statically import all scene classes.
 ```
 
-- [ ] **Step 2: Mirror the same section into AGENTS.md**
+- [x] **Step 2: Mirror the same section into AGENTS.md**
 
 CLAUDE.md and AGENTS.md are twin docs (see `AGENTS.md:3`). Add the same Phaser architecture section to AGENTS.md.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add CLAUDE.md AGENTS.md
@@ -1032,7 +1032,7 @@ git commit -m "docs: add Phaser architecture notes to CLAUDE.md and AGENTS.md"
 
 The custom cat sprite is stored as a blob URL (from IndexedDB). Phaser needs this loaded as a texture.
 
-- [ ] **Step 1: Create SpriteLoader.ts**
+- [x] **Step 1: Create SpriteLoader.ts**
 
 ```typescript
 import Phaser from 'phaser';
@@ -1051,7 +1051,7 @@ export function loadCatSprite(scene: Phaser.Scene, blobUrl: string | null): void
 export { CAT_TEXTURE_KEY };
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add scenes/shared/SpriteLoader.ts
@@ -1071,7 +1071,7 @@ This migration is independent of the Phaser port — it updates the persistence 
 
 **Scope note:** This task covers ONLY the `defeatedBosses` → `completedLevels` rename and migration. It does NOT touch Hall of Fame semantics (those still use the existing `HighScoreEntry` shape) or `LevelResult` persistence (that's Task 0.9). These three concerns — unlock state, Hall of Fame, and per-level results — are independent persistence layers with separate storage keys and separate migration paths.
 
-- [ ] **Step 1: Write migration tests**
+- [x] **Step 1: Write migration tests**
 
 Create `services/levelProgress.test.ts`:
 
@@ -1110,13 +1110,13 @@ describe('completedLevels migration', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests — verify they fail**
+- [x] **Step 2: Run tests — verify they fail**
 
 ```bash
 npm run test:run -- services/levelProgress.test.ts
 ```
 
-- [ ] **Step 3: Update levelProgress.ts**
+- [x] **Step 3: Update levelProgress.ts**
 
 Rename functions and add migration:
 
@@ -1160,7 +1160,7 @@ export function saveCompletedLevels(state: CompletedLevelsState): void {
 }
 ```
 
-- [ ] **Step 4: Update runOutcome.ts**
+- [x] **Step 4: Update runOutcome.ts**
 
 Replace `nextDefeatedBossesAfterVictory` with:
 
@@ -1175,17 +1175,17 @@ export function nextCompletedLevelsAfterWin(
 
 Update `mergeHallOfFameAfterRun` calls in App.tsx to pass `levelId`.
 
-- [ ] **Step 5: Update App.tsx references**
+- [x] **Step 5: Update App.tsx references**
 
 Replace all `defeatedBosses` state/usage with `completedLevels`. Replace `loadDefeatedBosses` with `loadCompletedLevels`.
 
-- [ ] **Step 6: Run all tests**
+- [x] **Step 6: Run all tests**
 
 ```bash
 npm run test:run
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add services/levelProgress.ts services/levelProgress.test.ts services/runOutcome.ts App.tsx
@@ -1202,7 +1202,7 @@ git commit -m "feat(v3): migrate defeatedBosses to completedLevels with migratio
 
 This service owns star calculation and per-level result persistence. `runOutcome.ts` continues to own Hall of Fame merge.
 
-- [ ] **Step 1: Write tests**
+- [x] **Step 1: Write tests**
 
 ```typescript
 import { describe, it, expect, beforeEach } from 'vitest';
@@ -1245,13 +1245,13 @@ describe('saveLevelResult best-of merge', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests — verify they fail**
+- [x] **Step 2: Run tests — verify they fail**
 
 ```bash
 npm run test:run -- services/levelCompletion.test.ts
 ```
 
-- [ ] **Step 3: Implement levelCompletion.ts**
+- [x] **Step 3: Implement levelCompletion.ts**
 
 ```typescript
 import type { LevelId, LevelResult } from '../types';
@@ -1294,13 +1294,13 @@ export function saveLevelResult(result: LevelResult): void {
 }
 ```
 
-- [ ] **Step 4: Run tests — verify they pass**
+- [x] **Step 4: Run tests — verify they pass**
 
 ```bash
 npm run test:run -- services/levelCompletion.test.ts
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add services/levelCompletion.ts services/levelCompletion.test.ts
