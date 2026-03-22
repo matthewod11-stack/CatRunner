@@ -60,6 +60,7 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
 
     let destroyed = false;
     const container = containerRef.current;
+    let resizeObserver: ResizeObserver | null = null;
 
     (async () => {
       // Lazy-load the scene class
@@ -68,8 +69,8 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
 
       const SceneClass = 'default' in imported ? imported.default : imported;
 
-      // Wait a frame for CSS layout to settle, then read container dimensions
-      await new Promise(r => requestAnimationFrame(r));
+      // Wait two frames for CSS layout to fully settle
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
       if (destroyed) return;
 
       const initW = container.clientWidth || 800;
@@ -80,21 +81,12 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
         parent: container,
         width: initW,
         height: initH,
-        backgroundColor: '#bfdbfe',
+        backgroundColor: '#87CEEB',
         scale: {
-          mode: Phaser.Scale.RESIZE,
-          autoCenter: Phaser.Scale.CENTER_BOTH,
+          mode: Phaser.Scale.NONE,  // Full manual control — no Phaser auto-scaling
         },
-        // Start with no scenes — we add + start manually below
         scene: [],
       });
-
-      // Force Phaser canvas to fill container via CSS
-      const canvas = container.querySelector('canvas');
-      if (canvas) {
-        canvas.style.width = '100%';
-        canvas.style.height = '100%';
-      }
 
       if (destroyed) {
         game.destroy(true);
@@ -103,18 +95,25 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
 
       gameRef.current = game;
 
-      // ResizeObserver — manually resize Phaser when container size changes
-      const ro = new ResizeObserver(entries => {
+      // ResizeObserver — manually resize Phaser game when container changes
+      resizeObserver = new ResizeObserver(entries => {
         for (const entry of entries) {
-          const { width, height } = entry.contentRect;
-          if (width > 0 && height > 0 && game.scale) {
-            game.scale.resize(width, height);
+          const w = Math.floor(entry.contentRect.width);
+          const h = Math.floor(entry.contentRect.height);
+          if (w > 0 && h > 0 && gameRef.current) {
+            gameRef.current.scale.resize(w, h);
+            // Also update the canvas element dimensions directly
+            const canvas = gameRef.current.canvas;
+            if (canvas) {
+              canvas.width = w;
+              canvas.height = h;
+              canvas.style.width = w + 'px';
+              canvas.style.height = h + 'px';
+            }
           }
         }
       });
-      ro.observe(container);
-      // Store for cleanup
-      (game as any).__resizeObserver = ro;
+      resizeObserver.observe(container);
 
       // Add the scene class and start it with init data
       game.scene.add(SCENE_KEY, SceneClass, true, {
@@ -153,9 +152,8 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
     return () => {
       destroyed = true;
       sceneRef.current = null;
+      if (resizeObserver) resizeObserver.disconnect();
       if (gameRef.current) {
-        const ro = (gameRef.current as any).__resizeObserver as ResizeObserver | undefined;
-        if (ro) ro.disconnect();
         gameRef.current.destroy(true);
         gameRef.current = null;
       }
@@ -170,7 +168,7 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
   return (
     <div
       ref={containerRef}
-      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+      style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
     />
   );
 };
