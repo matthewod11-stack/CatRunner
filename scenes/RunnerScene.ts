@@ -175,6 +175,9 @@ export default class RunnerScene extends SceneBridge {
   private bgSprites = new Map<number, Phaser.GameObjects.Image>();
   private lastBackgroundSpawnTime = 0;
 
+  // ── Pacing / phase tracking (Task 9) ──
+  private runStartTime = 0;
+
   /** Texture key map for obstacle/collectible sprites */
   private static readonly OBSTACLE_TEXTURE_MAP: Record<string, string> = {
     CRAB: 'obs-CRAB',
@@ -424,6 +427,9 @@ export default class RunnerScene extends SceneBridge {
     // Notify React overlay that we're playing
     this.emitStatusChange(GameStatus.PLAYING);
     this.emitScoreUpdate(this.gameScore);
+
+    // ── Pacing: record run start for phase determination (Task 9) ──
+    this.runStartTime = Date.now();
   }
 
   update(_time: number, delta: number): void {
@@ -604,6 +610,17 @@ export default class RunnerScene extends SceneBridge {
   }
 
   /**
+   * Determine current run phase based on elapsed time.
+   * early: 0-20s, mid: 20-40s, late: 40s+
+   */
+  private getCurrentPhase(): 'early' | 'mid' | 'late' {
+    const elapsed = (Date.now() - this.runStartTime) / 1000;
+    if (elapsed < 20) return 'early';
+    if (elapsed < 40) return 'mid';
+    return 'late';
+  }
+
+  /**
    * Time-based spawn logic ported from GameEngine.tsx lines 755-811.
    * Called once per frame; spawns entities when the spawn timer fires.
    */
@@ -623,10 +640,14 @@ export default class RunnerScene extends SceneBridge {
       const patternChance = Math.min(0.15 + (this.gameScore.current / 12000), 0.7) * lifeAssistScale;
       const isPlayerRecovering = now < this.invincibleUntil;
       const patterns = this.levelConfig.patterns;
+      const currentPhase = this.getCurrentPhase();
 
-      if (patterns.length > 0 && Math.random() < patternChance && !isPlayerRecovering) {
-        const pi = Math.floor(Math.random() * patterns.length);
-        this.patternQueue = [...patterns[pi]];
+      // Filter patterns by current phase
+      const available = patterns.filter(p => p.phase === currentPhase || p.phase === 'any');
+
+      if (available.length > 0 && Math.random() < patternChance && !isPlayerRecovering) {
+        const pi = Math.floor(Math.random() * available.length);
+        this.patternQueue = [...available[pi].steps];    // .steps, not the whole PhasedPattern
         this.consecutiveHarmful = 0;
       } else {
         // ── Check for power-up spawn ──
