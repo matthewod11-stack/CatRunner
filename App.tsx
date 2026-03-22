@@ -736,114 +736,214 @@ const App: React.FC = () => {
         USE_PHASER_RUNNER ? (
           <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #2d2d44 100%)' }}>
             {/* Retro TV/VCR Frame */}
-            <div className="relative" style={{ width: '85vw', maxWidth: '1100px', aspectRatio: '4/3' }}>
-              {/* TV body */}
-              <div className="absolute inset-0 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
+            <div className="relative" style={{ width: '85vw', maxWidth: '1100px' }}>
+              {/* TV Body — JVC-style boxy warm-gray plastic */}
+              <div className="relative rounded-[0.75rem]"
                 style={{
-                  background: 'linear-gradient(180deg, #b8b8c8 0%, #9898a8 30%, #a8a8b8 70%, #909098 100%)',
-                  padding: '24px 24px 80px 24px',
+                  background: 'linear-gradient(180deg, #e8e6e2 0%, #dddad4 40%, #d5d2cc 100%)',
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.1)',
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 48px',
                 }}>
-                {/* Screen bezel (dark border around screen) */}
-                <div className="w-full h-full rounded-2xl overflow-hidden relative"
-                  style={{
-                    border: '6px solid #2a2a3a',
-                    boxShadow: 'inset 0 0 30px rgba(0,0,0,0.4), 0 0 8px rgba(0,0,0,0.3)',
+                {/* Left column — screen + VCR */}
+                <div style={{ padding: '18px 12px 18px 18px' }}>
+                  {/* Screen bezel (inner plastic frame) */}
+                  <div style={{
+                    background: 'linear-gradient(180deg, #e0ddd8, #d8d5d0)',
+                    borderRadius: '4px',
+                    padding: '6px',
                   }}>
-                  {/* CRT scanline overlay */}
-                  <div className="absolute inset-0 z-20 pointer-events-none opacity-[0.04]"
-                    style={{
-                      backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.3) 2px, rgba(0,0,0,0.3) 4px)',
-                    }} />
-                  {/* Screen glare */}
-                  <div className="absolute inset-0 z-20 pointer-events-none"
-                    style={{
-                      background: 'radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.08) 0%, transparent 60%)',
-                    }} />
-                  {/* Phaser canvas */}
-                  <PhaserGame
-                    levelId={selectedLevel}
-                    catSpriteUrl={customCatUrl}
-                    sceneInitData={{
-                      levelConfig,
-                      initialLives: score.lives > 0 ? score.lives : MAX_LIVES,
-                      startAtBoss,
-                      tuning: mergedTuning,
-                      onTelemetryReady: handleTelemetryReady,
-                    }}
-                    sceneFactory={() => import('./scenes/RunnerScene')}
-                    onScoreUpdate={handleScoreUpdate}
-                    onLevelComplete={handleLevelComplete}
-                    onGameOver={(finalScore: number) => handleGameOver(finalScore)}
-                    onStatusChange={handleStatusChange}
-                    onHudUpdate={handleHudUpdate}
-                  />
-                  {/* In-screen HUD */}
-                  <div className="absolute top-3 left-3 z-30 pointer-events-none">
-                    <div className="bg-black/50 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/20 flex items-center gap-4">
-                      <div className="flex flex-col">
-                        <span className="text-[8px] uppercase font-black text-white/50">Score</span>
-                        <span className="text-xl font-black text-white tabular-nums leading-none">{score.current}</span>
-                      </div>
-                      <div className="w-px h-7 bg-white/20" />
-                      <div className="flex flex-col">
-                        <span className="text-[8px] uppercase font-black text-red-300/70">Lives</span>
-                        <span className="text-xl font-black text-red-400 leading-none">{score.lives}</span>
-                      </div>
-                      <div className="w-px h-7 bg-white/20" />
-                      <div className="flex flex-col">
-                        <span className="text-[8px] uppercase font-black text-purple-300/70">Mult</span>
-                        <span className="text-xl font-black text-purple-300 tabular-nums leading-none">x{score.multiplier}</span>
-                      </div>
-                      <div className="w-px h-7 bg-white/20" />
-                      <div className="flex flex-col">
-                        <span className="text-[8px] uppercase font-black text-yellow-300/70">Stars</span>
-                        <span className="text-lg font-black text-yellow-300 tabular-nums leading-none">★{score.coins}<span className="text-[9px] text-yellow-300/40">/{bossCoinTarget}</span></span>
+                    {/* Black CRT frame */}
+                    <div style={{
+                      background: '#0a0a0a',
+                      borderRadius: '10px',
+                      padding: '6px',
+                    }}>
+                      {/* CRT Glass — the actual screen */}
+                      <div className="relative overflow-hidden" style={{
+                        borderRadius: '8px',
+                        aspectRatio: '4/3',
+                        boxShadow: 'inset 0 0 40px rgba(0,0,0,0.3)',
+                      }}>
+                        {/* CRT reflections */}
+                        <div className="absolute inset-0 z-20 pointer-events-none" style={{
+                          background: 'radial-gradient(ellipse at 25% 15%, rgba(255,255,255,0.12) 0%, transparent 50%), radial-gradient(ellipse at 75% 85%, rgba(255,255,255,0.04) 0%, transparent 40%)',
+                        }} />
+                        {/* Scanlines */}
+                        <div className="absolute inset-0 z-20 pointer-events-none opacity-[0.06]" style={{
+                          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.4) 2px, rgba(0,0,0,0.4) 4px)',
+                        }} />
+                        {/* Green OSD — CH 03 */}
+                        <div className="absolute top-2 right-3 z-30 pointer-events-none" style={{
+                          fontFamily: "'Courier New', monospace",
+                          fontSize: '14px',
+                          fontWeight: 700,
+                          color: '#4ade80',
+                          textShadow: '0 0 8px rgba(74,222,128,0.5)',
+                          letterSpacing: '2px',
+                        }}>CH 03</div>
+
+                        {/* === GAME CONTENT (preserved from original) === */}
+                        {/* Phaser canvas */}
+                        <PhaserGame
+                          levelId={selectedLevel}
+                          catSpriteUrl={customCatUrl}
+                          sceneInitData={{
+                            levelConfig,
+                            initialLives: score.lives > 0 ? score.lives : MAX_LIVES,
+                            startAtBoss,
+                            tuning: mergedTuning,
+                            onTelemetryReady: handleTelemetryReady,
+                          }}
+                          sceneFactory={() => import('./scenes/RunnerScene')}
+                          onScoreUpdate={handleScoreUpdate}
+                          onLevelComplete={handleLevelComplete}
+                          onGameOver={(finalScore: number) => handleGameOver(finalScore)}
+                          onStatusChange={handleStatusChange}
+                          onHudUpdate={handleHudUpdate}
+                        />
+                        {/* In-screen HUD */}
+                        <div className="absolute top-3 left-3 z-30 pointer-events-none">
+                          <div className="bg-black/50 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/20 flex items-center gap-4">
+                            <div className="flex flex-col">
+                              <span className="text-[8px] uppercase font-black text-white/50">Score</span>
+                              <span className="text-xl font-black text-white tabular-nums leading-none">{score.current}</span>
+                            </div>
+                            <div className="w-px h-7 bg-white/20" />
+                            <div className="flex flex-col">
+                              <span className="text-[8px] uppercase font-black text-red-300/70">Lives</span>
+                              <span className="text-xl font-black text-red-400 leading-none">{score.lives}</span>
+                            </div>
+                            <div className="w-px h-7 bg-white/20" />
+                            <div className="flex flex-col">
+                              <span className="text-[8px] uppercase font-black text-purple-300/70">Mult</span>
+                              <span className="text-xl font-black text-purple-300 tabular-nums leading-none">x{score.multiplier}</span>
+                            </div>
+                            <div className="w-px h-7 bg-white/20" />
+                            <div className="flex flex-col">
+                              <span className="text-[8px] uppercase font-black text-yellow-300/70">Stars</span>
+                              <span className="text-lg font-black text-yellow-300 tabular-nums leading-none">★{score.coins}<span className="text-[9px] text-yellow-300/40">/{bossCoinTarget}</span></span>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Phaser pause overlay */}
+                        {phaserPaused && (
+                          <div className="absolute inset-0 bg-black/60 backdrop-blur-md z-[100] flex flex-col items-center justify-center animate-[fadeIn_0.2s_ease-out]">
+                            <h2 className="text-6xl font-black text-white italic tracking-tighter uppercase mb-8 drop-shadow-[0_8px_0_rgba(0,0,0,0.5)]">PAUSED</h2>
+                            <div className="flex flex-col gap-4 w-full max-w-xs px-6">
+                              <button
+                                onClick={() => setPhaserPaused(false)}
+                                className="w-full bg-white text-amber-900 font-black py-4 rounded-2xl text-2xl shadow-[0_8px_0_#d97706] hover:shadow-[0_4px_0_#d97706] transition-all active:translate-y-1 active:shadow-none"
+                              >
+                                RESUME
+                              </button>
+                              <button
+                                onClick={() => { setPhaserPaused(false); setStatus(GameStatus.CAMPAIGN); }}
+                                className="w-full bg-red-600 text-white font-black py-4 rounded-2xl text-2xl shadow-[0_8px_0_#7f1d1d] hover:shadow-[0_4px_0_#7f1d1d] transition-all active:translate-y-1 active:shadow-none"
+                              >
+                                MAIN MENU
+                              </button>
+                            </div>
+                            <p className="mt-8 text-white/50 font-bold tracking-widest text-xs uppercase">Press 'P' or 'ESC' to Resume</p>
+                          </div>
+                        )}
+                        {/* === END GAME CONTENT === */}
                       </div>
                     </div>
                   </div>
-                  {/* Phaser pause overlay */}
-                  {phaserPaused && (
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-md z-[100] flex flex-col items-center justify-center animate-[fadeIn_0.2s_ease-out]">
-                      <h2 className="text-6xl font-black text-white italic tracking-tighter uppercase mb-8 drop-shadow-[0_8px_0_rgba(0,0,0,0.5)]">PAUSED</h2>
-                      <div className="flex flex-col gap-4 w-full max-w-xs px-6">
-                        <button
-                          onClick={() => setPhaserPaused(false)}
-                          className="w-full bg-white text-amber-900 font-black py-4 rounded-2xl text-2xl shadow-[0_8px_0_#d97706] hover:shadow-[0_4px_0_#d97706] transition-all active:translate-y-1 active:shadow-none"
-                        >
-                          RESUME
-                        </button>
-                        <button
-                          onClick={() => { setPhaserPaused(false); setStatus(GameStatus.CAMPAIGN); }}
-                          className="w-full bg-red-600 text-white font-black py-4 rounded-2xl text-2xl shadow-[0_8px_0_#7f1d1d] hover:shadow-[0_4px_0_#7f1d1d] transition-all active:translate-y-1 active:shadow-none"
-                        >
-                          MAIN MENU
-                        </button>
-                      </div>
-                      <p className="mt-8 text-white/50 font-bold tracking-widest text-xs uppercase">Press 'P' or 'ESC' to Resume</p>
+
+                  {/* Brand label below screen */}
+                  <div className="text-center mt-2" style={{
+                    fontSize: '16px',
+                    fontWeight: 900,
+                    letterSpacing: '6px',
+                    fontStyle: 'italic',
+                    color: '#6b6860',
+                  }}>BEACH KITTY</div>
+
+                  {/* VCR Section */}
+                  <div className="mt-2 flex items-center justify-between gap-3" style={{ height: '56px' }}>
+                    {/* Left: VCR label */}
+                    <div style={{ fontSize: '8px', fontWeight: 700, color: '#8a8880', letterSpacing: '1.5px' }}>
+                      4 HEAD<br/>VCR COMBO
                     </div>
-                  )}
-                </div>
-              </div>
-              {/* VCR section at bottom */}
-              <div className="absolute bottom-0 left-0 right-0 h-[72px] rounded-b-[2.5rem] flex items-center justify-between px-10"
-                style={{ background: 'linear-gradient(180deg, #909098 0%, #80808c 100%)' }}>
-                {/* VCR slot */}
-                <div className="w-48 h-3 rounded-full" style={{ background: '#3a3a4a', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)' }} />
-                {/* Brand + indicator */}
-                <div className="flex items-center gap-4">
-                  <span className="text-[10px] font-black tracking-[0.3em] uppercase" style={{ color: '#5a5a6a' }}>Beach Kitty</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]" />
-                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: '#5a5a6a' }}>Phaser</span>
+
+                    {/* Center: Tape slot */}
+                    <div className="flex-1 mx-2">
+                      <div style={{
+                        height: '8px',
+                        background: '#2a2a28',
+                        borderRadius: '2px',
+                        boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.6)',
+                        maxWidth: '200px',
+                        margin: '0 auto',
+                      }} />
+                    </div>
+
+                    {/* Right: Transport buttons */}
+                    <div className="flex items-center gap-1">
+                      {['REC/ITR', 'REW', 'PLAY', 'FF', 'STOP'].map(label => (
+                        <div key={label} className="flex items-center justify-center" style={{
+                          width: label === 'REC/ITR' ? '36px' : '28px',
+                          height: '20px',
+                          background: 'linear-gradient(180deg, #d5d2cc, #c8c5c0)',
+                          borderRadius: '2px',
+                          boxShadow: '0 1px 0 #b8b5b0, inset 0 1px 0 rgba(255,255,255,0.3)',
+                        }}>
+                          <span style={{ fontSize: '5px', fontWeight: 800, color: '#6b6860', letterSpacing: '0.5px' }}>{label}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* RCA jacks */}
+                    <div className="flex items-center gap-1 ml-2">
+                      {[['#eab308','VIDEO'], ['#ffffff','AUDIO L'], ['#ef4444','AUDIO R']].map(([color, label]) => (
+                        <div key={label} className="flex flex-col items-center">
+                          <div style={{
+                            width: '10px', height: '10px', borderRadius: '50%',
+                            background: color,
+                            border: '2px solid #4a4a48',
+                            boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.4)',
+                          }} />
+                          <span style={{ fontSize: '4px', color: '#8a8880', marginTop: '1px' }}>{label}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* CH/VOL + POWER */}
+                    <div className="flex items-center gap-2 ml-2">
+                      {['CH', 'VOL'].map(label => (
+                        <div key={label} className="flex flex-col items-center gap-0.5">
+                          <div style={{ width: '14px', height: '10px', background: '#c8c5c0', borderRadius: '2px', boxShadow: '0 1px 0 #b8b5b0' }} />
+                          <span style={{ fontSize: '5px', color: '#8a8880', fontWeight: 700 }}>{label}</span>
+                          <div style={{ width: '14px', height: '10px', background: '#c8c5c0', borderRadius: '2px', boxShadow: '0 1px 0 #b8b5b0' }} />
+                        </div>
+                      ))}
+                      {/* POWER */}
+                      <div className="flex flex-col items-center ml-1">
+                        <div className="w-2 h-2 rounded-full bg-emerald-400" style={{ boxShadow: '0 0 6px rgba(52,211,153,0.6)' }} />
+                        <div style={{
+                          width: '20px', height: '16px', marginTop: '2px',
+                          background: 'linear-gradient(180deg, #888, #666)',
+                          borderRadius: '3px', boxShadow: '0 1px 0 #555',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          <span style={{ fontSize: '5px', fontWeight: 900, color: '#ddd' }}>POWER</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                {/* Buttons */}
-                <div className="flex gap-2">
-                  {['REC', 'PLAY', 'STOP'].map(label => (
-                    <div key={label} className="w-6 h-6 rounded-md flex items-center justify-center"
-                      style={{ background: '#4a4a5a', boxShadow: '0 2px 0 #3a3a4a' }}>
-                      <span className="text-[6px] font-black" style={{ color: '#8a8a9a' }}>{label}</span>
-                    </div>
+
+                {/* Right column — speaker grille */}
+                <div className="flex flex-col justify-center gap-[3px] pr-3" style={{ paddingTop: '18px', paddingBottom: '56px' }}>
+                  {Array.from({ length: 10 }, (_, i) => (
+                    <div key={i} style={{
+                      height: '3px',
+                      background: 'linear-gradient(90deg, #b8b5b0, #a8a5a0)',
+                      borderRadius: '1px',
+                      boxShadow: 'inset 0 1px 0 rgba(0,0,0,0.15)',
+                    }} />
                   ))}
                 </div>
               </div>
