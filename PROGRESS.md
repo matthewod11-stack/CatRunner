@@ -34,6 +34,34 @@ sed -n '1,100p' ROADMAP_V3.md
 Most recent session should be first.
 -->
 
+## Session: 2026-03-22 16:30 (Character Sprite System — Roadmap Architecture)
+
+### Completed
+- [x] Added "Character Sprite System" shared section to ROADMAP_V3 — establishes per-level AI sprite generation architecture, IndexedDB storage model (compound keys: `{catDesignId}:{levelId}:{poseId}`), fallback strategy, and closet evolution
+- [x] Added Task 1.14: Beach Sprite Requirements to Phase 1 — defines 5 runner poses (run, jump, duck, hit, idle) with prompt strategy and validation criteria
+- [x] Reworked Phase 3 entirely — replaced `catPoseTransforms` (programmatic crop/flip) with "Character Sprite Generation Pipeline" (5 tasks: storage, generator service, PhaserGame integration, closet UI, level config)
+- [x] Updated Genre Level Template to include sprite requirements as step 2
+- [x] Added preliminary sprite requirement stubs to all 8 level tasks (Tasks 4–11)
+- [x] Updated File Map: `catPoseTransforms.ts` → `catSpriteGenerator.ts`
+
+### Design Decisions
+- **Per-sprite, not sprite-sheet:** Gemini generates one pose at a time (not a batch sheet) — more reliable for AI generation
+- **Lazy generation:** Sprites generate on first level entry, cached for replay. Optional eager "generate all" from closet
+- **Fallback always works:** Missing sprites use base equipped sprite — game is always playable with single sprite
+- **Movement lists are level-specific:** Can't spec sprites until the level's mechanics are built, so sprite reqs are defined during each level phase, not upfront
+- **Base prompt = closet identity:** The existing cat description + reference image becomes the seed for all per-level sprite generation
+
+### Issues Encountered
+- None — this was a planning/roadmap session
+
+### Next Session Should
+1. **Continue Phase 1.5 visual polish** — obstacle ground alignment, background entity rebalancing, HUD into TV bezel, P/ESC pause wiring (from previous session's list)
+2. After Phase 1.5 visual polish → merge `phase-1.5-beach-polish` into main
+3. Begin Phase 0 tasks from ROADMAP_V3 (Phaser install, V3 types, SceneBridge)
+4. Task 1.14 (Beach sprite validation) can happen any time after sprite generation pipeline exists (Phase 3)
+
+---
+
 ## Session: 2026-03-22 16:00 (Phase 1.5: Beach Polish — Implementation + TV Frame Debugging)
 
 ### Completed
@@ -276,12 +304,4 @@ Most recent session should be first.
 
 ---
 
-## Session: 2026-03-19 (KNOWN_ISSUES closure — closet delete, migration lock, strict deferral)
-
-**Focus:** Indexed closet **delete** now persists via **`handleClosetLookDelete`** (localStorage + **`deleteCatSprite`** after write); **`CatCustomizer`** async **`deleteLook`** + dirty snapshot. **`migrateCatStorageIfNeeded`** uses **`navigator.locks.request('beach-kitty-cat-migration-v1')`** when available. **[KNOWN_ISSUES.md](KNOWN_ISSUES.md)** open list cleared; V2-6 resolved as already capped; V2-7 closed as documented **`strict`** deferral. `npm test` + `npm run build` pass.
-
----
-
-## Session: 2026-03-19 (ROADMAP V2 complete — must-fix closure)
-
-**Focus:** **`mergeLevelTuning`** in **`levels/catalog.ts`** — **`App`** and **`GameEngine`** both use it (replacing duplicated `{ ...store, ...tuningOverrides }`). Boss entry / HUD / sky stay tied to **`getBossEntryCoinThreshold(levelConfig, merged)`**. New **[docs/LEVEL_RUNTIME.md](docs/LEVEL_RUNTIME.md)** (authoritative runtime contract); **`levels/catalog.test.ts`** extended; **`ROADMAP_V2.md`** must-fix items + status banner. `npm run build` + `npm test` pass.
+*(Sessions older than 10 archived to [PROGRESS_ARCHIVE.md](./PROGRESS_ARCHIVE.md))*

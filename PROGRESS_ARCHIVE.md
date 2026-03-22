@@ -2,6 +2,18 @@
 
 ---
 
+## Session: 2026-03-19 (KNOWN_ISSUES closure — closet delete, migration lock, strict deferral)
+
+**Focus:** Indexed closet **delete** now persists via **`handleClosetLookDelete`** (localStorage + **`deleteCatSprite`** after write); **`CatCustomizer`** async **`deleteLook`** + dirty snapshot. **`migrateCatStorageIfNeeded`** uses **`navigator.locks.request('beach-kitty-cat-migration-v1')`** when available. **[KNOWN_ISSUES.md](KNOWN_ISSUES.md)** open list cleared; V2-6 resolved as already capped; V2-7 closed as documented **`strict`** deferral. `npm test` + `npm run build` pass.
+
+---
+
+## Session: 2026-03-19 (ROADMAP V2 complete — must-fix closure)
+
+**Focus:** **`mergeLevelTuning`** in **`levels/catalog.ts`** — **`App`** and **`GameEngine`** both use it (replacing duplicated `{ ...store, ...tuningOverrides }`). Boss entry / HUD / sky stay tied to **`getBossEntryCoinThreshold(levelConfig, merged)`**. New **[docs/LEVEL_RUNTIME.md](docs/LEVEL_RUNTIME.md)** (authoritative runtime contract); **`levels/catalog.test.ts`** extended; **`ROADMAP_V2.md`** must-fix items + status banner. `npm run build` + `npm test` pass.
+
+---
+
 ## Session: 2026-03-19 (ROADMAP V2 Phase 2 — API protection)
 
 **Focus:** `/api/cat/*` rate limits, body caps, client/server timeouts, prompt hardening
