@@ -34,6 +34,13 @@ sed -n '1,100p' ROADMAP_V3.md
 Most recent session should be first.
 -->
 
+## Machine Sync Note: 2026-03-22
+
+> **`npm install` required** — `phaser@^3.90.0` was added as a dependency during the V3 port (Phase 0–1).
+> Run `npm install` before `npm run dev`. ROADMAP_V3.md updated with full V3 plan.
+
+---
+
 ## Session: 2026-03-21 14:00 (Phase 0 + Phase 1: Phaser port complete)
 
 ### Completed

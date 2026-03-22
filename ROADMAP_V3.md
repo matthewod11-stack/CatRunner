@@ -14,6 +14,171 @@
 
 ---
 
+## Current Baseline (as of 2026-03-20)
+
+The shipped game is a **single BEACH runner**. React owns menus, the customizer (Kitty Closet), and the Hall of Fame. The gameplay monolith lives in:
+
+- `App.tsx` — root state machine (`GameStatus`), score/lives/level selection, Hall of Fame persistence
+- `components/GameEngine.tsx` — ~1,630-line `requestAnimationFrame` loop: physics, spawning, collisions, HUD wiring, boss fight
+- `types.ts` — `GameStatus`, obstacle/power-up unions, `LevelConfig`, `PlayerState`, etc.
+- `levels/beach.ts` — `BEACH_LEVEL_CONFIG` (runner-specific: obstacles, patterns, boss, theme, background)
+
+**All three ship-checks pass today:**
+```
+npm run build       ✓
+npm run test:run    ✓  (56 tests, 14 files)
+npx tsc --noEmit    ✓
+```
+
+Everything below builds incrementally on this baseline. The BEACH runner must remain playable at every phase boundary.
+
+---
+
+## Shared Phaser Contract
+
+The bridge between React and Phaser must stay **genre-agnostic**. Only these concerns belong in the permanent shared contract:
+
+**Shared (SceneBridge + PhaserGame):**
+- Lifecycle: `init`, `create`, `update`, `shutdown`
+- Generic events: `statusChange`, `hudUpdate`, `levelComplete`, `gameOver`
+- Scene identity: `levelId`, `catSpriteUrl`
+
+**NOT shared — belongs in genre-specific `SceneInitData` subtypes:**
+- `initialLives`, `startAtBoss` → `RunnerSceneInitData`
+- Runner tuning profile, runner score shape → `RunnerSceneInitData`
+- Platform layouts, enemy configs → `PlatformerSceneInitData`
+- Wave definitions → `ShooterSceneInitData`
+- etc.
+
+The base `SceneInitData` should carry only `levelId` and `catSpriteUrl`. Each genre extends it with its own fields. `PhaserGame.tsx` passes an opaque `initData: Record<string, unknown>` (or a discriminated union keyed on `genre`) that the scene downcasts in `init()`.
+
+---
+
+## React → Phaser Runtime Sync Rules
+
+Props passed to `PhaserGame` during scene boot are **not magically live**. Once Phaser's `init(data)` unpacks the initial values, React re-renders do NOT update those values inside the running scene.
+
+**Any mid-run update requires an explicit sync path:**
+
+1. **`scene.applyRuntimePatch(patch)`** — scene exposes a method; `PhaserGame` calls it via `sceneRef` when relevant props change. Best for tuning/dev panel changes.
+2. **Bridge event (React → Phaser)** — `PhaserGame` emits a custom event on the scene's `EventEmitter`; scene listens. Best for pause/resume, status changes.
+3. **Deliberate scene remount** — destroy and re-create the Phaser.Game. Only for hard resets (level change, cat appearance change mid-run).
+
+**Current features that depend on runtime sync:**
+
+| Feature | Sync mechanism needed |
+|---------|----------------------|
+| Tuning / dev BalancePanel sliders | `applyRuntimePatch` — tuning values change mid-run |
+| Telemetry hookup | One-time callback in `init` (already handled) |
+| Pause / resume | Bridge event or `scene.pause()` / `scene.resume()` |
+| Cat appearance change (closet) | Scene remount (rare, only if user swaps mid-game) |
+| Status change (PLAYING ↔ BOSS_FIGHT) | Scene emits to React, not the other way |
+
+**`propsRef` is NOT sufficient** for values the scene reads in its update loop. The scene's `update()` reads from its own instance fields, not from React state. `propsRef` only helps for callback identity (so React handlers stay current), not for mutable game state.
+
+---
+
+## Level Config Model
+
+Split campaign metadata from genre-specific runtime config:
+
+**`CampaignLevelMeta`** (shared across all genres):
+```typescript
+interface CampaignLevelMeta {
+  id: LevelId;
+  name: string;
+  description: string;
+  genre: LevelGenre;
+  catPose: CatPoseId;
+  victoryCondition: VictoryCondition;
+  starThresholds: [number, number, number];
+  cutscene?: { intro?: CutsceneConfig; outro?: CutsceneConfig };
+}
+```
+
+**Genre runtime configs** (each genre defines its own):
+```typescript
+// The existing LevelConfig effectively becomes this:
+interface RunnerLevelConfig extends CampaignLevelMeta {
+  genre: 'runner';
+  obstacles: ObstacleDefinition[];
+  patterns: PatternConfig[];
+  boss: BossConfig;
+  theme: ThemeConfig;
+  background: BackgroundConfig;
+  tuningOverrides?: Partial<TuningProfile>;
+  // ... all current runner-specific fields
+}
+
+// Future genres add their own:
+interface PlatformerLevelConfig extends CampaignLevelMeta {
+  genre: 'platformer';
+  platforms: PlatformDef[];
+  enemies: EnemyDef[];
+  // ...
+}
+```
+
+**The discriminated union grows incrementally:**
+```typescript
+type AnyLevelConfig = RunnerLevelConfig | PlatformerLevelConfig | ...;
+```
+
+Do NOT absorb all genre fields into a single flattened `LevelConfig`. The current `LevelConfig` is already runner-specific — rename it to `RunnerLevelConfig` and let it be the first variant in the union.
+
+---
+
+## Beach Port Exit Criteria
+
+The BEACH Phaser port is **not done** until it matches current gameplay across all of these:
+
+- [ ] Jump / double-jump: same apex height, same float time (±5% tolerance)
+- [ ] Duck / shoot behavior: same hitbox shrink, same input responsiveness
+- [ ] Scoring: coins = 1, shells = 5, multiplier/streak math identical
+- [ ] Power-ups: SPEED (~1.7×), MAGNET (attract types), SUPER_SIZE (scale + invincibility) — same durations and effects
+- [ ] Obstacle spawning: weighted pool, pattern queue, life-assist scaling — same cadence
+- [ ] Boss trigger: fires at `bossEntryCoinThreshold` coins, not before
+- [ ] Boss fight: Sand Monster sway/bob, arc projectiles, health, defeat animation
+- [ ] Seagull variants: swoop dive + poop drop, same trajectories
+- [ ] Pause / resume: P or Esc toggles, React overlay appears
+- [ ] Telemetry: `runTelemetry` events fire with same schema
+- [ ] Balance panel: dev BalancePanel sliders update running scene in real time
+- [ ] Hall of Fame write: entry created on victory with correct score, `levelId`, `catAssetId`
+- [ ] Custom cat rendering: equipped sprite loads into Phaser texture, matting works
+- [ ] Visual effects: screen shake, hit flash, freeze frames, speed lines, particles
+- [ ] Background parallax: boats/surfers/planes at correct depth layers
+- [ ] Audio: music tempo tied to game speed, boss music transition, all SFX audible
+
+Only after **all** boxes are checked should Phase 1 be considered complete.
+
+---
+
+## Fallback Policy
+
+The current DOM-based runner (`GameEngine.tsx`, `audioService.ts`, `sfxService.ts`) remains available behind a feature flag until **Phaser BEACH parity is proven**.
+
+**Rules:**
+1. Do NOT archive `GameEngine.tsx` or old audio services immediately after the first successful Phaser run.
+2. Add a `USE_PHASER_RUNNER` flag (localStorage or env) that defaults to `true` but can be toggled to `false` to fall back to the DOM runner.
+3. Archiving happens only after: (a) BEACH parity is confirmed against all exit criteria above, AND (b) at least one additional scene (Level 2) proves the bridge is reusable for a second genre.
+4. When archiving, move files to `components/_archive/` and `services/_archive/` — do not delete.
+
+This protects against discovering a bridge limitation mid-Phase 1 that would leave the game unplayable.
+
+---
+
+## Score Semantics
+
+Cross-genre score normalization is **deferred** (not in V3 scope). This has consequences:
+
+1. **Hall of Fame entries MUST include `levelId`.** A bare score like "450" is meaningless without knowing the genre.
+2. **UI must present scores as level-scoped** — either grouped by level, or with a clear level label per row.
+3. **Scores are NOT directly comparable across genres.** A score of 300 in the runner (coin-based) and 300 in whack-a-mole (hit-based) represent completely different achievements.
+4. **`LevelResult.score` is raw, genre-specific.** No normalization, no cross-genre ranking.
+5. **Stars ARE comparable** — 3 stars in any level means mastery. The campaign screen uses stars (not scores) for progression display.
+
+---
+
 ## File Map
 
 ### New files
@@ -35,7 +200,7 @@
 | `scenes/ClimberScene.ts` | Level 9 — Cat tree climber |
 | `components/PhaserGame.tsx` | React wrapper — mounts Phaser.Game, lazy scene registration, bridge callbacks |
 | `components/CampaignScreen.tsx` | Nine Lives cat tree level selector (replaces LevelSelection.tsx) |
-| `components/CutscenePlayer.tsx` | Between-level story beat player (text frames, future video support) |
+| `components/CutscenePlayer.tsx` | Between-level story beat player (text frames + DaVinci Resolve video via `demo-video-factory-catrunner/`) |
 | `services/levelCompletion.ts` | `LevelCompletePayload`, `LevelResult`, star calculation, best-score merge, persistence |
 | `services/catPoseTransforms.ts` | Programmatic cat pose variants per genre (canvas crop/rotate/overlay) |
 | `scenes/shared/SpriteLoader.ts` | Load cat sprite from blob URL into a Phaser texture (handles IndexedDB blob URL lifecycle) |
@@ -63,14 +228,14 @@
 | `vite.config.ts` | Add Phaser to `optimizeDeps.include`; verify build config |
 | `package.json` | Add `phaser` dependency |
 
-### Retired files (Phase 1 complete)
+### Retired files (CONDITIONAL — see Task 1.13 gate + Fallback Policy)
 
-| File | Reason |
-|------|--------|
-| `components/GameEngine.tsx` | Replaced by `scenes/RunnerScene.ts` + `components/PhaserGame.tsx` |
-| `services/audioService.ts` | Replaced by `scenes/shared/PhaserAudio.ts` (Phaser owns AudioContext) |
-| `services/sfxService.ts` | SFX migrated into Phaser audio system |
-| `components/LevelSelection.tsx` | Replaced by `components/CampaignScreen.tsx` |
+| File | Reason | Gate |
+|------|--------|------|
+| `components/GameEngine.tsx` | Replaced by `scenes/RunnerScene.ts` + `components/PhaserGame.tsx` | Beach parity + bridge reuse proven |
+| `services/audioService.ts` | Replaced by `scenes/shared/PhaserAudio.ts` (Phaser owns AudioContext) | Beach parity + bridge reuse proven |
+| `services/sfxService.ts` | SFX migrated into Phaser audio system | Beach parity + bridge reuse proven |
+| `components/LevelSelection.tsx` | Replaced by `components/CampaignScreen.tsx` | CampaignScreen functional |
 
 ---
 
@@ -173,6 +338,8 @@ export interface CutsceneFrame {
   type: 'text' | 'video';
   text?: string;
   image?: string;
+  /** Path to video file. Produced via demo-video-factory-catrunner/ pipeline
+   *  (DaVinci Resolve → export → assets/cutscenes/). */
   videoSrc?: string;
   subtitles?: string;
   durationMs?: number;
@@ -269,21 +436,53 @@ export function getLevelConfig(id: LevelId): LevelConfig {
 }
 ```
 
-- [ ] **Step 8: Add V3 fields to `LevelConfig` and the existing runner config**
+- [ ] **Step 8: Create `CampaignLevelMeta` and rename existing config to `RunnerLevelConfig`**
 
-Add these optional fields to the existing `LevelConfig` interface in `types.ts` so runner and future genres coexist during the transition:
+Do NOT add optional genre fields to the existing `LevelConfig`. Instead, split campaign metadata from genre runtime config now — this prevents the "god config" anti-pattern where one interface absorbs fields from every genre.
+
+**8a. Create `CampaignLevelMeta` in `types.ts`:**
 
 ```typescript
-// Add to existing LevelConfig interface:
-genre?: LevelGenre;
-catPose?: CatPoseId;
-victoryCondition?: VictoryCondition;
-starThresholds?: [number, number, number];
-cutscene?: { intro?: CutsceneConfig; outro?: CutsceneConfig };
+/** Shared campaign metadata — every genre implements this. */
+export interface CampaignLevelMeta {
+  id: LevelId;
+  name: string;
+  description: string;
+  genre: LevelGenre;
+  catPose: CatPoseId;
+  victoryCondition: VictoryCondition;
+  starThresholds: [number, number, number];
+  cutscene?: { intro?: CutsceneConfig; outro?: CutsceneConfig };
+}
 ```
 
-All fields are optional so the existing `BEACH_LEVEL_CONFIG` doesn't break. Then add the V3 fields to `BEACH_LEVEL_CONFIG` in `levels/beach.ts`:
+**8b. Rename the existing `LevelConfig` to `RunnerLevelConfig` and extend `CampaignLevelMeta`:**
 
+```typescript
+/** Runner-specific level config. The existing LevelConfig IS this. */
+export interface RunnerLevelConfig extends CampaignLevelMeta {
+  genre: 'runner';
+  obstacles: ObstacleDefinition[];
+  patterns: PatternConfig[];
+  boss: BossConfig;
+  theme: ThemeConfig;
+  background: BackgroundConfig;
+  tuningOverrides?: Partial<TuningProfile>;
+  magnetAttractTypes?: string[];
+  // ... all existing runner-specific fields stay here
+}
+```
+
+**8c. Create the union type (starts with one variant, grows per genre):**
+
+```typescript
+/** Discriminated union — grows as genres are added. */
+export type AnyLevelConfig = RunnerLevelConfig; // | PlatformerLevelConfig | ...
+```
+
+**8d. Update `BEACH_LEVEL_CONFIG` in `levels/beach.ts`:**
+
+Add the required `CampaignLevelMeta` fields:
 ```typescript
 genre: 'runner',
 catPose: 'runner',
@@ -291,7 +490,18 @@ victoryCondition: { type: 'boss', bossId: 'sandMonster' },
 starThresholds: [100, 300, 500],
 ```
 
-**Note on LevelConfig evolution:** The existing `LevelConfig` is runner-specific (has `obstacles`, `patterns`, `boss`, etc.). For V3, the plan is to eventually move to a discriminated union (`RunnerLevelConfig | PlatformerLevelConfig | ...`). But that refactor happens incrementally — each new genre adds its own interface. The existing `LevelConfig` effectively becomes `RunnerLevelConfig`. The discriminated union is assembled in `levels/index.ts` as genres are built. For now, adding optional V3 fields to the existing interface is the minimal change that unblocks all phases.
+**8e. Update `LEVEL_REGISTRY` type in `levels/index.ts`:**
+
+Change from `Partial<Record<LevelId, LevelConfig>>` to `Partial<Record<LevelId, AnyLevelConfig>>`. Update `getLevelConfig` return type to `AnyLevelConfig`.
+
+**8f. Add `LevelConfig` as a deprecated alias** to avoid breaking all existing imports at once:
+
+```typescript
+/** @deprecated Use RunnerLevelConfig or AnyLevelConfig. Alias kept for migration. */
+export type LevelConfig = RunnerLevelConfig;
+```
+
+This alias lets existing code compile while the rename propagates incrementally. Remove it when all references are updated.
 
 - [ ] **Step 9: Type-check again**
 
@@ -334,6 +544,7 @@ describe('SceneBridge event protocol', () => {
       LEVEL_COMPLETE: 'levelComplete',
       GAME_OVER: 'gameOver',
       STATUS_CHANGE: 'statusChange',
+      HUD_UPDATE: 'hudUpdate',
     });
   });
 });
@@ -349,13 +560,13 @@ npm run test:run -- scenes/shared/SceneBridge.test.ts
 
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Create SceneBridge**
+- [ ] **Step 3: Create SceneBridge (genre-agnostic base)**
 
-Create `scenes/shared/SceneBridge.ts`:
+Create `scenes/shared/SceneBridge.ts`. **The base class carries ONLY shared concerns.** Runner-specific fields (`initialLives`, `startAtBoss`, `tuning`) do NOT belong here — they go in `RunnerSceneInitData` (see Task 0.3b below).
 
 ```typescript
 import Phaser from 'phaser';
-import type { GameScore, GameStatus, LevelCompletePayload, LevelConfig, LevelId } from '../../types';
+import type { GameScore, GameStatus, LevelCompletePayload, LevelId } from '../../types';
 
 /** Event names emitted by Phaser scenes, received by PhaserGame React wrapper. */
 export const BRIDGE_EVENTS = {
@@ -364,46 +575,33 @@ export const BRIDGE_EVENTS = {
   LEVEL_COMPLETE: 'levelComplete',
   GAME_OVER: 'gameOver',
   STATUS_CHANGE: 'statusChange',
+  HUD_UPDATE: 'hudUpdate',
 } as const;
 
+/** Base init data — shared by ALL genres. Genre scenes extend this. */
 export interface SceneInitData {
   levelId: LevelId;
   catSpriteUrl: string | null;
-  levelConfig: LevelConfig;
-  initialLives: number;
-  startAtBoss: boolean;
-  tuning: TuningProfile;
-  /** Optional telemetry hook — scene calls this to hand off its getTelemetry fn */
-  onTelemetryReady?: (getTelemetry: () => TelemetryEvent[]) => void;
 }
 
 /**
  * Base class for all V3 Phaser scenes.
- * Provides typed event emission, init data unpacking, and lifecycle hooks.
- * Subclasses implement `onSceneCreate()` and `onSceneUpdate(time, delta)`.
+ * Provides typed event emission and shared lifecycle.
+ * Genre scenes extend this and define their own init data type.
+ *
+ * IMPORTANT: This base class is genre-agnostic. Do not add runner-specific
+ * fields (lives, tuning, boss flags) here. See RunnerSceneInitData.
  */
 export abstract class SceneBridge extends Phaser.Scene {
   protected levelId!: LevelId;
   protected catSpriteUrl: string | null = null;
-  protected levelConfig!: LevelConfig;
-  protected initialLives!: number;
-  protected startAtBoss!: boolean;
-  protected tuning!: TuningProfile;
 
   init(data: SceneInitData): void {
     this.levelId = data.levelId;
     this.catSpriteUrl = data.catSpriteUrl;
-    this.levelConfig = data.levelConfig;
-    this.initialLives = data.initialLives;
-    this.startAtBoss = data.startAtBoss;
-    this.tuning = data.tuning;
-    if (data.onTelemetryReady) data.onTelemetryReady(this.getTelemetry.bind(this));
   }
 
-  /** Override in subclasses that support telemetry export */
-  protected getTelemetry(): TelemetryEvent[] { return []; }
-
-  /** Emit score update to React HUD */
+  /** Emit score/HUD update to React */
   protected emitScoreUpdate(score: GameScore): void {
     this.events.emit(BRIDGE_EVENTS.SCORE_UPDATE, score);
   }
@@ -422,8 +620,38 @@ export abstract class SceneBridge extends Phaser.Scene {
   protected emitStatusChange(status: GameStatus): void {
     this.events.emit(BRIDGE_EVENTS.STATUS_CHANGE, status);
   }
+
+  /**
+   * Apply a runtime patch from React (e.g., tuning slider change).
+   * Override in subclasses that support mid-run updates.
+   * Default: no-op.
+   */
+  applyRuntimePatch(_patch: Record<string, unknown>): void {}
 }
 ```
+
+- [ ] **Step 3b: Create RunnerSceneInitData (temporary BEACH shim)**
+
+Runner-specific init data lives alongside the scene, not in the shared bridge:
+
+```typescript
+// scenes/RunnerScene.types.ts (or inline in RunnerScene.ts)
+import type { SceneInitData } from './shared/SceneBridge';
+import type { RunnerLevelConfig } from '../types';
+import type { TuningProfile } from '../systems/tuning/defaultTuning';
+import type { TelemetryEvent } from '../systems/telemetry/runTelemetry';
+
+/** Runner-specific init data — extends the shared base. */
+export interface RunnerSceneInitData extends SceneInitData {
+  levelConfig: RunnerLevelConfig;
+  initialLives: number;
+  startAtBoss: boolean;
+  tuning: TuningProfile;
+  onTelemetryReady?: (getTelemetry: () => TelemetryEvent[]) => void;
+}
+```
+
+**This is a temporary BEACH shim**, not the long-term shared API. When Level 2 (Platformer) is built, it will define `PlatformerSceneInitData extends SceneInitData` with its own fields.
 
 - [ ] **Step 4: Run test — verify it passes**
 
@@ -449,37 +677,34 @@ git commit -m "feat(v3): add SceneBridge base class with event protocol"
 
 This component mounts a `Phaser.Game` instance inside a div, handles lazy scene registration, resize, and cleanup. It wires bridge events to React callbacks.
 
-- [ ] **Step 1: Create PhaserGame.tsx**
+- [ ] **Step 1: Create PhaserGame.tsx (genre-agnostic wrapper)**
+
+The wrapper is **generic** — it does not know about runner-specific fields. Genre-specific init data is passed as an opaque bag via `sceneInitData`.
 
 ```typescript
 import React, { useEffect, useRef } from 'react';
-import type { GameScore, GameStatus, LevelCompletePayload, LevelConfig, LevelId } from '../types';
-import type { TuningProfile } from '../systems/tuning/defaultTuning';
-import type { TelemetryEvent } from '../systems/telemetry/runTelemetry';
-import { BRIDGE_EVENTS, type SceneInitData } from '../scenes/shared/SceneBridge';
+import type { GameScore, GameStatus, LevelCompletePayload, LevelId } from '../types';
+import { BRIDGE_EVENTS, type SceneBridge } from '../scenes/shared/SceneBridge';
 
 interface PhaserGameProps {
   levelId: LevelId;
-  levelConfig: LevelConfig;
   catSpriteUrl: string | null;
-  initialLives: number;
-  startAtBoss: boolean;
-  tuning: TuningProfile;
+  /** Genre-specific init data — opaque to PhaserGame, consumed by the scene. */
+  sceneInitData: Record<string, unknown>;
   sceneFactory: () => Promise<{ default: typeof Phaser.Scene }>;
   onScoreUpdate: (score: GameScore) => void;
   onLevelComplete: (payload: LevelCompletePayload) => void;
   onGameOver: (finalScore: number) => void;
   onStatusChange?: (status: GameStatus) => void;
-  onTelemetryReady?: (getTelemetry: () => TelemetryEvent[]) => void;
 }
 
 const PhaserGame: React.FC<PhaserGameProps> = (props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
+  const sceneRef = useRef<SceneBridge | null>(null);
 
-  // ALL props go in a ref so the effect closure always sees current values
-  // without restarting Phaser. The effect depends ONLY on levelId
-  // (new level = new Phaser instance; everything else updates in-place).
+  // Callbacks go in a ref so the effect closure always sees current values
+  // without restarting Phaser.
   const propsRef = useRef(props);
   propsRef.current = props;
 
@@ -496,14 +721,12 @@ const PhaserGame: React.FC<PhaserGameProps> = (props) => {
       if (destroyed) return;
 
       const sceneKey = `scene-${p.levelId}`;
-      const initData: SceneInitData = {
+
+      // Merge shared fields + genre-specific data into one init payload
+      const initData = {
         levelId: p.levelId,
         catSpriteUrl: p.catSpriteUrl,
-        levelConfig: p.levelConfig,
-        initialLives: p.initialLives,
-        startAtBoss: p.startAtBoss,
-        tuning: p.tuning,
-        onTelemetryReady: p.onTelemetryReady,
+        ...p.sceneInitData,
       };
 
       const game = new Phaser.Game({
@@ -526,10 +749,11 @@ const PhaserGame: React.FC<PhaserGameProps> = (props) => {
       // Add scene but do NOT auto-start (false). Wire events first, then start.
       game.scene.add(sceneKey, SceneClass, false);
 
-      const scene = game.scene.getScene(sceneKey);
+      const scene = game.scene.getScene(sceneKey) as SceneBridge | null;
       if (scene) {
+        sceneRef.current = scene;
+
         // Wire bridge events BEFORE starting the scene.
-        // This ensures no events emitted during create() are lost.
         scene.events.on(BRIDGE_EVENTS.SCORE_UPDATE, (s: GameScore) => propsRef.current.onScoreUpdate(s));
         scene.events.on(BRIDGE_EVENTS.LEVEL_COMPLETE, (p: LevelCompletePayload) => propsRef.current.onLevelComplete(p));
         scene.events.on(BRIDGE_EVENTS.GAME_OVER, (s: number) => propsRef.current.onGameOver(s));
@@ -546,13 +770,13 @@ const PhaserGame: React.FC<PhaserGameProps> = (props) => {
 
     return () => {
       destroyed = true;
+      sceneRef.current = null;
       if (gameRef.current) {
         gameRef.current.destroy(true);
         gameRef.current = null;
       }
     };
-  // ONLY levelId triggers a full Phaser restart. Callbacks and config
-  // are read from propsRef so React re-renders don't restart the game.
+  // ONLY levelId triggers a full Phaser restart.
   }, [props.levelId]);
 
   return <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }} />;
@@ -562,13 +786,41 @@ export default PhaserGame;
 ```
 
 **Key design points:**
-- **No re-render restarts:** The effect depends ONLY on `props.levelId`. All other props (callbacks, config, sceneFactory) live in `propsRef` — React re-renders from score/lives updates do NOT tear down Phaser.
-- **Events before start:** Scene is added with `autoStart: false`, events are wired, THEN `game.scene.start()` is called. Events emitted during `create()` (like the initial `statusChange`) are never lost.
-- **Full contract:** `SceneInitData` carries `initialLives`, `startAtBoss`, `tuning`, and `onTelemetryReady` — matching the current `GameEngine` props. Balance panel, boss-practice, persisted lives, and telemetry all work.
-- **Code splitting:** `sceneFactory` is called once during boot (read from `propsRef.current`), not on every render.
-- **Web Audio forced:** `audio: { disableWebAudio: false }` ensures single AudioContext for music + SFX.
+- **Genre-agnostic:** `PhaserGame` knows `levelId`, `catSpriteUrl`, and `sceneInitData` (opaque). It does NOT import runner types, tuning types, or telemetry types. Genre scenes downcast `sceneInitData` in their `init()`.
+- **No re-render restarts:** The effect depends ONLY on `props.levelId`. Callbacks live in `propsRef`.
+- **Events before start:** Scene is added with `autoStart: false`, events are wired, THEN `game.scene.start()` is called.
+- **`sceneRef` exposed:** Needed for runtime patches (Step 2b below).
+- **Code splitting:** `sceneFactory` is called once during boot, not on every render.
+- **Web Audio forced:** `audio: { disableWebAudio: false }` ensures single AudioContext.
 
-- [ ] **Step 2: Verify type-check**
+- [ ] **Step 2: Add runtime update handling**
+
+**`propsRef` is NOT sufficient** for values the scene reads in its update loop (see "React → Phaser Runtime Sync Rules" above). Add a `useEffect` that forwards tuning/config changes to the running scene:
+
+```typescript
+// After the boot effect, add a second effect for runtime patches:
+useEffect(() => {
+  if (sceneRef.current && props.sceneInitData) {
+    // Forward changed values to the running scene.
+    // Each scene's applyRuntimePatch decides what to accept.
+    sceneRef.current.applyRuntimePatch(props.sceneInitData);
+  }
+  // Depend on the specific values that can change mid-run.
+  // For runner: tuning object reference. For other genres: their equivalent.
+}, [props.sceneInitData]);
+```
+
+This calls `SceneBridge.applyRuntimePatch()` (default no-op). `RunnerScene` overrides it to update tuning values, dev panel state, etc. Other genre scenes override it for their own needs.
+
+**Concrete mechanism for current features:**
+
+| Feature | How it works |
+|---------|-------------|
+| BalancePanel tuning sliders | App passes updated `sceneInitData.tuning` → `useEffect` fires → `RunnerScene.applyRuntimePatch({tuning})` updates instance fields |
+| Pause from React | Call `sceneRef.current.scene.pause()` / `.resume()` directly, or emit a custom bridge event |
+| Cat appearance mid-game | Full scene remount (change `levelId` key or add a `sceneKey` prop) |
+
+- [ ] **Step 3: Verify type-check**
 
 ```bash
 npx tsc --noEmit
@@ -761,6 +1013,8 @@ git commit -m "feat(v3): add SpriteLoader — loads cat blob URL into Phaser tex
 - Modify: `services/runOutcome.ts`
 
 This migration is independent of the Phaser port — it updates the persistence layer to use the generic `completedLevels` key.
+
+**Scope note:** This task covers ONLY the `defeatedBosses` → `completedLevels` rename and migration. It does NOT touch Hall of Fame semantics (those still use the existing `HighScoreEntry` shape) or `LevelResult` persistence (that's Task 0.9). These three concerns — unlock state, Hall of Fame, and per-level results — are independent persistence layers with separate storage keys and separate migration paths.
 
 - [ ] **Step 1: Write migration tests**
 
@@ -1510,21 +1764,28 @@ With:
 ```tsx
 <PhaserGame
   levelId={selectedLevel}
-  levelConfig={levelConfig}
-  catSpriteUrl={mattedCatUrl}
-  initialLives={score.lives}
-  startAtBoss={startAtBoss}
-  tuning={mergedTuning}
+  catSpriteUrl={customCatUrl}
+  sceneInitData={{
+    levelConfig,
+    initialLives: score.lives,
+    startAtBoss,
+    tuning: mergedTuning,
+    equippedMattedState,
+    onTelemetryReady: handleTelemetryReady,
+  }}
   sceneFactory={() => import('./scenes/RunnerScene')}
   onScoreUpdate={handleScoreUpdate}
   onLevelComplete={handleLevelComplete}
   onGameOver={handleGameOver}
   onStatusChange={handleStatusChange}
-  onTelemetryReady={handleTelemetryReady}
 />
 ```
 
+**Note on actual app state:** The roadmap previously referenced `mattedCatUrl`, but the current App.tsx uses `customCatUrl` (raw sprite URL from state) plus `equippedMattedState` (from `useMatteCatUrl`). The scene receives the raw URL and handles matting via `SpriteLoader`, or receives the pre-matted state — whichever approach is cleaner after the `SpriteLoader` is implemented.
+
 **Note on `sceneFactory`:** The inline arrow function `() => import(...)` creates a new function identity on every render, but this is safe — `PhaserGame` reads it from `propsRef.current` inside the boot closure, and the effect depends only on `levelId`. The factory is never compared by reference.
+
+**Note on `sceneInitData`:** This is the runner-specific opaque bag. `PhaserGame` does not type-check its contents — `RunnerScene.init()` downcasts it to `RunnerSceneInitData`.
 
 - [ ] **Step 2: Add handleLevelComplete**
 
@@ -1566,14 +1827,31 @@ git commit -m "feat(v3/phase1): wire App to PhaserGame, replace GameEngine for B
 
 ---
 
-### Task 1.13: Archive GameEngine and old audio services
+### Task 1.13: Archive GameEngine and old audio services (CONDITIONAL — do not rush)
+
+> **GATE:** This task is blocked until BOTH conditions are met:
+> 1. **BEACH parity proven** — all items in the "Beach Port Exit Criteria" section above are checked off.
+> 2. **Bridge reuse proven** — at least one additional scene (Level 2 Platformer skeleton, Phase 4 Task 4.1) successfully loads through `PhaserGame.tsx`, confirming the bridge is not accidentally coupled to runner assumptions.
+>
+> Until then, the DOM runner remains available behind the `USE_PHASER_RUNNER` feature flag (see Fallback Policy). Do not delete or move these files prematurely.
 
 **Files:**
 - Modify: `components/GameEngine.tsx` → move to `components/_archive/GameEngine.tsx`
 - Modify: `services/audioService.ts` → move to `services/_archive/audioService.ts`
 - Modify: `services/sfxService.ts` → move to `services/_archive/sfxService.ts`
 
-- [ ] **Step 1: Move files to archive directory**
+- [ ] **Step 0: Verify gate conditions**
+
+Before proceeding, confirm:
+- [ ] All "Beach Port Exit Criteria" items are checked
+- [ ] Level 2 skeleton loads and renders via PhaserGame (even just a text label)
+- [ ] `USE_PHASER_RUNNER=false` flag still works and falls back to DOM runner
+
+- [ ] **Step 1: Remove the feature flag**
+
+Delete the `USE_PHASER_RUNNER` toggle and the DOM runner code path from `App.tsx`. The Phaser runner is now the only path.
+
+- [ ] **Step 2: Move files to archive directory**
 
 ```bash
 mkdir -p components/_archive services/_archive
@@ -1582,27 +1860,21 @@ git mv services/audioService.ts services/_archive/audioService.ts
 git mv services/sfxService.ts services/_archive/sfxService.ts
 ```
 
-- [ ] **Step 2: Remove imports of archived files**
+- [ ] **Step 3: Remove imports of archived files**
 
-Find and remove all imports of `GameEngine`, `audioService`, and `sfxService` from active code. The Phaser scene handles all of this now.
+Find and remove all imports of `GameEngine`, `audioService`, and `sfxService` from active code.
 
-- [ ] **Step 3: Run tests**
-
-```bash
-npm run test:run
-```
-
-- [ ] **Step 4: Verify build**
+- [ ] **Step 4: Run tests + build**
 
 ```bash
-npm run build
+npm run test:run && npm run build
 ```
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add -A
-git commit -m "chore(v3/phase1): archive GameEngine and old audio services — Phaser owns gameplay + audio"
+git commit -m "chore(v3/phase1): archive GameEngine and old audio services — Phaser parity confirmed + bridge reuse proven"
 ```
 
 ---
@@ -1659,8 +1931,8 @@ git commit -m "feat(v3/phase2): add CampaignScreen with nine-branch cat tree and
 
 Renders `CutsceneConfig.frames` sequentially:
 - `text` frames: display text over a background image with fade/slide transitions
-- `video` frames: (future) play video with subtitles
-- Each frame auto-advances after `durationMs` or on click/spacebar
+- `video` frames: play video produced via `demo-video-factory-catrunner/` pipeline (DaVinci Resolve → export → `assets/cutscenes/`). Use `<video>` element with `subtitles` as optional `<track>`.
+- Each frame auto-advances after `durationMs` (text) or video end (video), or on click/spacebar to skip
 
 Props: `config: CutsceneConfig`, `onComplete: () => void`.
 
@@ -2128,12 +2400,21 @@ git commit -m "feat(v3/phase4): complete Level 2 — Rooftop Prowl platformer"
 - [ ] Genre-appropriate SFX added per level via `PhaserAudio`
 - [ ] Music crossfade on level transitions works
 
-### Task 16: Write all cutscene scripts
+### Task 16: Write all cutscene scripts + produce videos
 
-- [ ] 9 intro cutscenes (one per level)
+**Video production pipeline:** `demo-video-factory-catrunner/` contains a DaVinci Resolve automation workflow. For each cutscene:
+1. Write the blueprint in `demo-video-factory-catrunner/blueprint.md` (scenes, text, timing)
+2. Generate manifest → extract clips → render cards → optional voiceover → build Resolve timeline
+3. Export from Resolve → place in `assets/cutscenes/<levelId>-intro.mp4` / `-outro.mp4`
+4. Reference in `CutsceneConfig` as `videoSrc: '/assets/cutscenes/beach-intro.mp4'`
+
+Text-only frames are the fallback for initial development. Video frames layer on top once produced.
+
+- [ ] 9 intro cutscenes (one per level — text first, then video via factory)
 - [ ] 8 transition cutscenes (between levels: "the cat lost its life and woke in a new dream")
 - [ ] 1 finale (The Great Ascension: eternal catnip)
 - [ ] Placeholder art for text frames
+- [ ] Produce at least BEACH intro/outro as video via DaVinci Resolve pipeline to prove the workflow
 
 ### Task 17: Performance and QA
 
@@ -2142,6 +2423,13 @@ git commit -m "feat(v3/phase4): complete Level 2 — Rooftop Prowl platformer"
 - [ ] Keyboard navigation works for all menus
 - [ ] Reduced-motion preference is respected
 - [ ] Test `npm run build` and Vercel deployment
+- [ ] **Deterministic Playwright support for Phaser scenes**
+  - Each Phaser scene must expose `window.__GAME_TEST_API` when `import.meta.env.DEV` is true:
+    - `window.__GAME_TEST_API.renderToText()` — returns a serialized snapshot of the current game state (player position, score, active entities, status) as a JSON-safe object. This enables Playwright assertions without pixel-matching.
+    - `window.__GAME_TEST_API.advanceTime(ms: number)` — advances Phaser's clock by the given duration (pauses real-time, steps the physics/update loop deterministically). This enables frame-precise test scenarios without wall-clock waits.
+    - `window.__GAME_TEST_API.sendInput(action: string)` — injects synthetic input events (e.g., `'jump'`, `'duck'`, `'pause'`). This enables input testing without OS-level key simulation.
+  - Write at least one Playwright e2e test per genre that: boots the scene, advances time, sends input, and asserts on `renderToText()` output.
+  - Gate: this is required for CI confidence before declaring V3 shippable.
 
 ### Task 18: Documentation
 
