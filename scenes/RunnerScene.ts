@@ -1813,5 +1813,9 @@ export default class RunnerScene extends SceneBridge {
       // Recompute boss entry threshold when tuning changes
       this.bossEntryCoins = getBossEntryCoinThreshold(this.levelConfig, this.tuning);
     }
+    // React transport buttons can toggle pause — sync to scene's internal flag
+    if (typeof patch.isPaused === 'boolean' && patch.isPaused !== this.isPaused) {
+      this.isPaused = patch.isPaused;
+    }
   }
 }
