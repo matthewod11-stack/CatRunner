@@ -69,8 +69,9 @@ describe('getBossEntryCoinThreshold', () => {
   });
 
   it('falls back to tuning bossThreshold', () => {
+    const { bossEntryCoinThreshold: _, ...levelWithoutThreshold } = BEACH_LEVEL_CONFIG;
     expect(
-      getBossEntryCoinThreshold(BEACH_LEVEL_CONFIG, {
+      getBossEntryCoinThreshold(levelWithoutThreshold as typeof BEACH_LEVEL_CONFIG, {
         ...DEFAULT_TUNING,
         bossThreshold: 99,
       })
