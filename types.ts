@@ -166,6 +166,11 @@ export interface PatternStep {
   y?: number;
 }
 
+export interface PhasedPattern {
+  phase: 'early' | 'mid' | 'late' | 'any';
+  steps: PatternStep[];
+}
+
 /** Behavior archetypes for obstacle movement/interaction */
 export type BehaviorType =
   | 'swoop'          // seagull dive trajectory
@@ -370,7 +375,7 @@ export interface CampaignLevelMeta {
 export interface RunnerLevelConfig extends CampaignLevelMeta {
   genre: 'runner';
   obstacles: ObstacleDefinition[];
-  patterns: PatternStep[][];
+  patterns: PhasedPattern[];
   theme: ThemeConfig;
   boss: BossConfig;
   background: BackgroundConfig;

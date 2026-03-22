@@ -16,6 +16,11 @@ export const BRIDGE_EVENTS = {
   HUD_UPDATE: 'hudUpdate',
 } as const;
 
+export interface HudUpdatePayload {
+  isPaused?: boolean;
+  shellAmmo?: number;
+}
+
 export interface SceneInitData {
   levelId: LevelId;
   catSpriteUrl: string | null;
