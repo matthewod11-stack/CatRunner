@@ -5,6 +5,7 @@ export interface TuningProfile {
   bounceForce: number;
   initialSpeed: number;
   speedIncrement: number;
+  maxSpeed: number;
 
   // Spawning
   spawnBaseMs: number;
@@ -34,7 +35,8 @@ export const DEFAULT_TUNING: TuningProfile = {
   jumpForce: 17,
   bounceForce: 15,
   initialSpeed: 7.5,
-  speedIncrement: 0.002,
+  speedIncrement: 0.0003,    // Was 0.002
+  maxSpeed: 8.5,             // New — caps speed ramp at ~13%
 
   spawnBaseMs: 1225,
   spawnMinMs: 520,
@@ -61,7 +63,8 @@ export const TUNING_RANGES: Record<keyof TuningProfile, [number, number, number]
   jumpForce:              [5, 30, 0.5],
   bounceForce:            [5, 25, 0.5],
   initialSpeed:           [3, 15, 0.5],
-  speedIncrement:         [0, 0.01, 0.0005],
+  speedIncrement:         [0, 0.005, 0.0001],    // Was [0, 0.01, 0.0005]
+  maxSpeed:               [6, 15, 0.5],                // New
 
   spawnBaseMs:            [400, 3000, 25],
   spawnMinMs:             [200, 1500, 10],

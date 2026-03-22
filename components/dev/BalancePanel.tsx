@@ -8,7 +8,7 @@ interface BalancePanelProps {
 }
 
 const GROUPS: Record<string, (keyof TuningProfile)[]> = {
-  Physics: ['gravity', 'jumpForce', 'bounceForce', 'initialSpeed', 'speedIncrement'],
+  Physics: ['gravity', 'jumpForce', 'bounceForce', 'initialSpeed', 'speedIncrement', 'maxSpeed'],
   Spawning: ['spawnBaseMs', 'spawnMinMs', 'spawnJitterMs', 'patternEndGapMs', 'harmfulCooldownMs'],
   Difficulty: ['bossThreshold', 'powerupThreshold', 'streakRequired'],
   Assist: ['lowLivesThreshold', 'criticalLivesThreshold', 'hitSpawnGraceMs', 'startSpawnGraceMs'],
