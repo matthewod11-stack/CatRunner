@@ -68,11 +68,18 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
 
       const SceneClass = 'default' in imported ? imported.default : imported;
 
+      // Wait a frame for CSS layout to settle, then read container dimensions
+      await new Promise(r => requestAnimationFrame(r));
+      if (destroyed) return;
+
+      const initW = container.clientWidth || 800;
+      const initH = container.clientHeight || 600;
+
       const game = new Phaser.Game({
         type: Phaser.AUTO,
         parent: container,
-        width: container.clientWidth || 800,
-        height: container.clientHeight || 600,
+        width: initW,
+        height: initH,
         backgroundColor: '#bfdbfe',
         scale: {
           mode: Phaser.Scale.RESIZE,
@@ -82,12 +89,32 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
         scene: [],
       });
 
+      // Force Phaser canvas to fill container via CSS
+      const canvas = container.querySelector('canvas');
+      if (canvas) {
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+      }
+
       if (destroyed) {
         game.destroy(true);
         return;
       }
 
       gameRef.current = game;
+
+      // ResizeObserver — manually resize Phaser when container size changes
+      const ro = new ResizeObserver(entries => {
+        for (const entry of entries) {
+          const { width, height } = entry.contentRect;
+          if (width > 0 && height > 0 && game.scale) {
+            game.scale.resize(width, height);
+          }
+        }
+      });
+      ro.observe(container);
+      // Store for cleanup
+      (game as any).__resizeObserver = ro;
 
       // Add the scene class and start it with init data
       game.scene.add(SCENE_KEY, SceneClass, true, {
@@ -127,6 +154,8 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
       destroyed = true;
       sceneRef.current = null;
       if (gameRef.current) {
+        const ro = (gameRef.current as any).__resizeObserver as ResizeObserver | undefined;
+        if (ro) ro.disconnect();
         gameRef.current.destroy(true);
         gameRef.current = null;
       }
