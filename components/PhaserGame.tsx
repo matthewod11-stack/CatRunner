@@ -19,6 +19,16 @@ export interface PhaserGameProps {
 }
 
 const SCENE_KEY = 'active-level';
+const GAME_W = 960;
+const GAME_H = 720;
+
+function enforceCanvasFill(canvas: HTMLCanvasElement): void {
+  canvas.style.setProperty('display', 'block', 'important');
+  canvas.style.setProperty('width', '100%', 'important');
+  canvas.style.setProperty('height', '100%', 'important');
+  canvas.style.setProperty('max-width', '100%', 'important');
+  canvas.style.setProperty('max-height', '100%', 'important');
+}
 
 const PhaserGame: React.FC<PhaserGameProps> = ({
   levelId,
@@ -50,29 +60,37 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
 
     let destroyed = false;
     const container = containerRef.current;
+    let resizeObserver: ResizeObserver | null = null;
 
     (async () => {
       const imported = await sceneFactory();
       if (destroyed) return;
       const SceneClass = 'default' in imported ? imported.default : imported;
 
-      const GAME_W = 960;
-      const GAME_H = 720;
-
       const game = new Phaser.Game({
         type: Phaser.AUTO,
-        parent: container,
+        // React owns the TV-screen box; Phaser owns the fixed logical resolution.
+        parent: null,
         width: GAME_W,
         height: GAME_H,
         backgroundColor: '#87CEEB',
-        scale: { mode: Phaser.Scale.NONE },
+        scale: { parent: null, mode: Phaser.Scale.NONE },
         scene: [],
       });
 
-      // Force canvas to fill container — override any Phaser sizing
-      const canvas = container.querySelector('canvas');
+      const canvas = game.canvas as HTMLCanvasElement | null;
       if (canvas) {
-        canvas.style.cssText = 'width:100%!important;height:100%!important;display:block!important;';
+        container.replaceChildren(canvas);
+        enforceCanvasFill(canvas);
+        requestAnimationFrame(() => {
+          if (!destroyed) {
+            enforceCanvasFill(canvas);
+          }
+        });
+        resizeObserver = new ResizeObserver(() => {
+          enforceCanvasFill(canvas);
+        });
+        resizeObserver.observe(container);
       }
 
       if (destroyed) { game.destroy(true); return; }
@@ -96,6 +114,7 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
 
     return () => {
       destroyed = true;
+      resizeObserver?.disconnect();
       sceneRef.current = null;
       if (gameRef.current) { gameRef.current.destroy(true); gameRef.current = null; }
     };
