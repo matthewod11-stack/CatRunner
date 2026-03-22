@@ -34,6 +34,38 @@ sed -n '1,100p' ROADMAP_V3.md
 Most recent session should be first.
 -->
 
+## Session: 2026-03-22 11:00 (Phase 1.5: Beach Polish — Design & Planning)
+
+### Completed
+- [x] Playtested Phaser BEACH runner, identified 8 visual/gameplay issues
+- [x] Brainstormed and designed Phase 1.5 polish mini-phase (with visual companion mockups)
+- [x] Decided on sprite-based environment art via nanobanana MCP (option C — highest quality)
+- [x] Designed JVC CRT/VHS combo TV frame from user-provided reference photo
+- [x] Designed shell-ammo boss fight system (5-hit fight, shells as ammo + score)
+- [x] Designed composition-based difficulty curve (constant speed, 3 phases: early/mid/late)
+- [x] Wrote and reviewed design spec (3 review iterations, all issues resolved)
+- [x] Wrote and reviewed implementation plan (2 review iterations, 18 total issues fixed)
+- [x] All ship checks pass: `tsc --noEmit` clean, 76 tests passing, build clean
+
+### In Progress
+- Nothing in progress — all planning complete, ready for implementation
+
+### Key Files
+- **Design spec:** `docs/superpowers/specs/2026-03-22-phase-1.5-beach-polish-design.md`
+- **Implementation plan:** `docs/superpowers/plans/2026-03-22-phase-1.5-beach-polish.md`
+- **Visual mockups:** `.superpowers/brainstorm/` (gitignored)
+
+### Next Session Should
+1. **Start implementation using subagent-driven-development** — invoke `superpowers:subagent-driven-development` skill
+2. **Read the plan first:** `docs/superpowers/plans/2026-03-22-phase-1.5-beach-polish.md`
+3. **Begin with Task 1:** Generate environment sprites via nanobanana MCP (art-first approach)
+4. **Then Task 2:** Generate crab/seagull sprite variants
+5. **Then Tasks 3-9:** Code changes (types, tuning, config, coordinate fix, env layers, TV frame, boss fight, pacing)
+6. **Task 10:** Final verification and ship check
+7. nanobanana MCP is available for image generation — the art pipeline (generate + sharp background removal) is proven from Phase 1
+
+---
+
 ## Machine Sync Note: 2026-03-22
 
 > **`npm install` required** — `phaser@^3.90.0` was added as a dependency during the V3 port (Phase 0–1).
