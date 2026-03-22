@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import { BRIDGE_EVENTS } from '../scenes/shared/SceneBridge';
 import type { SceneBridge } from '../scenes/shared/SceneBridge';
+import type { HudUpdatePayload } from '../scenes/shared/bridgeProtocol';
 import type { GameScore, GameStatus, LevelCompletePayload, LevelId } from '../types';
 
 export interface PhaserGameProps {
@@ -14,7 +15,7 @@ export interface PhaserGameProps {
   onLevelComplete?: (payload: LevelCompletePayload) => void;
   onGameOver?: (finalScore: number) => void;
   onStatusChange?: (status: GameStatus) => void;
-  onHudUpdate?: (data: Record<string, unknown>) => void;
+  onHudUpdate?: (data: HudUpdatePayload) => void;
 }
 
 const SCENE_KEY = 'active-level';
@@ -117,7 +118,7 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
       scene.events.on(BRIDGE_EVENTS.STATUS_CHANGE, (st: GameStatus) => {
         propsRef.current.onStatusChange?.(st);
       });
-      scene.events.on(BRIDGE_EVENTS.HUD_UPDATE, (d: Record<string, unknown>) => {
+      scene.events.on(BRIDGE_EVENTS.HUD_UPDATE, (d: HudUpdatePayload) => {
         propsRef.current.onHudUpdate?.(d);
       });
     })();
