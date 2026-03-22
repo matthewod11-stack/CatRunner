@@ -295,8 +295,7 @@ export default class RunnerScene extends SceneBridge {
     this.envSand = this.add.tileSprite(width / 2, this.groundYScreen + this.themeGroundY / 2, width, this.themeGroundY, 'env-sand')
       .setDepth(6);
 
-    // Listen for canvas resize
-    this.scale.on('resize', this.handleResize, this);
+    // Canvas is fixed-size — no resize handling needed
 
     // ── Player visual (sprite) ──
     const scale = RunnerScene.ENTITY_SCALE;
@@ -1794,23 +1793,6 @@ export default class RunnerScene extends SceneBridge {
     CLOUD: 'env-cloud-1',
   };
 
-
-  // ─── Canvas resize handling ──────────────────────────────────────────
-
-  private handleResize(gameSize: Phaser.Structs.Size): void {
-    const width = gameSize.width;
-    const height = gameSize.height;
-    this.canvasWidth = width;
-    this.canvasHeight = height;
-    this.groundYScreen = height - this.themeGroundY;
-
-    // Reposition environment layers
-    this.envSky.setPosition(width / 2, height / 2).setDisplaySize(width, height);
-    this.envSun.setPosition(width * 0.35, height * 0.12);
-    this.envOcean.setPosition(width / 2, this.groundYScreen - 80).setSize(width, 100);
-    this.envFoam.setPosition(width / 2, this.groundYScreen - 4).setSize(width, 16);
-    this.envSand.setPosition(width / 2, this.groundYScreen + this.themeGroundY / 2).setSize(width, this.themeGroundY);
-  }
 
   // ─── Runtime patching (dev balance panel) ───────────────────────────
 
