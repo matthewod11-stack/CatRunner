@@ -8,7 +8,7 @@
     "v2Status": "complete",
     "totalPhases": 9,
     "completedPhases": 9,
-    "v3Status": "planned — design spec and implementation plan complete, execution not started"
+    "v3Status": "Phase 0 complete, Phase 1.5 beach polish merged to main, Phase 1 port in progress"
   },
   "phase-1": {
     "description": "Session Protocol Infrastructure",

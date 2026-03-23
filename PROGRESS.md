@@ -34,6 +34,29 @@ sed -n '1,100p' ROADMAP_V3.md
 Most recent session should be first.
 -->
 
+## Session: 2026-03-22 17:00 (Phase 1.5 Polish Complete + Merge to Main)
+
+### Completed
+- [x] **Character Sprite System** — added shared architecture section to ROADMAP_V3, reworked Phase 3 from programmatic transforms to AI sprite generation pipeline, added sprite stubs to all 9 level phases
+- [x] **Phase 0 verified** — confirmed all 49 Phase 0 tasks (Phaser install, V3 types, SceneBridge, PhaserGame, SpriteLoader, persistence migration, levelCompletion) already implemented; checked off in roadmap
+- [x] **Background entity rebalancing** — sizes reduced ~50%, Y ranges corrected (clouds/planes in sky band, boats/surfers on ocean band), speeds reduced to convey distance
+- [x] **Ground obstacle alignment** — fixed rendering formula: `groundYScreen - (entityY - themeGroundY)` so obstacles sit ON the ground, not 100px above
+- [x] **Bidirectional pause** — transport buttons now sync to RunnerScene via `applyRuntimePatch({isPaused})`; keyboard P/ESC already worked via HudUpdatePayload bridge
+- [x] **VFD-style HUD** — moved HUD from CRT glass overlay to dark shelf in TV bezel; green VFD score counter, red LED life dots, amber multiplier, CH03 indicator
+- [x] **Shell throw fix** — bullets and defeat poop animation used old rendering formula; same groundY offset fix applied
+- [x] **Merged `phase-1.5-beach-polish` into `main`** — 24 commits, clean merge
+
+### Issues Encountered
+- Rendering coordinate bug was pervasive: every `groundYScreen - entityY` needed `- themeGroundY` offset. The DOM engine uses y=groundY as "at ground" but the Phaser port was treating it as "groundY pixels above ground zero". Fixed in 8 locations across obstacles, boss, bullets, and defeat poops.
+
+### Next Session Should
+1. **Visual QA** — run `npm run dev` and play through Beach level to verify all fixes look correct
+2. **Begin Phase 1 tasks** from ROADMAP_V3 — RunnerScene skeleton already exists, start porting player physics (Task 1.2)
+3. **Consider sprite regeneration** — current Gemini-generated sprites are functional but not great; explore better prompts or tools
+4. Phase 3 (sprite generation pipeline) can start any time after Phase 1 Beach port parity
+
+---
+
 ## Session: 2026-03-22 16:30 (Character Sprite System — Roadmap Architecture)
 
 ### Completed
@@ -295,12 +318,6 @@ Most recent session should be first.
 1. **Execute Phase 0** of ROADMAP_V3.md — install Phaser, define V3 types, create SceneBridge, PhaserGame wrapper, TestScene, docs, SpriteLoader, persistence migration, levelCompletion service
 2. **Then Phase 1** — port Beach runner to Phaser RunnerScene (largest phase, ~13 tasks)
 3. The plan is designed for subagent-driven development — Phase 0 tasks 0.1–0.9 have clear boundaries
-
----
-
-## Session: 2026-03-19 (V2 completion audit — fixes + doc sync)
-
-**Focus:** Post–V2 audit fixes: boss victory no longer calls `onScoreUpdate` after `onVictoryFinalize` (lives refill preserved). Indexed `handleIndexedSave` guards `putCatSprite`, repairs missing dedup blobs, equips by `assetId` only when blob exists. `stopMusic` closes the correct `AudioContext` and clears pending timers. Beach `SEAGULL` harmful for body collisions. `services/blobContentKey.test.ts` typed for `tsc --noEmit`. Docs: [ROADMAP_V2.md](ROADMAP_V2.md) phase table, [AGENTS.md](AGENTS.md) / [CLAUDE.md](CLAUDE.md) Vitest truth, [docs/QA_CHECKLIST.md](docs/QA_CHECKLIST.md), [KNOWN_ISSUES.md](KNOWN_ISSUES.md) V2-9–12. **`npm run test:run`**, **`npm run build`**, **`npx tsc --noEmit`** pass. **Manual:** run [docs/QA_CHECKLIST.md](docs/QA_CHECKLIST.md) in browser before release.
 
 ---
 

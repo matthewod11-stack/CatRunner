@@ -2,6 +2,12 @@
 
 ---
 
+## Session: 2026-03-19 (V2 completion audit — fixes + doc sync)
+
+**Focus:** Post–V2 audit fixes: boss victory no longer calls `onScoreUpdate` after `onVictoryFinalize` (lives refill preserved). Indexed `handleIndexedSave` guards `putCatSprite`, repairs missing dedup blobs, equips by `assetId` only when blob exists. `stopMusic` closes the correct `AudioContext` and clears pending timers. Beach `SEAGULL` harmful for body collisions. `services/blobContentKey.test.ts` typed for `tsc --noEmit`. Docs: [ROADMAP_V2.md](ROADMAP_V2.md) phase table, [AGENTS.md](AGENTS.md) / [CLAUDE.md](CLAUDE.md) Vitest truth, [docs/QA_CHECKLIST.md](docs/QA_CHECKLIST.md), [KNOWN_ISSUES.md](KNOWN_ISSUES.md) V2-9–12. **`npm run test:run`**, **`npm run build`**, **`npx tsc --noEmit`** pass. **Manual:** run [docs/QA_CHECKLIST.md](docs/QA_CHECKLIST.md) in browser before release.
+
+---
+
 ## Session: 2026-03-19 (KNOWN_ISSUES closure — closet delete, migration lock, strict deferral)
 
 **Focus:** Indexed closet **delete** now persists via **`handleClosetLookDelete`** (localStorage + **`deleteCatSprite`** after write); **`CatCustomizer`** async **`deleteLook`** + dirty snapshot. **`migrateCatStorageIfNeeded`** uses **`navigator.locks.request('beach-kitty-cat-migration-v1')`** when available. **[KNOWN_ISSUES.md](KNOWN_ISSUES.md)** open list cleared; V2-6 resolved as already capped; V2-7 closed as documented **`strict`** deferral. `npm test` + `npm run build` pass.
