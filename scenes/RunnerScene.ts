@@ -1452,8 +1452,8 @@ export default class RunnerScene extends SceneBridge {
 
     this.bullets.push(bullet);
 
-    // Render at screen coords
-    const screenY = this.groundYScreen - bullet.y;
+    // Render at screen coords (bullet.y is in collision coords: groundY + playerY + offset)
+    const screenY = this.groundYScreen - (bullet.y - this.themeGroundY);
     const img = this.add.image(bullet.x, screenY, 'obs-SHELL')
       .setDisplaySize(bulletSize, bulletSize)
       .setDepth(12);
@@ -1488,7 +1488,7 @@ export default class RunnerScene extends SceneBridge {
           this.bossHealth -= this.levelConfig.boss.damagePerHit;
 
           // Hit effects
-          const hitScreenY = this.groundYScreen - b.y;
+          const hitScreenY = this.groundYScreen - (b.y - this.themeGroundY);
           this.effects.spawnParticles(b.x, hitScreenY, 0xff6600, 25, 300);
           this.effects.shake(0.02, 100);
           this.effects.freezeFrame(40);
@@ -1545,7 +1545,7 @@ export default class RunnerScene extends SceneBridge {
     for (const b of this.bullets) {
       const sprite = this.bulletSprites.get(b.id);
       if (sprite) {
-        sprite.setPosition(b.x, this.groundYScreen - b.y);
+        sprite.setPosition(b.x, this.groundYScreen - (b.y - this.themeGroundY));
       }
     }
   }
@@ -1645,7 +1645,7 @@ export default class RunnerScene extends SceneBridge {
       const gfx = this.defeatPoopGraphics.get(poop.id);
       if (gfx) {
         gfx.clear();
-        const screenY = this.groundYScreen - poop.y - poop.size;
+        const screenY = this.groundYScreen - (poop.y - this.themeGroundY) - poop.size;
         gfx.fillStyle(0x8b4513, 1);
         gfx.fillCircle(poop.x, screenY + poop.size / 2, poop.size / 2);
       }
