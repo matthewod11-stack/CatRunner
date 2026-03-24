@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Beach Kitty is an endless runner game built with React 19 + TypeScript + Vite. A cat runs along a beach dodging obstacles, collecting coins/shells, and fighting a boss (Sand Monster). Gemini AI requests are proxied through server-side API routes for key safety.
+Beach Kitty is a **nine-level campaign game** built with React 19 + TypeScript + Vite + **Phaser 3**. Each level is a different classic game genre (runner, platformer, launcher, shooter, breakout, frogger, whack-a-mole, snake, climber). A custom AI-generated cat character carries across all levels. Gemini AI requests are proxied through server-side API routes for key safety.
 
 ## Development Commands
 
@@ -78,12 +78,26 @@ Set `GEMINI_API_KEY` in `.env.local` for AI features (custom cat generation, wis
 - **SFX:** `sfxService` — file-backed + procedural fallbacks; `GameEngine` preloads and routes `playSound` through it.
 
 ### Phaser 3 Integration (V3)
-- **`components/PhaserGame.tsx`** — React wrapper that mounts a `Phaser.Game` inside a div. Accepts `sceneFactory` (lazy import), `levelId`, `catSpriteUrl`, `sceneInitData`, and callback props for bridge events. Full Phaser restart on `levelId` change; `applyRuntimePatch` for mid-run tuning updates.
+- **`components/PhaserGame.tsx`** — React wrapper that mounts a `Phaser.Game` (with Arcade Physics) inside a div. Accepts `sceneFactory` (lazy import), `levelId`, `catSpriteUrl`, `sceneInitData`, and callback props for bridge events. Full Phaser restart on `levelId` change; `applyRuntimePatch` for mid-run tuning updates.
 - **`scenes/shared/SceneBridge.ts`** — Abstract base class extending `Phaser.Scene`. All genre scenes extend this. Defines 6 bridge events: `SCORE_UPDATE`, `LIVES_CHANGED`, `LEVEL_COMPLETE`, `GAME_OVER`, `STATUS_CHANGE`, `HUD_UPDATE`. Protocol constants and interfaces live in `scenes/shared/bridgeProtocol.ts` (importable without Phaser browser globals).
 - **`scenes/shared/SpriteLoader.ts`** — Loads cat sprite blob URL into Phaser texture cache during `preload()`.
+- **Genre scenes (all 9 implemented as skeletons):**
+  - `scenes/RunnerScene.ts` — Beach runner (full port from GameEngine)
+  - `scenes/PlatformerScene.ts` — Mario-style L/R/jump, procedural platforms
+  - `scenes/LauncherScene.ts` — Angry Birds slingshot, destructible blocks
+  - `scenes/ShooterScene.ts` — Galaga wave formations, deferred destroy pattern
+  - `scenes/BreakoutScene.ts` — Paddle + ball, brick grid
+  - `scenes/FroggerScene.ts` — Lane hazards, discrete grid movement
+  - `scenes/WhackScene.ts` — Click/tap mice, combo system
+  - `scenes/SnakeScene.ts` — Grid movement, grow tail, self-collision
+  - `scenes/ClimberScene.ts` — Doodle Jump auto-bounce, vertical scroll
+- **Scene factory routing:** `App.tsx` uses a genre-keyed object lookup (`{ runner: () => import(...), platformer: ... }[genre]`) for code-split scene loading.
+- **Type system:** `AnyLevelConfig` discriminated union on `genre` field; each genre has its own config interface extending `CampaignLevelMeta`. `getLevelConfig()` for runner-only, `getAnyLevelConfig()` for any genre.
 - **Rendering rule:** Phaser owns gameplay rendering; React owns UI (menus, HUD, campaign screen, cutscenes).
-- **Code splitting rule:** Never statically import all scene classes. Use `sceneFactory: () => import('./scenes/BeachScene')` for lazy loading.
-- **`CAMPAIGN_LEVEL_META` vs `LEVEL_REGISTRY`:** `CAMPAIGN_LEVEL_META` (in `levels/catalog.ts`) lists all 9 levels with display metadata for the campaign screen. `LEVEL_REGISTRY` (in `levels/index.ts`) only contains levels with actual runtime configs. The campaign screen reads from meta; `getLevelConfig()` reads from the registry and throws for unimplemented levels.
+- **Code splitting rule:** Never statically import all scene classes. Use `sceneFactory: () => import('./scenes/<Name>Scene')` for lazy loading.
+- **Deferred destroy pattern:** Scenes that destroy objects during Phaser Group iteration must use `deferDestroy()` + `flushDestroys()` to prevent iterator corruption (see ShooterScene for reference).
+- **Dev unlock:** `DEV_UNLOCK_ALL` flag (active in dev mode or `?unlock_all` URL param) bypasses linear level unlock progression.
+- **`CAMPAIGN_LEVEL_META` vs `LEVEL_REGISTRY`:** `CAMPAIGN_LEVEL_META` (in `levels/catalog.ts`) lists all 9 levels with display metadata. `LEVEL_REGISTRY` (in `levels/index.ts`) contains levels with runtime configs (now all 9). `LEVEL_ORDER` defines unlock progression.
 
 ## Roadmap V2 and known gaps
 

@@ -34,6 +34,35 @@ sed -n '1,100p' ROADMAP_V3.md
 Most recent session should be first.
 -->
 
+## Session: 2026-03-24 11:45 (All 9 Campaign Levels — Skeleton Build Sprint)
+
+### Completed
+- [x] **Phase 1 audit & roadmap update** — Verified Phase 1 Beach port is COMPLETE (14/16 criteria, 2 minor deferrals). Updated ROADMAP_V3 with audit notes rather than retroactively checking granular sub-steps.
+- [x] **Multi-genre architecture** — `AnyLevelConfig` discriminated union, `getAnyLevelConfig()`, genre-keyed scene factory in App.tsx, Arcade Physics added to Phaser game config.
+- [x] **Dev unlock all levels** — `DEV_UNLOCK_ALL` flag (active in dev mode) bypasses linear unlock progression.
+- [x] **Level 2 — City Heights (Platformer)** — Mario-style L/R/jump, procedural platform generation, parallax city buildings with lit windows, coins, fall death + respawn, distance-based victory (15k px to penthouse).
+- [x] **Level 3 — Countertop Chaos (Launcher)** — Angry Birds slingshot aiming with trajectory preview, 3 material types (glass/wood/metal), 4 structure templates, 5 rounds, score-based victory.
+- [x] **Level 4 — Cardboard Cosmos (Shooter)** — Galaga-style wave formations, auto-fire, 5 waves + boss wave (Mouse King 20HP), deferred destroy pattern to prevent Phaser iterator corruption.
+- [x] **Level 5 — Yarn Ball Bounce (Breakout)** — Paddle + yarn ball, 70 rainbow bricks (7 rows), angle reflection, ball speed escalation, clear-all victory.
+- [x] **Level 6 — Busy Crossing (Frogger)** — 4 road lanes + 4 water lanes, discrete grid movement, ride logs, 60s timer, 3 crossings to win.
+- [x] **Level 7 — Garden Patrol (Whack-a-Mole)** — 3x3 hole grid, click/tap mice, 3 mouse types, combo multiplier, 60s timer, score-based victory.
+- [x] **Level 8 — Garden Snake (Snake)** — Grid movement, grow tail on eat, wall/self collision, speed escalation, survive 2 min to win.
+- [x] **Level 9 — The Cat Tree (Climber)** — Doodle Jump-style auto-bounce, solid/spring/breakable platforms, auto-scroll acceleration, sky gradient shift, 10k px to victory.
+
+### Issues Encountered
+- **Phaser Arcade Physics missing** — PhaserGame.tsx had no `physics` config (RunnerScene uses custom physics). Added `physics: { default: 'arcade' }` to fix blank screen on platformer.
+- **ShooterScene freeze** — Destroying enemies mid-Phaser-Group-iterate corrupted the iterator. Fixed with deferred destroy pattern (mark inactive → flush after all iteration).
+- **Wave transition bug** — `checkWaveComplete()` ran every frame while enemies were 0, incrementing wave index repeatedly. Fixed with `waveTransitioning` guard flag.
+
+### Next Session Should
+1. **User brain dump** — Matt will test all 9 levels and provide high-level feedback/priorities
+2. **Visual polish pass** — All levels use placeholder graphics (colored rectangles). Sprite art, better backgrounds, themed particles needed.
+3. **Audio per genre** — Each level needs its own music mood + genre-appropriate SFX
+4. **Game feel tuning** — Difficulty curves, scoring balance, victory thresholds per level
+5. **Phase 2 (Campaign Screen)** and **Phase 3 (Sprite Pipeline)** still deferred but may become priority depending on feedback
+
+---
+
 ### Checkpoint: 2026-03-24 10:35
 
 **Currently Working On:** Level 2 (City Heights) — procedural platformer + multi-genre architecture
