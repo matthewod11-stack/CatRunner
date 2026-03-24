@@ -387,8 +387,63 @@ export interface RunnerLevelConfig extends CampaignLevelMeta {
   magnetAttractTypes?: EntityType[];
 }
 
+// ─── Platformer (Level 2: Rooftops) ─────────────────────────────────
+
+/** Procedural platform generation parameters */
+export interface PlatformGenerationConfig {
+  /** Min/max width of generated platforms in pixels */
+  platformWidthRange: [number, number];
+  /** Min/max horizontal gap between platforms in pixels */
+  gapRange: [number, number];
+  /** Min/max vertical step between platforms in pixels (positive = up) */
+  heightStepRange: [number, number];
+  /** How much gaps widen per 1000px of distance traveled */
+  gapScaling: number;
+  /** Starting Y position for the first platform (from top of world) */
+  startY: number;
+  /** World height — falling below this = death */
+  deathY: number;
+}
+
+/** Visual theme for the platformer */
+export interface PlatformerThemeConfig {
+  /** Sky gradient colors [top, bottom] */
+  skyGradient: [string, string];
+  /** Platform fill color */
+  platformColor: string;
+  /** Platform border/edge color */
+  platformEdgeColor: string;
+  /** Background building tint colors */
+  buildingColors: string[];
+  /** Particle colors */
+  particleColors: {
+    dust: string;
+    impact: string;
+    coinCollect: string;
+  };
+}
+
+/** Platformer-specific level config */
+export interface PlatformerLevelConfig extends CampaignLevelMeta {
+  genre: 'platformer';
+  theme: PlatformerThemeConfig;
+  generation: PlatformGenerationConfig;
+  /** Distance in pixels to reach the penthouse (victory) */
+  victoryDistance: number;
+  /** Player movement tuning */
+  playerConfig: {
+    moveSpeed: number;
+    jumpForce: number;
+    gravity: number;
+    /** Max jumps before landing (1 = single jump, 2 = double jump) */
+    maxJumps: number;
+  };
+  /** Initial lives */
+  startLives: number;
+}
+
 /** Discriminated union — grows as genres are added. */
-export type AnyLevelConfig = RunnerLevelConfig; // | PlatformerLevelConfig | ...
+export type AnyLevelConfig = RunnerLevelConfig | PlatformerLevelConfig;
 
 /** @deprecated Use RunnerLevelConfig or AnyLevelConfig. Alias kept for migration. */
 export type LevelConfig = RunnerLevelConfig;

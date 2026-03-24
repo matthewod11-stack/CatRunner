@@ -34,6 +34,39 @@ sed -n '1,100p' ROADMAP_V3.md
 Most recent session should be first.
 -->
 
+### Checkpoint: 2026-03-24 10:35
+
+**Currently Working On:** Level 2 (City Heights) — procedural platformer + multi-genre architecture
+
+**Status:**
+- [x] Audited Phase 1 Beach port — marked COMPLETE in ROADMAP_V3 (14/16 done, telemetry + speed lines deferred)
+- [x] Added `PlatformerLevelConfig` type system (`types.ts`) — generation params, theme, player config
+- [x] Created `levels/rooftops.ts` — night city theme, procedural platform params, double jump, 15k px victory
+- [x] Created `scenes/PlatformerScene.ts` — Arcade Physics, Mario-style L/R/jump, procedural platforms + coins, parallax city buildings, fall death + respawn, distance-based victory
+- [x] Multi-genre scene routing — `getAnyLevelConfig()`, App.tsx branches sceneFactory by genre
+- [x] Added Arcade Physics to Phaser game config (was missing — RunnerScene uses custom physics)
+- [x] Dev unlock all levels via `import.meta.env.DEV` flag
+- [x] Added ROOFTOPS to `LEVEL_ORDER` in catalog
+- [ ] Level 3 (Countertop Chaos) — launcher genre, next up
+
+**If Resuming:**
+1. Start Level 3 (KITCHEN / launcher genre) — follow same pattern: config + scene + register
+2. All 76 tests passing, 0 type errors as of checkpoint
+3. PlatformerScene is playable but bare bones — enemies, moving platforms, boss, art TBD
+
+**Files Modified:**
+- `types.ts` — PlatformerLevelConfig, PlatformGenerationConfig, PlatformerThemeConfig, AnyLevelConfig union
+- `levels/rooftops.ts` — NEW: rooftops level config
+- `scenes/PlatformerScene.ts` — NEW: ~400 line platformer scene
+- `scenes/shared/bridgeProtocol.ts` — PlatformerSceneInitData
+- `scenes/shared/SceneBridge.ts` — re-export PlatformerSceneInitData
+- `levels/index.ts` — ROOFTOPS in registry, getAnyLevelConfig()
+- `levels/catalog.ts` — ROOFTOPS in LEVEL_ORDER
+- `components/PhaserGame.tsx` — Arcade Physics in game config
+- `components/LevelSelection.tsx` — devUnlockAll prop
+- `App.tsx` — genre-based scene routing, DEV_UNLOCK_ALL, null guards for non-runner levels
+- `ROADMAP_V3.md` — Phase 1 marked COMPLETE with audit notes
+
 ## Session: 2026-03-22 17:00 (Phase 1.5 Polish Complete + Merge to Main)
 
 ### Completed

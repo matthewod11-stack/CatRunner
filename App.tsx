@@ -33,6 +33,7 @@ import { blobContentKey } from './services/blobContentKey';
 import { useMatteCatUrl } from './hooks/useMatteCatUrl';
 import {
   getLevelConfig,
+  getAnyLevelConfig,
   LEVEL_ORDER,
   CAMPAIGN_LEVEL_META,
   isLevelUnlocked,
@@ -55,6 +56,7 @@ import type { HudUpdatePayload } from './scenes/shared/bridgeProtocol';
 
 const MAX_LIVES = 9;
 const USE_PHASER_RUNNER = !new URLSearchParams(window.location.search).has('dom_runner');
+const DEV_UNLOCK_ALL = import.meta.env.DEV || new URLSearchParams(window.location.search).has('unlock_all');
 
 function formatHallOfFameDate(ts: number): string {
   try {
@@ -79,16 +81,21 @@ const App: React.FC = () => {
   const [selectedLevel, setSelectedLevel] = useState<LevelId>(() => LEVEL_ORDER[0]);
 
   const { tuning } = useTuningStore();
-  const levelConfig = useMemo(() => getLevelConfig(selectedLevel), [selectedLevel]);
+  const anyLevelConfig = useMemo(() => getAnyLevelConfig(selectedLevel), [selectedLevel]);
+  const isRunnerLevel = anyLevelConfig.genre === 'runner';
+  const levelConfig = useMemo(
+    () => isRunnerLevel ? getLevelConfig(selectedLevel) : null,
+    [selectedLevel, isRunnerLevel]
+  );
   const mergedTuning = useMemo(
-    () => mergeLevelTuning(tuning, levelConfig),
+    () => levelConfig ? mergeLevelTuning(tuning, levelConfig) : tuning,
     [tuning, levelConfig]
   );
   const bossCoinTarget = useMemo(
-    () => getBossEntryCoinThreshold(levelConfig, mergedTuning),
+    () => levelConfig ? getBossEntryCoinThreshold(levelConfig, mergedTuning) : 0,
     [levelConfig, mergedTuning]
   );
-  const skyProgressMode = levelConfig.theme.skyProgressMode ?? 'coinsToBoss';
+  const skyProgressMode = levelConfig?.theme.skyProgressMode ?? 'coinsToBoss';
 
   const [kittyName, setKittyName] = useState<string>("Beach Kitty");
   const [customCatUrl, setCustomCatUrl] = useState<string | null>(null);
@@ -495,7 +502,7 @@ const App: React.FC = () => {
   }, []);
 
   const startGame = (bossMode: boolean = false) => {
-    if (!isLevelUnlocked(defeatedBosses, selectedLevel)) return;
+    if (!DEV_UNLOCK_ALL && !isLevelUnlocked(defeatedBosses, selectedLevel)) return;
     const currentLives = score.lives <= 0 ? MAX_LIVES : score.lives;
     setStartAtBoss(bossMode);
     setStatus(GameStatus.PLAYING);
@@ -583,12 +590,15 @@ const App: React.FC = () => {
       return {};
     }
 
-    if (skyProgressMode === 'static') {
+    if (skyProgressMode === 'static' && levelConfig) {
       const [top, bottom] = levelConfig.theme.skyGradient;
       return {
         background: `linear-gradient(to bottom, ${top}, ${bottom})`,
       };
     }
+
+    // Non-runner levels handle their own sky inside Phaser
+    if (!levelConfig) return {};
 
     const denom = Math.max(1, bossCoinTarget);
     const starProgress = Math.min(score.coins / denom, 1);
@@ -704,6 +714,7 @@ const App: React.FC = () => {
             kittyName={kittyName}
             wisdom={wisdom}
             lives={score.lives > 0 ? score.lives : MAX_LIVES}
+            devUnlockAll={DEV_UNLOCK_ALL}
           />
         </main>
       )}
@@ -872,15 +883,29 @@ const App: React.FC = () => {
                         <PhaserGame
                           levelId={selectedLevel}
                           catSpriteUrl={customCatUrl}
-                          sceneInitData={{
-                            levelConfig,
-                            initialLives: score.lives > 0 ? score.lives : MAX_LIVES,
-                            startAtBoss,
-                            tuning: mergedTuning,
-                            isPaused: phaserPaused,
-                            onTelemetryReady: handleTelemetryReady,
-                          }}
-                          sceneFactory={() => import('./scenes/RunnerScene')}
+                          sceneInitData={
+                            isRunnerLevel
+                              ? {
+                                  levelConfig,
+                                  initialLives: score.lives > 0 ? score.lives : MAX_LIVES,
+                                  startAtBoss,
+                                  tuning: mergedTuning,
+                                  isPaused: phaserPaused,
+                                  onTelemetryReady: handleTelemetryReady,
+                                }
+                              : {
+                                  levelConfig: anyLevelConfig,
+                                  initialLives: score.lives > 0 ? score.lives : MAX_LIVES,
+                                  isPaused: phaserPaused,
+                                }
+                          }
+                          sceneFactory={
+                            isRunnerLevel
+                              ? () => import('./scenes/RunnerScene')
+                              : anyLevelConfig.genre === 'platformer'
+                                ? () => import('./scenes/PlatformerScene')
+                                : () => import('./scenes/RunnerScene') // fallback
+                          }
                           onScoreUpdate={handleScoreUpdate}
                           onLevelComplete={handleLevelComplete}
                           onGameOver={(finalScore: number) => handleGameOver(finalScore)}

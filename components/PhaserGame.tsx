@@ -75,6 +75,10 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
         height: GAME_H,
         backgroundColor: '#87CEEB',
         scale: { parent: null, mode: Phaser.Scale.NONE },
+        physics: {
+          default: 'arcade',
+          arcade: { gravity: { x: 0, y: 0 }, debug: false },
+        },
         scene: [],
       });
 

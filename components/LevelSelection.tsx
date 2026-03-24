@@ -28,6 +28,7 @@ export interface CampaignScreenProps {
   kittyName: string;
   wisdom: string;
   lives: number;
+  devUnlockAll?: boolean;
 }
 
 const CampaignScreen: React.FC<CampaignScreenProps> = ({
@@ -40,6 +41,7 @@ const CampaignScreen: React.FC<CampaignScreenProps> = ({
   kittyName,
   wisdom,
   lives,
+  devUnlockAll = false,
 }) => {
   const levelResults = useMemo(() => {
     const results: Partial<Record<LevelId, LevelResult>> = {};
@@ -84,7 +86,7 @@ const CampaignScreen: React.FC<CampaignScreenProps> = ({
           <div className="grid grid-cols-3 gap-3" role="group" aria-label="Level selection">
             {CAMPAIGN_LEVEL_META.map(meta => {
               const isImplemented = !!LEVEL_REGISTRY[meta.id];
-              const unlocked = isImplemented && isLevelUnlocked(defeatedBosses, meta.id);
+              const unlocked = isImplemented && (devUnlockAll || isLevelUnlocked(defeatedBosses, meta.id));
               const cleared = !!defeatedBosses[meta.id];
               const selected = selectedLevel === meta.id;
               const playable = unlocked && isImplemented;
