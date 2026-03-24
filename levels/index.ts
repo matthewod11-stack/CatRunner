@@ -3,11 +3,15 @@ import { BEACH_LEVEL_CONFIG } from './beach';
 import { ROOFTOPS_LEVEL_CONFIG } from './rooftops';
 import { KITCHEN_LEVEL_CONFIG } from './kitchen';
 import { SPACE_LEVEL_CONFIG } from './space';
+import { YARN_LEVEL_CONFIG } from './yarn';
+import { STREET_LEVEL_CONFIG } from './street';
 
 export { BEACH_LEVEL_CONFIG } from './beach';
 export { ROOFTOPS_LEVEL_CONFIG } from './rooftops';
 export { KITCHEN_LEVEL_CONFIG } from './kitchen';
 export { SPACE_LEVEL_CONFIG } from './space';
+export { YARN_LEVEL_CONFIG } from './yarn';
+export { STREET_LEVEL_CONFIG } from './street';
 export { BeachObstacleIcon, isBeachObstacleType } from './beach/obstacles';
 export { BackgroundEntityRenderer, BACKGROUND_ENTITY_VIEW_BY_LEVEL } from './levelBackgroundViews';
 
@@ -16,6 +20,8 @@ export const LEVEL_REGISTRY: Partial<Record<LevelId, AnyLevelConfig>> = {
   ROOFTOPS: ROOFTOPS_LEVEL_CONFIG,
   KITCHEN: KITCHEN_LEVEL_CONFIG,
   SPACE: SPACE_LEVEL_CONFIG,
+  YARN: YARN_LEVEL_CONFIG,
+  STREET: STREET_LEVEL_CONFIG,
 };
 
 /** Get a runner-specific level config. Throws for non-runner levels. */

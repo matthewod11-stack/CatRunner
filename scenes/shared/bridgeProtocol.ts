@@ -3,7 +3,7 @@
  * Separated from SceneBridge.ts so Node-only tests (Vitest) can import
  * without pulling in Phaser's browser globals.
  */
-import type { LevelId, LevelConfig, PlatformerLevelConfig, LauncherLevelConfig, ShooterLevelConfig } from '../../types';
+import type { LevelId, LevelConfig, PlatformerLevelConfig, LauncherLevelConfig, ShooterLevelConfig, BreakoutLevelConfig, FroggerLevelConfig } from '../../types';
 import type { TuningProfile } from '../../systems/tuning/defaultTuning';
 import type { TelemetryEvent } from '../../systems/telemetry/runTelemetry';
 
@@ -46,5 +46,15 @@ export interface LauncherSceneInitData extends SceneInitData {
 
 export interface ShooterSceneInitData extends SceneInitData {
   levelConfig: ShooterLevelConfig;
+  initialLives: number;
+}
+
+export interface BreakoutSceneInitData extends SceneInitData {
+  levelConfig: BreakoutLevelConfig;
+  initialLives: number;
+}
+
+export interface FroggerSceneInitData extends SceneInitData {
+  levelConfig: FroggerLevelConfig;
   initialLives: number;
 }

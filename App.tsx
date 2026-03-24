@@ -900,15 +900,14 @@ const App: React.FC = () => {
                                 }
                           }
                           sceneFactory={
-                            isRunnerLevel
-                              ? () => import('./scenes/RunnerScene')
-                              : anyLevelConfig.genre === 'platformer'
-                                ? () => import('./scenes/PlatformerScene')
-                                : anyLevelConfig.genre === 'launcher'
-                                  ? () => import('./scenes/LauncherScene')
-                                  : anyLevelConfig.genre === 'shooter'
-                                    ? () => import('./scenes/ShooterScene')
-                                    : () => import('./scenes/RunnerScene') // fallback
+                            {
+                              runner: () => import('./scenes/RunnerScene'),
+                              platformer: () => import('./scenes/PlatformerScene'),
+                              launcher: () => import('./scenes/LauncherScene'),
+                              shooter: () => import('./scenes/ShooterScene'),
+                              breakout: () => import('./scenes/BreakoutScene'),
+                              frogger: () => import('./scenes/FroggerScene'),
+                            }[anyLevelConfig.genre] ?? (() => import('./scenes/RunnerScene'))
                           }
                           onScoreUpdate={handleScoreUpdate}
                           onLevelComplete={handleLevelComplete}

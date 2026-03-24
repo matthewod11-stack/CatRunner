@@ -564,8 +564,94 @@ export interface ShooterLevelConfig extends CampaignLevelMeta {
   startLives: number;
 }
 
+// ─── Breakout (Level 5: Yarn) ───────────────────────────────────────
+
+/** A single brick in the breakout grid */
+export interface BreakoutBrick {
+  /** Column index */
+  col: number;
+  /** Row index */
+  row: number;
+  /** Hits to destroy */
+  health: number;
+  /** Color tint */
+  color: number;
+  /** Points when destroyed */
+  points: number;
+}
+
+/** Breakout-specific level config */
+export interface BreakoutLevelConfig extends CampaignLevelMeta {
+  genre: 'breakout';
+  /** Brick grid layout */
+  bricks: BreakoutBrick[];
+  /** Grid dimensions */
+  gridCols: number;
+  gridRows: number;
+  brickWidth: number;
+  brickHeight: number;
+  /** Paddle config */
+  paddleConfig: {
+    width: number;
+    height: number;
+    speed: number;
+    y: number; // distance from bottom
+  };
+  /** Ball config */
+  ballConfig: {
+    radius: number;
+    speed: number;
+    /** Speed increase per brick hit */
+    speedIncrement: number;
+    maxSpeed: number;
+  };
+  /** Background color */
+  bgColor: string;
+  startLives: number;
+}
+
+// ─── Frogger (Level 6: Street) ──────────────────────────────────────
+
+/** A lane of moving hazards or platforms */
+export interface FroggerLane {
+  /** Y position of this lane */
+  y: number;
+  /** Type of lane */
+  type: 'road' | 'water' | 'safe';
+  /** Direction: 1 = right, -1 = left */
+  direction: 1 | -1;
+  /** Speed of objects in this lane */
+  speed: number;
+  /** Objects in this lane */
+  objects: {
+    width: number;
+    height: number;
+    color: number;
+    /** Spacing between objects */
+    gap: number;
+  };
+}
+
+/** Frogger-specific level config */
+export interface FroggerLevelConfig extends CampaignLevelMeta {
+  genre: 'frogger';
+  /** Lane definitions from bottom to top */
+  lanes: FroggerLane[];
+  /** Grid cell size for discrete movement */
+  cellSize: number;
+  /** Player start position (grid coords) */
+  startCol: number;
+  /** Time limit in seconds (0 = no limit) */
+  timeLimit: number;
+  /** Background color */
+  bgColor: string;
+  /** Number of crossings to complete */
+  crossingsToWin: number;
+  startLives: number;
+}
+
 /** Discriminated union — grows as genres are added. */
-export type AnyLevelConfig = RunnerLevelConfig | PlatformerLevelConfig | LauncherLevelConfig | ShooterLevelConfig;
+export type AnyLevelConfig = RunnerLevelConfig | PlatformerLevelConfig | LauncherLevelConfig | ShooterLevelConfig | BreakoutLevelConfig | FroggerLevelConfig;
 
 /** @deprecated Use RunnerLevelConfig or AnyLevelConfig. Alias kept for migration. */
 export type LevelConfig = RunnerLevelConfig;
