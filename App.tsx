@@ -907,6 +907,9 @@ const App: React.FC = () => {
                               shooter: () => import('./scenes/ShooterScene'),
                               breakout: () => import('./scenes/BreakoutScene'),
                               frogger: () => import('./scenes/FroggerScene'),
+                              whack: () => import('./scenes/WhackScene'),
+                              snake: () => import('./scenes/SnakeScene'),
+                              climber: () => import('./scenes/ClimberScene'),
                             }[anyLevelConfig.genre] ?? (() => import('./scenes/RunnerScene'))
                           }
                           onScoreUpdate={handleScoreUpdate}

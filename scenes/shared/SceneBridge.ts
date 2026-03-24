@@ -5,7 +5,7 @@ import type { SceneInitData, HudUpdatePayload } from './bridgeProtocol';
 
 // Re-export protocol types so consumers can import everything from SceneBridge
 export { BRIDGE_EVENTS } from './bridgeProtocol';
-export type { SceneInitData, RunnerSceneInitData, PlatformerSceneInitData, LauncherSceneInitData, ShooterSceneInitData, BreakoutSceneInitData, FroggerSceneInitData } from './bridgeProtocol';
+export type { SceneInitData, RunnerSceneInitData, PlatformerSceneInitData, LauncherSceneInitData, ShooterSceneInitData, BreakoutSceneInitData, FroggerSceneInitData, WhackSceneInitData, SnakeSceneInitData, ClimberSceneInitData } from './bridgeProtocol';
 
 export abstract class SceneBridge extends Phaser.Scene {
   protected levelId!: string;

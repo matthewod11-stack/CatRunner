@@ -5,6 +5,9 @@ import { KITCHEN_LEVEL_CONFIG } from './kitchen';
 import { SPACE_LEVEL_CONFIG } from './space';
 import { YARN_LEVEL_CONFIG } from './yarn';
 import { STREET_LEVEL_CONFIG } from './street';
+import { GARDEN_WHACK_LEVEL_CONFIG } from './garden-whack';
+import { GARDEN_SNAKE_LEVEL_CONFIG } from './garden-snake';
+import { CAT_TREE_LEVEL_CONFIG } from './cattree';
 
 export { BEACH_LEVEL_CONFIG } from './beach';
 export { ROOFTOPS_LEVEL_CONFIG } from './rooftops';
@@ -12,6 +15,9 @@ export { KITCHEN_LEVEL_CONFIG } from './kitchen';
 export { SPACE_LEVEL_CONFIG } from './space';
 export { YARN_LEVEL_CONFIG } from './yarn';
 export { STREET_LEVEL_CONFIG } from './street';
+export { GARDEN_WHACK_LEVEL_CONFIG } from './garden-whack';
+export { GARDEN_SNAKE_LEVEL_CONFIG } from './garden-snake';
+export { CAT_TREE_LEVEL_CONFIG } from './cattree';
 export { BeachObstacleIcon, isBeachObstacleType } from './beach/obstacles';
 export { BackgroundEntityRenderer, BACKGROUND_ENTITY_VIEW_BY_LEVEL } from './levelBackgroundViews';
 
@@ -22,6 +28,9 @@ export const LEVEL_REGISTRY: Partial<Record<LevelId, AnyLevelConfig>> = {
   SPACE: SPACE_LEVEL_CONFIG,
   YARN: YARN_LEVEL_CONFIG,
   STREET: STREET_LEVEL_CONFIG,
+  GARDEN_WHACK: GARDEN_WHACK_LEVEL_CONFIG,
+  GARDEN_SNAKE: GARDEN_SNAKE_LEVEL_CONFIG,
+  CAT_TREE: CAT_TREE_LEVEL_CONFIG,
 };
 
 /** Get a runner-specific level config. Throws for non-runner levels. */

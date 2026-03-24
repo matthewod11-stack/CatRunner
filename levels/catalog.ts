@@ -106,7 +106,7 @@ export const CAMPAIGN_LEVEL_META: CampaignLevelMeta[] = [
 ];
 
 /** Campaign order; when adding levels, extend `LevelId` + registry and append here. */
-export const LEVEL_ORDER: LevelId[] = ['BEACH', 'ROOFTOPS', 'KITCHEN', 'SPACE', 'YARN', 'STREET'];
+export const LEVEL_ORDER: LevelId[] = ['BEACH', 'ROOFTOPS', 'KITCHEN', 'SPACE', 'YARN', 'STREET', 'GARDEN_WHACK', 'GARDEN_SNAKE', 'CAT_TREE'];
 
 export function isLevelUnlocked(
   defeatedBosses: Partial<Record<LevelId, boolean>>,

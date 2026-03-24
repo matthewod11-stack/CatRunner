@@ -651,7 +651,88 @@ export interface FroggerLevelConfig extends CampaignLevelMeta {
 }
 
 /** Discriminated union — grows as genres are added. */
-export type AnyLevelConfig = RunnerLevelConfig | PlatformerLevelConfig | LauncherLevelConfig | ShooterLevelConfig | BreakoutLevelConfig | FroggerLevelConfig;
+// ─── Whack-a-Mole (Level 7: Garden Patrol) ──────────────────────────
+
+export interface WhackHoleDef {
+  col: number;
+  row: number;
+}
+
+export interface WhackMouseType {
+  type: string;
+  /** Time visible in ms */
+  visibleMs: number;
+  points: number;
+  color: number;
+}
+
+export interface WhackLevelConfig extends CampaignLevelMeta {
+  genre: 'whack';
+  /** Grid of holes */
+  gridCols: number;
+  gridRows: number;
+  /** Mouse types keyed by name */
+  mouseTypes: Record<string, WhackMouseType>;
+  /** Time limit in seconds */
+  timeLimit: number;
+  /** Min/max ms between mouse pops — decreases over time */
+  spawnIntervalRange: [number, number];
+  bgColor: string;
+  startLives: number;
+}
+
+// ─── Snake (Level 8: Garden Snake) ──────────────────────────────────
+
+export interface SnakeLevelConfig extends CampaignLevelMeta {
+  genre: 'snake';
+  /** Grid dimensions */
+  gridCols: number;
+  gridRows: number;
+  cellSize: number;
+  /** Starting snake length */
+  startLength: number;
+  /** Movement interval in ms (gets faster as snake grows) */
+  baseMoveInterval: number;
+  /** Minimum move interval */
+  minMoveInterval: number;
+  /** Number of wall obstacles */
+  wallCount: number;
+  /** Survive this long to win (ms) */
+  surviveTimeMs: number;
+  bgColor: string;
+  startLives: number;
+}
+
+// ─── Climber (Level 9: Cat Tree) ────────────────────────────────────
+
+export interface ClimberLevelConfig extends CampaignLevelMeta {
+  genre: 'climber';
+  /** Auto-scroll speed (pixels/sec upward) */
+  scrollSpeed: number;
+  /** Scroll speed increase per 1000px climbed */
+  scrollAcceleration: number;
+  /** Max scroll speed */
+  maxScrollSpeed: number;
+  /** Platform generation */
+  platformConfig: {
+    widthRange: [number, number];
+    gapYRange: [number, number];
+    /** Chance of spring platform (0-1) */
+    springChance: number;
+    /** Chance of breakable platform (0-1) */
+    breakableChance: number;
+  };
+  /** Player horizontal speed */
+  moveSpeed: number;
+  /** Bounce force when landing on platform */
+  bounceForce: number;
+  /** Height to reach for victory (pixels climbed) */
+  victoryHeight: number;
+  bgColor: string;
+  startLives: number;
+}
+
+export type AnyLevelConfig = RunnerLevelConfig | PlatformerLevelConfig | LauncherLevelConfig | ShooterLevelConfig | BreakoutLevelConfig | FroggerLevelConfig | WhackLevelConfig | SnakeLevelConfig | ClimberLevelConfig;
 
 /** @deprecated Use RunnerLevelConfig or AnyLevelConfig. Alias kept for migration. */
 export type LevelConfig = RunnerLevelConfig;
