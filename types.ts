@@ -442,8 +442,130 @@ export interface PlatformerLevelConfig extends CampaignLevelMeta {
   startLives: number;
 }
 
+// ─── Launcher (Level 3: Kitchen) ────────────────────────────────────
+
+/** A single destructible block in a structure */
+export interface LauncherBlock {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  /** How many hits to destroy (1 = fragile, 3 = tough) */
+  health: number;
+  material: 'glass' | 'wood' | 'metal';
+  /** Points awarded when destroyed */
+  points: number;
+}
+
+/** A pre-built structure of stacked blocks */
+export interface LauncherStructure {
+  /** Offset from right side of screen */
+  offsetX: number;
+  blocks: LauncherBlock[];
+}
+
+/** Visual theme for the launcher */
+export interface LauncherThemeConfig {
+  /** Background gradient [top, bottom] */
+  bgGradient: [string, string];
+  /** Counter/surface color */
+  counterColor: string;
+  /** Wall color behind structures */
+  wallColor: string;
+  particleColors: {
+    dust: string;
+    impact: string;
+    coinCollect: string;
+  };
+}
+
+/** Launcher-specific level config */
+export interface LauncherLevelConfig extends CampaignLevelMeta {
+  genre: 'launcher';
+  theme: LauncherThemeConfig;
+  /** Y position of the counter surface */
+  counterY: number;
+  /** X position of the cat (launch point) */
+  launchX: number;
+  /** Structures to destroy — each round picks from this pool */
+  structures: LauncherStructure[];
+  /** Number of projectiles per round */
+  projectilesPerRound: number;
+  /** Total rounds before game ends */
+  totalRounds: number;
+  /** Projectile physics */
+  projectileConfig: {
+    radius: number;
+    /** Base launch power multiplier */
+    powerMultiplier: number;
+    gravity: number;
+    /** Max drag distance in pixels */
+    maxDragDistance: number;
+  };
+  startLives: number;
+}
+
+// ─── Shooter (Level 4: Space) ───────────────────────────────────────
+
+/** Enemy type in a shooter wave */
+export interface ShooterEnemyDef {
+  type: 'mouse' | 'rat' | 'bat';
+  health: number;
+  points: number;
+  /** Pixels/sec horizontal sway speed */
+  speed: number;
+  /** Whether this enemy shoots back */
+  shoots: boolean;
+  /** Shots per second (if shoots) */
+  fireRate?: number;
+}
+
+/** A wave of enemies */
+export interface ShooterWave {
+  /** Grid rows of enemies — each row is an array of enemy type keys or null for gaps */
+  rows: (string | null)[][];
+  /** Y start position for this wave */
+  startY: number;
+  /** Descent speed (pixels/sec the formation moves down) */
+  descentSpeed: number;
+  /** Horizontal sway amplitude */
+  swayAmplitude: number;
+}
+
+/** Visual theme for the shooter */
+export interface ShooterThemeConfig {
+  /** Star field density (stars per 1000 sq pixels) */
+  starDensity: number;
+  /** Background color */
+  bgColor: string;
+  /** Nebula accent color */
+  nebulaColor: string;
+  particleColors: {
+    dust: string;
+    impact: string;
+    coinCollect: string;
+  };
+}
+
+/** Shooter-specific level config */
+export interface ShooterLevelConfig extends CampaignLevelMeta {
+  genre: 'shooter';
+  theme: ShooterThemeConfig;
+  /** Enemy type definitions (keyed by type string used in wave rows) */
+  enemies: Record<string, ShooterEnemyDef>;
+  /** Wave sequence — last wave can be a boss wave */
+  waves: ShooterWave[];
+  /** Player ship config */
+  playerConfig: {
+    moveSpeed: number;
+    fireRate: number; // shots per second
+    bulletSpeed: number;
+  };
+  startLives: number;
+}
+
 /** Discriminated union — grows as genres are added. */
-export type AnyLevelConfig = RunnerLevelConfig | PlatformerLevelConfig;
+export type AnyLevelConfig = RunnerLevelConfig | PlatformerLevelConfig | LauncherLevelConfig | ShooterLevelConfig;
 
 /** @deprecated Use RunnerLevelConfig or AnyLevelConfig. Alias kept for migration. */
 export type LevelConfig = RunnerLevelConfig;

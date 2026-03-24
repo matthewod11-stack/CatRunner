@@ -904,7 +904,11 @@ const App: React.FC = () => {
                               ? () => import('./scenes/RunnerScene')
                               : anyLevelConfig.genre === 'platformer'
                                 ? () => import('./scenes/PlatformerScene')
-                                : () => import('./scenes/RunnerScene') // fallback
+                                : anyLevelConfig.genre === 'launcher'
+                                  ? () => import('./scenes/LauncherScene')
+                                  : anyLevelConfig.genre === 'shooter'
+                                    ? () => import('./scenes/ShooterScene')
+                                    : () => import('./scenes/RunnerScene') // fallback
                           }
                           onScoreUpdate={handleScoreUpdate}
                           onLevelComplete={handleLevelComplete}
