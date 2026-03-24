@@ -2188,9 +2188,17 @@ The generator reuses the existing Gemini image generation endpoint. The base cat
 
 ---
 
-## Chunk 5: Phases 4–8 — Genre Levels
+## Chunk 5: Phases 4–8 — Genre Levels — SKELETONS COMPLETE (2026-03-24)
 
 **Goal:** Build the remaining 8 genre levels. Each follows the same pattern.
+
+> **Implementation notes (2026-03-24):** All 8 genre levels built as playable skeletons in a single sprint session. Each has core mechanics, scoring, victory conditions, and pause/resume. The implementation skipped the roadmap's granular sub-steps (sprite requirements, boss encounters, cutscenes, detailed QA) — those are polish items for future sessions. What's done per level:
+> - **Config + types** — each genre has its own `*LevelConfig` interface in the `AnyLevelConfig` discriminated union
+> - **Scene + core mechanic** — each scene extends `SceneBridge`, implements the genre's unique gameplay loop
+> - **Wired into App** — genre-keyed scene factory, registered in `LEVEL_REGISTRY` and `LEVEL_ORDER`
+> - **Victory/death** — each level has a win condition and death/respawn handling
+>
+> **Not done yet (per level):** Sprite art (all use colored rectangles), boss encounters (except shooter), cutscenes, audio per genre, difficulty tuning, power-ups, enemies beyond basics. These are Phase 9 polish items or can be addressed incrementally.
 
 ### Genre Level Template
 
@@ -2206,7 +2214,8 @@ Every new level follows this structure:
 8. **Write cutscene** — placeholder intro/outro text
 9. **QA + commit** — verify sprites load, animations play, fallback works
 
-### Task 4.1: Level 2 config + PlatformerScene skeleton
+### Task 4.1: Level 2 config + PlatformerScene skeleton — DONE (2026-03-24)
+> Procedural platforms (not static arrays as spec'd). Mario-style L/R/jump, coins, parallax city buildings, distance-based victory. Design diverged from roadmap: procedural generation instead of hand-placed platforms, no enemies/boss yet.
 
 **Sprite Requirements (defined during implementation):**
 - `idle` — standing on rooftop, alert posture
@@ -2270,7 +2279,8 @@ case 'ROOFTOPS': return () => import('./scenes/PlatformerScene');
 
 ---
 
-### Task 4.2: Platformer player movement + camera
+### Task 4.2: Platformer player movement + camera — DONE (2026-03-24)
+> Implemented in PlatformerScene.ts. Arcade Physics, camera follow, world bounds.
 
 **Files:**
 - Modify: `scenes/PlatformerScene.ts`
@@ -2290,7 +2300,8 @@ this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
 
 ---
 
-### Task 4.3: Platform system
+### Task 4.3: Platform system — PARTIAL (2026-03-24)
+> Solid platforms procedurally generated. Moving/breakable/one-way not yet implemented.
 
 **Files:**
 - Modify: `scenes/PlatformerScene.ts`
@@ -2315,7 +2326,7 @@ Breakable platforms crack on first contact and destroy after a delay.
 
 ---
 
-### Task 4.4: Enemy patrol AI + stomp
+### Task 4.4: Enemy patrol AI + stomp — NOT STARTED
 
 **Files:**
 - Modify: `scenes/PlatformerScene.ts`
@@ -2336,7 +2347,8 @@ If player collides with enemy from the side, lose a life + hurt animation.
 
 ---
 
-### Task 4.5: Platformer boss + victory
+### Task 4.5: Platformer boss + victory — NOT STARTED
+> Victory is distance-based (reach penthouse). No boss encounter yet.
 
 **Files:**
 - Modify: `scenes/PlatformerScene.ts`
@@ -2360,7 +2372,8 @@ git commit -m "feat(v3/phase4): complete Level 2 — Rooftop Prowl platformer"
 
 ---
 
-### Task 5: Level 3 — Counter Chaos (Launcher)
+### Task 5: Level 3 — Counter Chaos (Launcher) — SKELETON DONE (2026-03-24)
+> Slingshot aiming with trajectory preview, 3 materials (glass/wood/metal), 4 structure templates, 5 rounds, score-based victory. No boss, no multiple projectile types yet.
 
 **Files:** `levels/kitchen.ts`, `scenes/LauncherScene.ts`
 
@@ -2382,7 +2395,8 @@ git commit -m "feat(v3/phase4): complete Level 2 — Rooftop Prowl platformer"
 
 ---
 
-### Task 6: Level 4 — Cosmic Kitty (Space Shooter)
+### Task 6: Level 4 — Cosmic Kitty (Space Shooter) — SKELETON DONE (2026-03-24)
+> 5 enemy waves + boss wave, auto-fire, 3 enemy types, deferred destroy pattern. No power-ups, no bullet patterns beyond aimed shots.
 
 **Files:** `levels/space.ts`, `scenes/ShooterScene.ts`
 
@@ -2405,7 +2419,8 @@ git commit -m "feat(v3/phase4): complete Level 2 — Rooftop Prowl platformer"
 
 ---
 
-### Task 7: Level 5 — Yarn Breaker (Breakout)
+### Task 7: Level 5 — Yarn Breaker (Breakout) — SKELETON DONE (2026-03-24)
+> Paddle + yarn ball, 70 rainbow bricks (7 rows × 10 cols), angle reflection, speed escalation. No power-ups, no boss row yet.
 
 **Files:** `levels/yarn.ts`, `scenes/BreakoutScene.ts`
 
@@ -2425,7 +2440,8 @@ git commit -m "feat(v3/phase4): complete Level 2 — Rooftop Prowl platformer"
 
 ---
 
-### Task 8: Level 6 — Busy Whiskers (Frogger)
+### Task 8: Level 6 — Busy Whiskers (Frogger) — SKELETON DONE (2026-03-24)
+> 4 road lanes + 4 water lanes, discrete grid movement, ride logs, 60s timer, 3 crossings to win. No boss intersection, no river floating platforms beyond logs.
 
 **Files:** `levels/street.ts`, `scenes/FroggerScene.ts`
 
@@ -2445,7 +2461,8 @@ git commit -m "feat(v3/phase4): complete Level 2 — Rooftop Prowl platformer"
 
 ---
 
-### Task 9: Level 7 — Mouse Hunt (Whack-a-Mole)
+### Task 9: Level 7 — Mouse Hunt (Whack-a-Mole) — SKELETON DONE (2026-03-24)
+> 3×3 hole grid, click/tap mice, 3 mouse types (normal/bonus/sneaky), combo multiplier, 60s timer. No armored mice, no boss mouse yet.
 
 **Files:** `levels/garden-whack.ts`, `scenes/WhackScene.ts`
 
@@ -2466,7 +2483,8 @@ git commit -m "feat(v3/phase4): complete Level 2 — Rooftop Prowl platformer"
 
 ---
 
-### Task 10: Level 8 — Catnip Garden (Snake)
+### Task 10: Level 8 — Catnip Garden (Snake) — SKELETON DONE (2026-03-24)
+> Grid movement, grow tail on eat, wall/self collision, speed escalation, survive 2 min. No cucumber scare zones, no special catnip types, no boss dog yet.
 
 **Files:** `levels/garden-snake.ts`, `scenes/SnakeScene.ts`
 
@@ -2488,7 +2506,8 @@ git commit -m "feat(v3/phase4): complete Level 2 — Rooftop Prowl platformer"
 
 ---
 
-### Task 11: Level 9 — The Cat Tree (Vertical Climber)
+### Task 11: Level 9 — The Cat Tree (Vertical Climber) — SKELETON DONE (2026-03-24)
+> Doodle Jump auto-bounce, solid/spring/breakable platforms, screen-wrap, auto-scroll acceleration, sky gradient, 10k px to top. No enemies, no Red Dot boss yet.
 
 **Files:** `levels/cattree.ts`, `scenes/ClimberScene.ts`
 
