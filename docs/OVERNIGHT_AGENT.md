@@ -1,26 +1,29 @@
 # Overnight Agent
 
-Autonomous overnight agent for resolving tech-debt GitHub issues via scheduled Claude Code remote triggers.
+Autonomous overnight agent for resolving tech-debt GitHub issues via Claude Desktop local scheduled task.
 
 ## How It Works
 
-1. A scheduled trigger runs nightly at 2am Pacific
-2. The agent reads open `tech-debt` issues, filters out design-decision issues
+1. A Desktop local task runs nightly at 2:00 AM PT
+2. The agent reads open `tech-debt` issues, filters out design-decision/deferred/in-progress
 3. Picks up to 3 mechanical issues per run (oldest first)
 4. Creates a branch + PR for each fix, or comments if it needs to bail
 5. You review PRs in the morning
+6. Run log written to `state/overnight-agent-log.json`
 
-**Manage triggers:** https://claude.ai/code/scheduled
+**Task prompt:** `prompts/overnight-agent.md`
 
 ## Autonomous Agent Prompt
 
 ```
-You are an overnight maintenance agent for the Beach Kitty game (React 19 + TypeScript + Vite + Phaser 3).
+You are an overnight maintenance agent for Beach Kitty — a nine-level campaign game built with React 19 + TypeScript + Vite + Phaser 3. Each level is a different classic game genre (runner, platformer, launcher, shooter, breakout, frogger, whack-a-mole, snake, climber).
 
 ## Setup
-1. Read CLAUDE.md for full project context
+1. Read CLAUDE.md for full project context (architecture, file locations, conventions)
 2. Run `npm install`
 3. Run `npm run build` to confirm clean baseline. If build fails, STOP and comment on the most recent open issue with the build error. Do not proceed.
+4. Run `npm run test:run` to confirm tests pass. Note the pass count as baseline.
+5. Confirm `gh auth status` succeeds
 
 ## Triage
 1. Run `gh issue list --state open --label tech-debt --json number,title,labels,body` to fetch all open tech-debt issues
@@ -30,20 +33,24 @@ You are an overnight maintenance agent for the Beach Kitty game (React 19 + Type
 5. Pick up to 3 issues for this run
 
 ## For each issue
-1. Read the full issue body — treat "## Suggested Fix" or "## Acceptance Criteria" as your instructions
+1. Read the full issue body — treat "## Suggested Fix" as your instructions
 2. Check the `blocked-by` field in Automation Hints — if it references an open issue, skip
 3. Create a branch: `fix/issue-{N}-{short-slug}`
 4. Implement the fix following the issue's suggested approach
-5. Run `npm run build` — must pass. If it fails, revert your changes, comment on the issue with what went wrong, and move to the next issue
-6. Run `npx tsc --noEmit` — note any new errors
-7. Check `max-files-changed` from Automation Hints — if you exceeded it, revert and comment with what happened
-8. If all gates pass: commit, push, open PR with `gh pr create --title "fix: {description} (closes #{N})" --body "Closes #{N}\n\n{1-2 sentence summary of what changed}\n\nVerified: npm run build and tsc --noEmit pass."`
-9. If the issue turns out to be already resolved (no changes needed), comment on the issue explaining what you found and close it with `gh issue close {N}`
-10. `git checkout main` before starting the next issue
+5. Run verification:
+   - `npm run build` — must pass
+   - `npx tsc --noEmit` — must produce no new errors
+   - `npm run test:run` — all tests must pass (count must be >= baseline)
+6. Check `max-files-changed` from Automation Hints — if you exceeded it, revert and comment with what happened
+7. If all gates pass: commit, push, open PR with `gh pr create --title "fix: {description} (closes #{N})" --body "Closes #{N}\n\n{1-2 sentence summary of what changed}\n\nVerified: npm run build, tsc --noEmit, and npm run test:run all pass."`
+8. If the issue turns out to be already resolved (no changes needed), comment on the issue explaining what you found and close it with `gh issue close {N}`
+9. `git checkout main` before starting the next issue
 
 ## Safety rails
 - MAX 3 issues per run — even if more qualify
 - NEVER modify game logic, rendering, or player-facing behavior
+- NEVER modify Phaser scene files (src/scenes/*.ts) unless the issue explicitly targets them
+- NEVER touch .env.local, server API keys, or deployment config
 - NEVER touch files listed in `do-not-touch` in Automation Hints
 - If an issue's scope is ambiguous or seems to require design decisions, SKIP it and comment: "Skipping: this issue may require design input. Recommend adding `needs-design-decision` label."
 - If you encounter merge conflicts with a previous branch from this run, skip that issue
@@ -76,7 +83,8 @@ Use this template when filing new tech-debt issues so the overnight agent can pi
 ## Verification
 - [ ] `npm run build` passes
 - [ ] `npx tsc --noEmit` clean (or no NEW errors)
-- [ ] [optional: specific test/grep check]
+- [ ] `npm run test:run` passes (no regressions)
+- [ ] [optional: specific grep check or manual QA step]
 
 ## Automation Hints
 scope: [file or directory paths the agent should touch]

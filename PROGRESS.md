@@ -34,6 +34,30 @@ sed -n '1,100p' ROADMAP_V3.md
 Most recent session should be first.
 -->
 
+## Session: 2026-03-30 09:15 (Local Overnight Agent — Desktop Task Setup)
+
+### Completed
+- [x] **Local overnight agent** — Adapted morty-v2 pattern for CatRunner as a Claude Desktop local scheduled task
+- [x] **`docs/OVERNIGHT_AGENT.md`** — Rewritten from remote trigger to Desktop task version with CatRunner-specific verification gates (build + tsc + Vitest) and safety rails (scenes, .env.local, game logic)
+- [x] **`prompts/overnight-agent.md`** — Thin task entry point, writes run log to `state/overnight-agent-log.json`
+- [x] **`state/` directory** — Created and gitignored for agent runtime artifacts
+- [x] **CLAUDE.md** — Added prompts + state file references to project tracking
+- [x] **GitHub labels verified** — All 4 labels confirmed present (tech-debt, needs-design-decision, deferred, in-progress)
+
+### In Progress
+- [ ] Desktop task needs to be created manually in Claude Desktop settings
+
+### Issues Encountered
+- None
+
+### Next Session Should
+1. **Create Desktop task** — Name: `overnight-agent`, Prompt: `Read prompts/overnight-agent.md and execute all instructions in it.`, Daily 2:00 AM, Sonnet, Folder: `/Users/homebase/Desktop/CatRunner`
+2. **Run once and approve permissions** — Click "Run now", approve gh/npm/git/file write permissions
+3. **Review first run results** — Check `state/overnight-agent-log.json` and GitHub PRs
+4. **Consider disabling remote trigger** — `trig_01WdJuhzamc5XsGBm8MAkP5K` now redundant with local task
+
+---
+
 ## Session: 2026-03-30 07:45 (Issue-Driven Maintenance & Overnight Agent Setup)
 
 ### Completed
