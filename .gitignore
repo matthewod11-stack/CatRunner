@@ -26,3 +26,6 @@ dist-ssr
 # Local tooling
 .superpowers/
 demo-video-factory-catrunner/
+
+# Overnight agent runtime state
+state/

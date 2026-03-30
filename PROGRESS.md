@@ -34,6 +34,55 @@ sed -n '1,100p' ROADMAP_V3.md
 Most recent session should be first.
 -->
 
+## Session: 2026-03-30 09:15 (Local Overnight Agent — Desktop Task Setup)
+
+### Completed
+- [x] **Local overnight agent** — Adapted morty-v2 pattern for CatRunner as a Claude Desktop local scheduled task
+- [x] **`docs/OVERNIGHT_AGENT.md`** — Rewritten from remote trigger to Desktop task version with CatRunner-specific verification gates (build + tsc + Vitest) and safety rails (scenes, .env.local, game logic)
+- [x] **`prompts/overnight-agent.md`** — Thin task entry point, writes run log to `state/overnight-agent-log.json`
+- [x] **`state/` directory** — Created and gitignored for agent runtime artifacts
+- [x] **CLAUDE.md** — Added prompts + state file references to project tracking
+- [x] **GitHub labels verified** — All 4 labels confirmed present (tech-debt, needs-design-decision, deferred, in-progress)
+
+### In Progress
+- [ ] Desktop task needs to be created manually in Claude Desktop settings
+
+### Issues Encountered
+- None
+
+### Next Session Should
+1. **Create Desktop task** — Name: `overnight-agent`, Prompt: `Read prompts/overnight-agent.md and execute all instructions in it.`, Daily 2:00 AM, Sonnet, Folder: `/Users/homebase/Desktop/CatRunner`
+2. **Run once and approve permissions** — Click "Run now", approve gh/npm/git/file write permissions
+3. **Review first run results** — Check `state/overnight-agent-log.json` and GitHub PRs
+4. **Consider disabling remote trigger** — `trig_01WdJuhzamc5XsGBm8MAkP5K` now redundant with local task
+
+---
+
+## Session: 2026-03-30 07:45 (Issue-Driven Maintenance & Overnight Agent Setup)
+
+### Completed
+- [x] **GitHub Issues strategy** — Shifted from KNOWN_ISSUES.md to GitHub Issues for all tech-debt tracking
+- [x] **Overnight agent trigger** — Created scheduled Claude Code remote trigger (`trig_01WdJuhzamc5XsGBm8MAkP5K`) running nightly at 2am Pacific, targeting issues #3, #4, #10
+- [x] **Autonomous agent prompt** — Drafted Level 2 autonomous prompt that triages `tech-debt` labeled issues, respects `needs-design-decision`/`deferred` labels, and uses issue-body-as-instructions pattern
+- [x] **Enhanced issue template** — Added `Automation Hints` section (scope, do-not-touch, risk, max-files-changed, blocked-by, bail-if) to all 8 tech-debt issues (#2-#5, #7-#10)
+- [x] **Label system** — Created `needs-design-decision` label; applied to design issues #1, #6, #11, #12
+- [x] **`docs/OVERNIGHT_AGENT.md`** — Project-specific agent prompt, issue template, label conventions reference
+- [x] **`~/.claude/rules/issue-driven-maintenance.md`** — Cross-project global rule for issue-driven maintenance pattern
+
+### In Progress
+- [ ] First overnight run scheduled for 2026-03-31 ~2am Pacific — will validate the pipeline
+
+### Issues Encountered
+- None — this was a planning/infrastructure session
+
+### Next Session Should
+1. **Review overnight agent results** — Check GitHub for PRs and/or issue comments from first run
+2. **Swap to autonomous prompt** — If pipeline validates, update trigger prompt from task-list to autonomous version
+3. **Retroactively update remaining issues** — Add `Automation Hints` to any new issues filed
+4. **Consider deleting KNOWN_ISSUES.md** — All items migrated to GitHub Issues
+
+---
+
 ## Session: 2026-03-24 11:45 (All 9 Campaign Levels — Skeleton Build Sprint)
 
 ### Completed
