@@ -34,6 +34,31 @@ sed -n '1,100p' ROADMAP_V3.md
 Most recent session should be first.
 -->
 
+## Session: 2026-03-30 07:45 (Issue-Driven Maintenance & Overnight Agent Setup)
+
+### Completed
+- [x] **GitHub Issues strategy** — Shifted from KNOWN_ISSUES.md to GitHub Issues for all tech-debt tracking
+- [x] **Overnight agent trigger** — Created scheduled Claude Code remote trigger (`trig_01WdJuhzamc5XsGBm8MAkP5K`) running nightly at 2am Pacific, targeting issues #3, #4, #10
+- [x] **Autonomous agent prompt** — Drafted Level 2 autonomous prompt that triages `tech-debt` labeled issues, respects `needs-design-decision`/`deferred` labels, and uses issue-body-as-instructions pattern
+- [x] **Enhanced issue template** — Added `Automation Hints` section (scope, do-not-touch, risk, max-files-changed, blocked-by, bail-if) to all 8 tech-debt issues (#2-#5, #7-#10)
+- [x] **Label system** — Created `needs-design-decision` label; applied to design issues #1, #6, #11, #12
+- [x] **`docs/OVERNIGHT_AGENT.md`** — Project-specific agent prompt, issue template, label conventions reference
+- [x] **`~/.claude/rules/issue-driven-maintenance.md`** — Cross-project global rule for issue-driven maintenance pattern
+
+### In Progress
+- [ ] First overnight run scheduled for 2026-03-31 ~2am Pacific — will validate the pipeline
+
+### Issues Encountered
+- None — this was a planning/infrastructure session
+
+### Next Session Should
+1. **Review overnight agent results** — Check GitHub for PRs and/or issue comments from first run
+2. **Swap to autonomous prompt** — If pipeline validates, update trigger prompt from task-list to autonomous version
+3. **Retroactively update remaining issues** — Add `Automation Hints` to any new issues filed
+4. **Consider deleting KNOWN_ISSUES.md** — All items migrated to GitHub Issues
+
+---
+
 ## Session: 2026-03-24 11:45 (All 9 Campaign Levels — Skeleton Build Sprint)
 
 ### Completed
