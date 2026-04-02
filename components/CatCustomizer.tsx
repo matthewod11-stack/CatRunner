@@ -47,7 +47,7 @@ type CatCustomizerIndexedProps = {
   ) => Promise<SavedCatLook>;
   onSave: (
     args: { playerDisplayName: string },
-    equip: { type: 'dataUrl'; url: string } | { type: 'assetId'; assetId: string } | null,
+    equip: { type: 'dataUrl'; url: string; mattedOnServer?: boolean } | { type: 'assetId'; assetId: string } | null,
     looks: SavedCatLook[]
   ) => void | Promise<void>;
   /** Persist closet row removal + delete sprite blob immediately (keeps IDB aligned with UI). */
@@ -475,10 +475,10 @@ const CatCustomizer: React.FC<CatCustomizerProps> = (props) => {
   );
 
   const equipPayload = useMemo(() => {
-    if (previewDataUrl) return { type: 'dataUrl' as const, url: previewDataUrl };
+    if (previewDataUrl) return { type: 'dataUrl' as const, url: previewDataUrl, mattedOnServer: lastGenerateMatted || undefined };
     if (previewAssetId) return { type: 'assetId' as const, assetId: previewAssetId };
     return null;
-  }, [previewDataUrl, previewAssetId]);
+  }, [previewDataUrl, previewAssetId, lastGenerateMatted]);
 
   return (
     <CustomizerShell

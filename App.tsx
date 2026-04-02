@@ -108,6 +108,8 @@ const App: React.FC = () => {
   const [legacyOutfits, setLegacyOutfits] = useState<Outfit[]>([]);
   const [closetSession, setClosetSession] = useState(0);
   const equippedObjectUrlRef = useRef<string | null>(null);
+  /** True when equipped cat was server-matted but not (yet) in savedLooks. */
+  const [equippedDirectMatte, setEquippedDirectMatte] = useState(false);
   const [showDevPanel, setShowDevPanel] = useState(false);
   const [getTelemetryEvents, setGetTelemetryEvents] = useState<(() => TelemetryEvent[]) | null>(null);
   const victoryConfetti = useMemo(
@@ -124,8 +126,9 @@ const App: React.FC = () => {
 
   const equippedFromSavedServerMatte = useMemo(
     () =>
+      equippedDirectMatte ||
       savedLooks.some((l) => l.assetId === equippedAssetId && l.mattedOnServer === true),
-    [savedLooks, equippedAssetId]
+    [savedLooks, equippedAssetId, equippedDirectMatte]
   );
 
   /** Single matting pass for equipped cat — shared by level select, closet, victory, and in-game Kitty. */
@@ -249,7 +252,7 @@ const App: React.FC = () => {
   const handleIndexedSave = useCallback(
     async (
       args: { playerDisplayName: string },
-      equip: { type: 'dataUrl'; url: string } | { type: 'assetId'; assetId: string } | null,
+      equip: { type: 'dataUrl'; url: string; mattedOnServer?: boolean } | { type: 'assetId'; assetId: string } | null,
       looks: SavedCatLook[]
     ) => {
       const db = catAssetDbHolder.db;
@@ -321,6 +324,9 @@ const App: React.FC = () => {
       }
 
       setEquippedAssetId(nextEquipped);
+      setEquippedDirectMatte(
+        equip?.type === 'dataUrl' && equip.mattedOnServer === true && nextEquipped !== null
+      );
       setSavedLooks(looks);
       const player = args.playerDisplayName.trim() || 'Beach Kitty';
       setKittyName(player);
