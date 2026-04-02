@@ -5,9 +5,11 @@ import {
   LEGACY_CAT_OUTFITS_KEY,
   catAssetDbHolder,
   dataUrlToPngBlob,
+  getCatSprite,
   openCatAssetDb,
   putCatSprite,
 } from './catAssetStore';
+import { blobContentKey } from './blobContentKey';
 
 function isSavedCatLook(x: unknown): x is SavedCatLook {
   if (!x || typeof x !== 'object') return false;
@@ -158,4 +160,37 @@ export async function migrateCatStorageIfNeeded(): Promise<IDBDatabase | null> {
     return navigator.locks.request(CAT_MIGRATION_LOCK_NAME, () => migrateCatStorageBody());
   }
   return migrateCatStorageBody();
+}
+
+/**
+ * Backfill `contentKey` for pre-Phase 4 SavedCatLook rows that lack it.
+ * Reads each blob from IndexedDB, computes the hash, and writes the updated state.
+ * Idempotent — safe to call multiple times. Only touches localStorage metadata, never blobs.
+ */
+export async function backfillContentKeys(db: IDBDatabase): Promise<void> {
+  const state = readCatCharacterState();
+  if (!state || state.looks.length === 0) return;
+
+  const needsBackfill = state.looks.filter((l) => !l.contentKey);
+  if (needsBackfill.length === 0) return;
+
+  let changed = false;
+  for (const look of needsBackfill) {
+    try {
+      const blob = await getCatSprite(db, look.assetId);
+      if (!blob) continue;
+      look.contentKey = await blobContentKey(blob);
+      changed = true;
+    } catch {
+      /* skip this look — next call will retry */
+    }
+  }
+
+  if (changed) {
+    try {
+      writeCatCharacterState(state);
+    } catch {
+      /* non-critical — will retry next session */
+    }
+  }
 }
