@@ -19,7 +19,7 @@ import BalancePanel from './components/dev/BalancePanel';
 import MatteCatImage from './components/MatteCatImage';
 import HallOfFameCatAvatar from './components/HallOfFameCatAvatar';
 import { TelemetryEvent } from './systems/telemetry/runTelemetry';
-import { migrateCatStorageIfNeeded, readCatCharacterState, writeCatCharacterState } from './services/migrateCatStorage';
+import { migrateCatStorageIfNeeded, readCatCharacterState, writeCatCharacterState, backfillContentKeys } from './services/migrateCatStorage';
 import {
   catAssetDbHolder,
   dataUrlToPngBlob,
@@ -173,6 +173,7 @@ const App: React.FC = () => {
 
       if (db) {
         setUseIndexedCatAssets(true);
+        await backfillContentKeys(db).catch(() => {});
         const st = readCatCharacterState();
         if (st) {
           setEquippedAssetId(st.equippedAssetId);
