@@ -5,9 +5,11 @@ import {
   LEGACY_CAT_OUTFITS_KEY,
   catAssetDbHolder,
   dataUrlToPngBlob,
+  getCatSprite,
   openCatAssetDb,
   putCatSprite,
 } from './catAssetStore';
+import { blobContentKey } from './blobContentKey';
 
 function isSavedCatLook(x: unknown): x is SavedCatLook {
   if (!x || typeof x !== 'object') return false;
@@ -158,4 +160,43 @@ export async function migrateCatStorageIfNeeded(): Promise<IDBDatabase | null> {
     return navigator.locks.request(CAT_MIGRATION_LOCK_NAME, () => migrateCatStorageBody());
   }
   return migrateCatStorageBody();
+}
+
+/**
+ * Backfill `contentKey` for pre-Phase 4 SavedCatLook rows that are missing it.
+ * Loads each sprite blob from IndexedDB, computes its hash, and writes back
+ * the updated state. Idempotent — safe to call multiple times.
+ * Returns the (possibly updated) looks array.
+ */
+export async function backfillContentKeys(
+  db: IDBDatabase,
+  looks: SavedCatLook[],
+): Promise<SavedCatLook[]> {
+  const needsBackfill = looks.filter((l) => !l.contentKey);
+  if (needsBackfill.length === 0) return looks;
+
+  let changed = false;
+  const updated = await Promise.all(
+    looks.map(async (look) => {
+      if (look.contentKey) return look;
+      try {
+        const blob = await getCatSprite(db, look.assetId);
+        if (!blob) return look;
+        const key = await blobContentKey(blob);
+        changed = true;
+        return { ...look, contentKey: key };
+      } catch {
+        return look;
+      }
+    }),
+  );
+
+  if (changed) {
+    const state = readCatCharacterState();
+    if (state) {
+      writeCatCharacterState({ ...state, looks: updated });
+    }
+  }
+
+  return updated;
 }
