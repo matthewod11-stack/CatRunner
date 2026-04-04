@@ -1360,7 +1360,7 @@ export default class RunnerScene extends SceneBridge {
       this.createObstacleGraphics(projectile);
 
       const bossFaceX = this.boss.x + this.boss.width * 0.5;
-      const bossFaceY = this.boss.y + this.boss.height * 0.85;
+      const bossFaceY = (this.boss.y ?? 0) + this.boss.height * 0.85;
       const bossFaceScreenY = this.groundYScreen - (bossFaceY - this.themeGroundY);
       this.effects.spawnParticles(bossFaceX, bossFaceScreenY, 0x8b4513, 8);
       this.audio.playSfx('poop_launch');
