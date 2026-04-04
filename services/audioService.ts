@@ -114,16 +114,17 @@ export function startMusic(initialTempo: number = 120): void {
     const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) return;
 
-    audioContext = new AudioContextClass();
-    masterGain = audioContext.createGain();
-    masterGain.gain.setValueAtTime(0.3, audioContext.currentTime);
-    masterGain.connect(audioContext.destination);
+    const ctx = new AudioContextClass() as AudioContext;
+    audioContext = ctx;
+    masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0.3, ctx.currentTime);
+    masterGain.connect(ctx.destination);
 
     tempo = initialTempo;
     isPlaying = true;
     currentBeat = 0;
     currentChordIndex = 0;
-    nextBeatTime = audioContext.currentTime;
+    nextBeatTime = ctx.currentTime;
 
     musicScheduler();
   } catch (e) {

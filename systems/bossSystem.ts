@@ -44,7 +44,7 @@ export function createBossProjectileObstacle(params: {
   } = params;
 
   const bossFaceX = boss.x + boss.width * 0.5;
-  const bossFaceY = boss.y + boss.height * 0.85;
+  const bossFaceY = (boss.y ?? 0) + boss.height * 0.85;
 
   const kittyX = projectileAimX;
   const kittyY = groundY + playerY + 50;
