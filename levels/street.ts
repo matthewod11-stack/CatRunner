@@ -1,41 +1,63 @@
-import type { FroggerLevelConfig, FroggerLane } from '../types';
-
-// ─── Lane definitions (bottom to top) ───────────────────────────────
+import type { FroggerCrossingPhase, FroggerLane, FroggerLaneKind, FroggerLevelConfig } from '../types';
 
 const CELL = 48;
-const LANE_H = CELL;
 
-// Helper: build lanes from bottom of playfield upward
-function lane(index: number, type: FroggerLane['type'], dir: 1 | -1, speed: number, objWidth: number, color: number, gap: number): FroggerLane {
+function lane(
+  index: number,
+  kind: FroggerLaneKind,
+  dir: 1 | -1,
+  speed: number,
+  objWidth: number,
+  color: number,
+  gap: number
+): FroggerLane {
   return {
-    y: 600 - index * LANE_H, // 600 is bottom of play area
-    type,
+    y: 600 - index * CELL,
+    kind,
     direction: dir,
     speed,
-    objects: { width: objWidth, height: LANE_H - 4, color, gap },
+    objects: { width: objWidth, height: CELL - 4, color, gap },
   };
 }
 
-const LANES: FroggerLane[] = [
-  // Row 0: start (safe)
-  lane(0, 'safe', 1, 0, 0, 0x44aa44, 0),
-  // Rows 1-4: road section
-  lane(1, 'road', -1, 80, 60, 0xcc3333, 200),   // slow cars left
-  lane(2, 'road', 1, 120, 80, 0x3333cc, 180),    // fast trucks right
-  lane(3, 'road', -1, 60, 50, 0xcccc33, 250),    // slow taxis left
-  lane(4, 'road', 1, 100, 100, 0x884422, 160),   // big bus right
-  // Row 5: median (safe)
-  lane(5, 'safe', 1, 0, 0, 0x44aa44, 0),
-  // Rows 6-9: water section
-  lane(6, 'water', 1, 50, 120, 0x664422, 200),   // logs right
-  lane(7, 'water', -1, 70, 90, 0x664422, 180),   // logs left
-  lane(8, 'water', 1, 90, 80, 0x226644, 150),    // lily pads right
-  lane(9, 'water', -1, 60, 140, 0x664422, 220),  // big log left
-  // Row 10: goal (safe)
-  lane(10, 'safe', 1, 0, 0, 0xffaa44, 0),
-];
+/** Teaching: road → median only (no bike). */
+const PHASE_TEACH: FroggerCrossingPhase = {
+  label: 'teach',
+  lanes: [
+    lane(0, 'safe', 1, 0, 0, 0x44aa44, 0),
+    lane(1, 'road', -1, 65, 58, 0xcc3333, 230),
+    lane(2, 'road', 1, 85, 65, 0x3333cc, 210),
+    lane(3, 'medianSlow', -1, 32, 95, 0x996633, 300),
+    lane(4, 'safe', 1, 0, 0, 0x44aa44, 0),
+  ],
+};
 
-// ─── Level Config ───────────────────────────────────────────────────
+const PHASE_MID: FroggerCrossingPhase = {
+  label: 'mid',
+  lanes: [
+    lane(0, 'safe', 1, 0, 0, 0x44aa44, 0),
+    lane(1, 'road', -1, 75, 55, 0xcc3333, 210),
+    lane(2, 'road', 1, 95, 70, 0x3333cc, 190),
+    lane(3, 'medianSlow', -1, 38, 88, 0xaa6644, 270),
+    lane(4, 'bike', 1, 115, 38, 0x888899, 130),
+    lane(5, 'safe', 1, 0, 0, 0xffaa44, 0),
+  ],
+};
+
+const PHASE_HARD: FroggerCrossingPhase = {
+  label: 'hard',
+  lanes: [
+    lane(0, 'safe', 1, 0, 0, 0x44aa44, 0),
+    lane(1, 'road', -1, 85, 50, 0xcc3333, 190),
+    lane(2, 'road', 1, 110, 65, 0x3333cc, 170),
+    lane(3, 'road', -1, 70, 72, 0xcccc33, 200),
+    lane(4, 'medianSlow', -1, 42, 92, 0x886644, 250),
+    lane(5, 'medianSlow', 1, 48, 85, 0x886644, 240),
+    lane(6, 'bike', -1, 125, 34, 0x9999aa, 120),
+    lane(7, 'bike', 1, 140, 36, 0x777788, 110),
+    lane(8, 'safe', 1, 0, 0, 0xffaa44, 0),
+  ],
+};
 
 export const STREET_LEVEL_CONFIG: FroggerLevelConfig = {
   id: 'STREET',
@@ -46,12 +68,11 @@ export const STREET_LEVEL_CONFIG: FroggerLevelConfig = {
   victoryCondition: { type: 'goal', description: 'Reach the fish market' },
   starThresholds: [100, 300, 500],
 
-  lanes: LANES,
+  phases: [PHASE_TEACH, PHASE_MID, PHASE_HARD],
   cellSize: CELL,
-  startCol: 10, // center of 20-col grid
-  timeLimit: 60, // 60 seconds
+  startCol: 10,
+  timeLimit: 60,
   bgColor: '#1a2a1a',
   crossingsToWin: 3,
-
   startLives: 3,
 };

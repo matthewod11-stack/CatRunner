@@ -754,12 +754,13 @@ export interface BreakoutLevelConfig extends CampaignLevelMeta {
 
 // ─── Frogger (Level 6: Street) ──────────────────────────────────────
 
-/** A lane of moving hazards or platforms */
+/** One horizontal lane band (ordering: bottom → top in config arrays). */
+export type FroggerLaneKind = 'safe' | 'road' | 'medianSlow' | 'bike';
+
 export interface FroggerLane {
   /** Y position of this lane */
   y: number;
-  /** Type of lane */
-  type: 'road' | 'water' | 'safe';
+  kind: FroggerLaneKind;
   /** Direction: 1 = right, -1 = left */
   direction: 1 | -1;
   /** Speed of objects in this lane */
@@ -774,11 +775,16 @@ export interface FroggerLane {
   };
 }
 
+export interface FroggerCrossingPhase {
+  lanes: FroggerLane[];
+  label?: string;
+}
+
 /** Frogger-specific level config */
 export interface FroggerLevelConfig extends CampaignLevelMeta {
   genre: 'frogger';
-  /** Lane definitions from bottom to top */
-  lanes: FroggerLane[];
+  /** Per-crossing layout; active index = min(crossingsCompleted, phases.length - 1) */
+  phases: FroggerCrossingPhase[];
   /** Grid cell size for discrete movement */
   cellSize: number;
   /** Player start position (grid coords) */
