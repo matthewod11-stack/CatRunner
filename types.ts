@@ -405,16 +405,70 @@ export interface PlatformGenerationConfig {
   deathY: number;
 }
 
+export interface ZoneGenerationOverrides {
+  platformWidthRange?: [number, number];
+  gapRange?: [number, number];
+  heightStepRange?: [number, number];
+  gapScaling?: number;
+}
+
+export interface ZoneEnemyConfig {
+  type: 'PIGEON' | 'RAT' | 'RACCOON';
+  /** Average number of this enemy per 1000px of zone distance */
+  density: number;
+}
+
+export interface ZoneHazardConfig {
+  type: 'AC_UNIT' | 'CLOTHESLINE' | 'SATELLITE_DISH' | 'NEON_SIGN';
+  /** Average number per 1000px */
+  frequency: number;
+}
+
+export interface ZoneConfig {
+  startDistance: number;
+  endDistance: number;
+  generation: ZoneGenerationOverrides;
+  enemies: ZoneEnemyConfig[];
+  hazards: ZoneHazardConfig[];
+  fireEscapeChance: number;
+  coinDensity: number;
+}
+
+export interface PlatformerBossPhaseConfig {
+  swoopSpeed: number;
+  feathersPerPass: number;
+  swoopsBeforeLand: number;
+  landDuration: number;
+  miniPigeonCount: number;
+  hasDiveBomb: boolean;
+}
+
+export interface PlatformerBossConfig {
+  arenaWidth: number;
+  phases: [PlatformerBossPhaseConfig, PlatformerBossPhaseConfig, PlatformerBossPhaseConfig];
+}
+
+export interface PlatformerPowerupConfig {
+  tripleJumpDuration: number;
+  glideDuration: number;
+  glideGravityMultiplier: number;
+  spawnPerZone: number;
+  fireEscapeBonusChance: number;
+}
+
 /** Visual theme for the platformer */
 export interface PlatformerThemeConfig {
   /** Sky gradient colors [top, bottom] */
   skyGradient: [string, string];
+  skyGradientZone3?: [string, string];
   /** Platform fill color */
   platformColor: string;
   /** Platform border/edge color */
   platformEdgeColor: string;
   /** Background building tint colors */
   buildingColors: string[];
+  farSkylineColor: string;
+  midSkylineColor: string;
   /** Particle colors */
   particleColors: {
     dust: string;
@@ -428,6 +482,7 @@ export interface PlatformerLevelConfig extends CampaignLevelMeta {
   genre: 'platformer';
   theme: PlatformerThemeConfig;
   generation: PlatformGenerationConfig;
+  zones: ZoneConfig[];
   /** Distance in pixels to reach the penthouse (victory) */
   victoryDistance: number;
   /** Player movement tuning */
@@ -440,6 +495,8 @@ export interface PlatformerLevelConfig extends CampaignLevelMeta {
   };
   /** Initial lives */
   startLives: number;
+  boss: PlatformerBossConfig;
+  powerups: PlatformerPowerupConfig;
 }
 
 // ─── Launcher (Level 3: Kitchen) ────────────────────────────────────
