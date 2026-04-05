@@ -230,7 +230,11 @@ export default class PlatformerScene extends SceneBridge {
       this.player = this.physics.add.sprite(
         this.startX, this.config.generation.startY - 60, CAT_TEXTURE_KEY,
       );
-      this.player.setDisplaySize(PLAYER_WIDTH, PLAYER_HEIGHT);
+      // Scale the cat sprite to fit PLAYER_WIDTH x PLAYER_HEIGHT
+      const tex = this.textures.get(CAT_TEXTURE_KEY).getSourceImage();
+      const scaleX = PLAYER_WIDTH / tex.width;
+      const scaleY = PLAYER_HEIGHT / tex.height;
+      this.player.setScale(scaleX, scaleY);
     } else {
       // Fallback: colored rectangle
       const g = this.make.graphics({}, false);
