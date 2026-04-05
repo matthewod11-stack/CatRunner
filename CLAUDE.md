@@ -88,7 +88,7 @@ Set `GEMINI_API_KEY` in `.env.local` for AI features (custom cat generation, wis
   - `scenes/ShooterScene.ts` — Galaga wave formations, deferred destroy pattern
   - `scenes/BreakoutScene.ts` — Paddle + ball, brick grid
   - `scenes/FroggerScene.ts` — Lane hazards, discrete grid movement
-  - `scenes/WhackScene.ts` — Click/tap mice, combo system
+  - `scenes/WhackScene.ts` — Garden Patrol: wave phases, qualify score, Gopher King boss; managers in `scenes/whack/` (grid, background, mole spawn, powerups, boss)
   - `scenes/SnakeScene.ts` — Grid movement, grow tail, self-collision
   - `scenes/ClimberScene.ts` — Doodle Jump auto-bounce, vertical scroll
 - **Scene factory routing:** `App.tsx` uses a genre-keyed object lookup (`{ runner: () => import(...), platformer: ... }[genre]`) for code-split scene loading.
