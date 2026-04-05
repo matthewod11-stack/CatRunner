@@ -501,6 +501,14 @@ export interface PlatformerLevelConfig extends CampaignLevelMeta {
 
 // ─── Launcher (Level 3: Kitchen) ────────────────────────────────────
 
+export type LauncherBlockKind =
+  | 'normal'
+  | 'explosive'
+  | 'ice'
+  | 'power_crate'
+  | 'cheese_ward'
+  | 'mixer_core';
+
 /** A single destructible block in a structure */
 export interface LauncherBlock {
   x: number;
@@ -512,6 +520,8 @@ export interface LauncherBlock {
   material: 'glass' | 'wood' | 'metal';
   /** Points awarded when destroyed */
   points: number;
+  /** Defaults to normal when omitted */
+  kind?: LauncherBlockKind;
 }
 
 /** A pre-built structure of stacked blocks */
@@ -519,6 +529,37 @@ export interface LauncherStructure {
   /** Offset from right side of screen */
   offsetX: number;
   blocks: LauncherBlock[];
+}
+
+/** Counter spill slow-zone (screen-space rectangle) */
+export interface LauncherSpillRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface LauncherHazardConfig {
+  spill: LauncherSpillRect | null;
+  /** Horizontal gust during boss round */
+  bossFanEnabled?: boolean;
+}
+
+export interface LauncherActConfig {
+  id: string;
+  roundStart: number;
+  roundEnd: number;
+  /** Keys into `structurePresets` */
+  structurePool: string[];
+  /** Same length as pool; uniform random if omitted */
+  weights?: number[];
+}
+
+export interface LauncherBossConfig {
+  /** 1-based round index for the boss */
+  roundIndex: number;
+  structure: LauncherStructure;
+  shots: number;
 }
 
 /** Visual theme for the launcher */
@@ -560,6 +601,13 @@ export interface LauncherLevelConfig extends CampaignLevelMeta {
     maxDragDistance: number;
   };
   startLives: number;
+
+  /** Named structures for act pools + tooling; optional until launcher refactor consumes it */
+  structurePresets?: Record<string, LauncherStructure>;
+  acts?: LauncherActConfig[];
+  hazards?: LauncherHazardConfig;
+  boss?: LauncherBossConfig;
+  powerupsEnabled?: boolean;
 }
 
 // ─── Shooter (Level 4: Space) ───────────────────────────────────────
@@ -621,7 +669,35 @@ export interface ShooterLevelConfig extends CampaignLevelMeta {
   startLives: number;
 }
 
-// ─── Breakout (Level 5: Yarn) ───────────────────────────────────────
+// ─── Breakout (YARN — Yarn Ball Bounce) ─────────────────────────────
+
+export type BreakoutBrickKind = 'NORMAL' | 'ARMORED' | 'EXPLOSIVE' | 'POWERUP_CARRIER';
+export type BreakoutPowerupKind = 'WIDE_PADDLE' | 'MULTI_BALL' | 'STICKY_PADDLE' | 'SLOW_BALL';
+
+export interface YarnBackgroundConfig {
+  floorBandColor?: string;
+  floorBandHeightPx?: number;
+  vignetteAlpha?: number;
+}
+
+export interface BreakoutPowerupConfig {
+  widePaddleScale?: number;
+  widePaddleDurationMs?: number;
+  slowBallDurationMs?: number;
+  slowMaxSpeedFactor?: number;
+  maxBalls?: number;
+  carrierDropChance?: number;
+}
+
+export interface BreakoutHazardConfig {
+  enableDriftingFluff?: boolean;
+  fluffNudgeRad?: number;
+}
+
+export interface BreakoutFinaleConfig {
+  enableUnravelCelebration?: boolean;
+  unravelDurationMs?: number;
+}
 
 /** A single brick in the breakout grid */
 export interface BreakoutBrick {
@@ -635,6 +711,10 @@ export interface BreakoutBrick {
   color: number;
   /** Points when destroyed */
   points: number;
+  /** Optional brick behavior (defaults to NORMAL) */
+  kind?: BreakoutBrickKind;
+  /** When kind is POWERUP_CARRIER, which drop spawns on destroy */
+  powerupDrop?: BreakoutPowerupKind;
 }
 
 /** Breakout-specific level config */
@@ -665,6 +745,11 @@ export interface BreakoutLevelConfig extends CampaignLevelMeta {
   /** Background color */
   bgColor: string;
   startLives: number;
+  /** Optional yarn-room layers (Phase B) */
+  background?: YarnBackgroundConfig;
+  powerups?: BreakoutPowerupConfig;
+  hazards?: BreakoutHazardConfig;
+  finale?: BreakoutFinaleConfig;
 }
 
 // ─── Frogger (Level 6: Street) ──────────────────────────────────────
@@ -721,6 +806,29 @@ export interface WhackMouseType {
   visibleMs: number;
   points: number;
   color: number;
+  /** Applies timed effect when whacked */
+  grantsEffect?: 'slow_mo' | 'double_score';
+  effectDurationSec?: number;
+}
+
+export interface WhackWaveConfig {
+  /** 0-based index (should match array position) */
+  index: number;
+  /** Seconds this wave lasts */
+  durationSec: number;
+  /** Spawn interval [maxMs, minMs] — eases faster pops toward end of wave */
+  spawnIntervalRange: [number, number];
+  /** Relative weights per `mouseTypes` key */
+  spawnWeights: Record<string, number>;
+}
+
+export interface WhackBossConfig {
+  hitsToDefeat: number;
+  visibleMs: number;
+  hitInvulnMs: number;
+  emergeDelayMs: [number, number];
+  color: number;
+  radiusPx: number;
 }
 
 export interface WhackLevelConfig extends CampaignLevelMeta {
@@ -730,11 +838,14 @@ export interface WhackLevelConfig extends CampaignLevelMeta {
   gridRows: number;
   /** Mouse types keyed by name */
   mouseTypes: Record<string, WhackMouseType>;
-  /** Time limit in seconds */
-  timeLimit: number;
-  /** Min/max ms between mouse pops — decreases over time */
-  spawnIntervalRange: [number, number];
+  /** Total seconds for wave phase before qualify check (should match sum of `waves[].durationSec`) */
+  wavePhaseTimeLimitSec: number;
+  waves: WhackWaveConfig[];
+  boss: WhackBossConfig;
+  /** Boss phase timeout in seconds; 0 = no limit */
+  bossTimeLimitSec: number;
   bgColor: string;
+  /** Bridge / HUD compatibility; wave+boss v1 does not KO on lives */
   startLives: number;
 }
 
