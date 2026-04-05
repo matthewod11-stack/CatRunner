@@ -62,4 +62,9 @@ export class PhaseController implements SceneManager {
       Math.ceil((this.config.finaleDurationMs - finaleElapsed) / 1000),
     );
   }
+
+  /** Wall-clock ms since `create()` — shared with EscalationManager tick. */
+  getRunElapsedMs(): number {
+    return this.getNow() - this.runStartTime;
+  }
 }

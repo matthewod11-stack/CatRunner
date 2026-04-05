@@ -3,6 +3,7 @@ import { SceneBridge } from './shared/SceneBridge';
 import type { SnakeSceneInitData } from './shared/bridgeProtocol';
 import type { GameScore, GameStatus, SnakeLevelConfig } from '../types';
 import { EffectsManager } from './shared/EffectsManager';
+import { PhaserAudio } from './shared/PhaserAudio';
 import { GridRenderManager } from './snake/GridRenderManager';
 import { WallManager } from './snake/WallManager';
 import { FoodManager } from './snake/FoodManager';
@@ -38,6 +39,7 @@ export default class SnakeScene extends SceneBridge {
   private snakeSim!: SnakeSimManager;
 
   private effects!: EffectsManager;
+  private audio!: PhaserAudio;
 
   private timeText!: Phaser.GameObjects.Text;
   private lengthText!: Phaser.GameObjects.Text;
@@ -76,6 +78,7 @@ export default class SnakeScene extends SceneBridge {
     this.phase = new PhaseController(this.config, () => this.time.now, () => {
       this.food.clear();
       this.dog.start();
+      this.audio.playSfx('boss_alert');
     });
 
     this.grid.create();
@@ -93,6 +96,7 @@ export default class SnakeScene extends SceneBridge {
     this.food.spawn(exclude);
 
     this.effects = new EffectsManager(this);
+    this.audio = new PhaserAudio(this);
 
     this.input.keyboard!.on('keydown-P', this.togglePause, this);
     this.input.keyboard!.on('keydown-ESC', this.togglePause, this);
@@ -125,6 +129,7 @@ export default class SnakeScene extends SceneBridge {
     if (this.phase.hasWon()) {
       if (!this.hasWon) {
         this.hasWon = true;
+        this.audio.playSfx('mult');
         this.effects.spawnParticles(this.scale.width / 2, this.scale.height / 2, 0x44ff44, 25, 300);
         this.emitLevelComplete({
           levelId: 'GARDEN_SNAKE',
@@ -188,6 +193,7 @@ export default class SnakeScene extends SceneBridge {
     );
     this.effects.floatingScore(foodPos.col * cs + cs / 2, foodPos.row * cs + cs / 2, '+10');
 
+    this.audio.playSfx('coin');
     this.emitScoreUpdate({ ...this.gameScore });
 
     const exclude = new Set<string>([
@@ -205,6 +211,7 @@ export default class SnakeScene extends SceneBridge {
 
     const head = this.snakeSim.getBody()[0];
     const cs = this.config.cellSize;
+    this.audio.playSfx('hit');
     this.effects.flash(0xff0000, 200);
     this.effects.shake(0.015, 150);
     this.effects.spawnParticles(head.col * cs + cs / 2, head.row * cs + cs / 2, 0xff4444, 10, 150);
