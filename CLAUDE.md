@@ -83,7 +83,7 @@ Set `GEMINI_API_KEY` in `.env.local` for AI features (custom cat generation, wis
 - **`scenes/shared/SpriteLoader.ts`** — Loads cat sprite blob URL into Phaser texture cache during `preload()`.
 - **Genre scenes (all 9 implemented as skeletons):**
   - `scenes/RunnerScene.ts` — Beach runner (full port from GameEngine)
-  - `scenes/PlatformerScene.ts` — Mario-style L/R/jump, procedural platforms
+  - `scenes/PlatformerScene.ts` — Mario-style platformer, **fully built** (modular orchestrator calling 6 managers in `scenes/platformer/`: BuildingGenerator, CityBackground, EnemyManager, HazardManager, PowerupManager, PigeonKingBoss). Pure logic in `generation.ts` + `bossPhases.ts` with Vitest coverage.
   - `scenes/LauncherScene.ts` — Angry Birds slingshot, destructible blocks
   - `scenes/ShooterScene.ts` — Galaga wave formations, deferred destroy pattern
   - `scenes/BreakoutScene.ts` — Paddle + ball, brick grid
@@ -138,3 +138,4 @@ Squash/stretch (Kitty), freeze frames, screen shake, hit flash, speed lines, dus
 - **[prompts/overnight-agent.md](./prompts/overnight-agent.md)** — Thin Desktop task entry point → reads OVERNIGHT_AGENT.md, writes run log.
 - **`state/overnight-agent-log.json`** — Runtime log from overnight agent (gitignored).
 - **GitHub Issues** — Primary tracker for tech-debt and bugs. Issues use `Automation Hints` section for overnight agent consumption.
+- **`/levelbuilder`** — Project command: builds a campaign level from skeleton to functional via brainstorm → spec → plan → subagent execution. 10-task template. Reference impl: City Heights (ROOFTOPS).

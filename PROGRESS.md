@@ -34,6 +34,34 @@ sed -n '1,100p' ROADMAP_V3.md
 Most recent session should be first.
 -->
 
+## Session: 2026-04-05 09:00 (City Heights Full Level Build)
+
+### Completed
+- [x] **City Heights (ROOFTOPS) full level design** — Brainstormed and specced a 3-zone Mario-style platformer with golden hour cityscape, building-based rooftop platforms, 3 enemy types (pigeon, rat, raccoon), 4 hazards (AC unit, clothesline, satellite dish, neon sign), 3 platformer-specific powerups (triple jump, glide, shield), and Pigeon King boss fight
+- [x] **10-task modular implementation** — Built 6 manager modules (BuildingGenerator, CityBackground, EnemyManager, HazardManager, PowerupManager, PigeonKingBoss) + rewrote PlatformerScene as thin orchestrator + SFX integration
+- [x] **Testable pure logic** — Extracted `generation.ts` (zone resolution) and `bossPhases.ts` (boss state machine) with full Vitest coverage (12 new tests, 97 total)
+- [x] **`/levelbuilder` command** — Created project-level slash command that codifies the repeatable build pipeline for remaining 7 campaign levels
+- [x] **Cat sprite sizing fix** — Fixed cat rendering at native texture resolution by computing scale from source image dimensions
+- [x] **Visual companion brainstorm** — Used browser-based visual companion for enemy/hazard selection, visual style (golden hour), and building generation model mockups
+
+### In Progress
+- [ ] **Visual polish** — Building facades, enemy sprites, hazard art are all placeholder rectangles. Need proper sprite art pass.
+- [ ] **Gameplay tuning** — Gap sizes, enemy density, boss timing, powerup durations need playtesting adjustment
+- [ ] **Cat sprite size** — Fixed scaling logic but may need size constant adjustment (40x48 might be too small relative to buildings)
+
+### Issues Encountered
+- Phaser `setDisplaySize` didn't reliably scale loaded cat sprite textures — switched to computing scale from source image dimensions
+- Git worktrees errored on branch conflicts — user prefers working directly on main
+- Subagent batching (Tasks 3-6) returned before committing — needed manual commit of created files
+
+### Next Session Should
+1. **Playtest City Heights end-to-end** — Verify all 3 zones, enemy behaviors, hazard interactions, boss fight, and victory flow work correctly
+2. **Tune difficulty** — Adjust gap sizes, enemy density, boss land durations based on playthrough feel
+3. **Use `/levelbuilder` on next level** — Pick Kitchen (launcher), Space (shooter), or another skeleton to validate the repeatable pipeline
+4. **Sprite art pass** — Replace placeholder rectangles with proper enemy/hazard art (consider Nanobanana MCP for sprite generation)
+
+---
+
 ## Session: 2026-03-30 09:15 (Local Overnight Agent — Desktop Task Setup)
 
 ### Completed
