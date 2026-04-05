@@ -4,6 +4,7 @@ import type { PlatformerSceneInitData } from './shared/bridgeProtocol';
 import type { PlatformerLevelConfig, GameScore, GameStatus } from '../types';
 import { loadCatSprite, CAT_TEXTURE_KEY } from './shared/SpriteLoader';
 import { EffectsManager } from './shared/EffectsManager';
+import { PhaserAudio } from './shared/PhaserAudio';
 import { BuildingGenerator } from './platformer/BuildingGenerator';
 import { CityBackground } from './platformer/CityBackground';
 import { EnemyManager } from './platformer/EnemyManager';
@@ -48,6 +49,7 @@ export default class PlatformerScene extends SceneBridge {
   private jumpHeld = false;
 
   // Managers
+  private audio!: PhaserAudio;
   private effects!: EffectsManager;
   private buildingGen!: BuildingGenerator;
   private background!: CityBackground;
@@ -82,6 +84,9 @@ export default class PlatformerScene extends SceneBridge {
 
     // Effects manager (shared by several managers)
     this.effects = new EffectsManager(this);
+
+    // Audio — procedural SFX + music
+    this.audio = new PhaserAudio(this);
 
     // ── Instantiate managers ────────────────────────────────────
 
@@ -146,7 +151,10 @@ export default class PlatformerScene extends SceneBridge {
     );
     this.physics.add.overlap(
       this.player, this.powerups.getGroup(),
-      (_p, powerup) => this.powerups.collectPowerup(powerup as Phaser.Physics.Arcade.Sprite),
+      (_p, powerup) => {
+        this.audio.playSfx('powerup');
+        this.powerups.collectPowerup(powerup as Phaser.Physics.Arcade.Sprite);
+      },
     );
     this.physics.add.overlap(
       this.player, this.buildingGen.getCoinGroup(),
@@ -282,6 +290,7 @@ export default class PlatformerScene extends SceneBridge {
     if (jumpJustPressed && this.jumpCount < this.maxJumps) {
       body.setVelocityY(-this.config.playerConfig.jumpForce);
       this.jumpCount++;
+      this.audio.playSfx('jump');
       if (this.jumpCount === 1 && this.isOnGround) {
         this.effects.spawnDust(this.player.x, this.player.y + PLAYER_HEIGHT / 2, 1);
       }
@@ -320,6 +329,7 @@ export default class PlatformerScene extends SceneBridge {
       // Bounce up after stomp — reward for stomping
       this.player.body.setVelocityY(-this.config.playerConfig.jumpForce * 0.6);
       this.jumpCount = 0;
+      this.audio.playSfx('hit');
       this.gameScore.current += result.points;
       this.gameScore.streak += 1;
       if (this.gameScore.streak % 5 === 0) {
@@ -336,6 +346,7 @@ export default class PlatformerScene extends SceneBridge {
       -this.config.playerConfig.jumpForce * BOUNCE_MULTIPLIER,
     );
     this.jumpCount = 0;
+    this.audio.playSfx('boing');
     this.effects.shake(0.008, 80);
   }
 
@@ -358,6 +369,7 @@ export default class PlatformerScene extends SceneBridge {
     this.gameScore.streak = 0;
     this.gameScore.multiplier = 1;
 
+    this.audio.playSfx('hit');
     this.effects.flash(0xff0000, 200);
     this.effects.shake(0.015, 150);
     this.emitLivesChanged(this.lives);
@@ -385,6 +397,7 @@ export default class PlatformerScene extends SceneBridge {
     const cy = coinSprite.y;
     coinSprite.destroy();
 
+    this.audio.playSfx('coin');
     this.gameScore.coins += 1;
     this.gameScore.streak += 1;
     if (this.gameScore.streak % 5 === 0) {
@@ -412,6 +425,8 @@ export default class PlatformerScene extends SceneBridge {
     if (this.inBossArena) return;
     if (this.distanceTraveled >= this.config.victoryDistance - 1000) {
       this.inBossArena = true;
+      this.audio.playSfx('boss_alert');
+      this.audio.setBossMode(true);
 
       // Set up boss arena at the end of the level
       const arenaX = this.startX + this.config.victoryDistance - 500;
@@ -421,6 +436,7 @@ export default class PlatformerScene extends SceneBridge {
       // Wire up boss collisions (deferred until arena exists)
       this.physics.add.overlap(this.player, this.boss.getBossSprite(), () => {
         if (this.boss.handleStomp()) {
+          this.audio.playSfx('boss_hit');
           this.player.body.setVelocityY(-this.config.playerConfig.jumpForce * 0.7);
           this.jumpCount = 0;
           this.gameScore.current += 100;
@@ -449,6 +465,7 @@ export default class PlatformerScene extends SceneBridge {
 
   private handleVictory(): void {
     this.hasWon = true;
+    this.audio.playSfx('mult');
     this.effects.spawnParticles(this.player.x, this.player.y, 0xffdd44, 20, 300);
     this.emitLevelComplete({
       levelId: 'ROOFTOPS',
@@ -473,6 +490,7 @@ export default class PlatformerScene extends SceneBridge {
     this.gameScore.streak = 0;
     this.gameScore.multiplier = 1;
 
+    this.audio.playSfx('meow');
     this.effects.flash(0xff0000, 200);
     this.effects.shake(0.015, 150);
     this.emitLivesChanged(this.lives);
