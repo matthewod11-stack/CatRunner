@@ -851,6 +851,16 @@ export interface WhackLevelConfig extends CampaignLevelMeta {
 
 // ─── Snake (Level 8: Garden Snake) ──────────────────────────────────
 
+/** Optional tuning for normal-phase pressure (speed steps + extra walls). */
+export interface SnakeEscalationConfig {
+  /** Shave this many ms off move interval every `speedStepEveryMs` of normal phase. */
+  speedStepAmount: number;
+  /** Wall-clock ms between speed steps during normal phase. */
+  speedStepEveryMs: number;
+  /** At these elapsed-ms marks during normal phase, add one random interior wall (if cell free). */
+  extraWallAtElapsedMs: number[];
+}
+
 export interface SnakeLevelConfig extends CampaignLevelMeta {
   genre: 'snake';
   /** Grid dimensions */
@@ -865,8 +875,11 @@ export interface SnakeLevelConfig extends CampaignLevelMeta {
   minMoveInterval: number;
   /** Number of wall obstacles */
   wallCount: number;
-  /** Survive this long to win (ms) */
-  surviveTimeMs: number;
+  /** Normal garden phase duration (ms) before finale. */
+  normalPhaseMs: number;
+  /** Survive this long in finale with patrol active to win. */
+  finaleDurationMs: number;
+  escalation: SnakeEscalationConfig;
   bgColor: string;
   startLives: number;
 }

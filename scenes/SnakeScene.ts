@@ -31,7 +31,7 @@ export default class SnakeScene extends SceneBridge {
   private snakeGraphics!: Phaser.GameObjects.Graphics;
   private wallGraphics!: Phaser.GameObjects.Graphics;
 
-  // Timer
+  /** Wall-clock run timer (temporary single-phase win until Task 8). */
   private surviveStartTime = 0;
   private timeText!: Phaser.GameObjects.Text;
   private lengthText!: Phaser.GameObjects.Text;
@@ -298,21 +298,23 @@ export default class SnakeScene extends SceneBridge {
 
   private checkSurviveVictory(): void {
     const elapsed = this.time.now - this.surviveStartTime;
-    if (elapsed >= this.config.surviveTimeMs) {
+    const winAfterMs = this.config.normalPhaseMs + this.config.finaleDurationMs;
+    if (elapsed >= winAfterMs) {
       this.hasWon = true;
       this.effects.spawnParticles(this.scale.width / 2, this.scale.height / 2, 0x44ff44, 25, 300);
       this.emitLevelComplete({
         levelId: 'GARDEN_SNAKE',
         finalScore: this.gameScore.current,
         gameScore: { ...this.gameScore },
-        victoryType: 'survive',
+        victoryType: 'goal',
       });
     }
   }
 
   private updateHud(): void {
     const elapsed = Math.floor((this.time.now - this.surviveStartTime) / 1000);
-    const remaining = Math.max(0, Math.floor(this.config.surviveTimeMs / 1000) - elapsed);
+    const totalSec = Math.floor((this.config.normalPhaseMs + this.config.finaleDurationMs) / 1000);
+    const remaining = Math.max(0, totalSec - elapsed);
     this.timeText.setText(`Survive: ${remaining}s`);
     this.lengthText.setText(`Length: ${this.snakeBody.length}`);
   }

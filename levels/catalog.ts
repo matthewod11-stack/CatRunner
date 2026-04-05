@@ -89,9 +89,9 @@ export const CAMPAIGN_LEVEL_META: CampaignLevelMeta[] = [
     id: 'GARDEN_SNAKE',
     name: 'Garden Snake',
     genre: 'snake',
-    description: 'Grow your tail by eating treats in the garden!',
+    description: 'Grow your tail in the garden — then survive the patrol!',
     catPose: 'slitherer',
-    victoryCondition: { type: 'survive', durationMs: 120000 },
+    victoryCondition: { type: 'goal', description: 'Survive the garden patrol' },
     starThresholds: [200, 500, 900],
   },
   {
