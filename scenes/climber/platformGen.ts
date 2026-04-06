@@ -30,8 +30,8 @@ function rollKind(
   breakableChance: number,
 ): PlatformKind {
   const u = rng();
-  if (u < breakableChance) return 'breakable';
-  if (u < breakableChance + springChance) return 'spring';
+  if (u < springChance) return 'spring';
+  if (u < springChance + breakableChance) return 'breakable';
   return 'solid';
 }
 

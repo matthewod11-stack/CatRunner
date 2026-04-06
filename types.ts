@@ -971,7 +971,10 @@ export interface ClimberLevelConfig extends CampaignLevelMeta {
   };
   /** Summit gauntlet + star timing */
   summitConfig: {
-    /** World Y (negative = up) at which summit phase begins — must align with victoryHeight / highestY semantics */
+    /**
+     * World Y (negative = up) at which summit phase begins — align with victoryHeight / highestY so a short gauntlet
+     * remains before the goal (e.g. entryWorldY: -9200 when victoryHeight: 10000).
+     */
     entryWorldY: number;
     parTimeMs: number;
   };
