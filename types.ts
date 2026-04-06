@@ -351,6 +351,8 @@ export interface LevelCompletePayload {
   finalScore: number;
   gameScore: GameScore;
   victoryType: VictoryCondition['type'];
+  /** When set, App uses this for `saveLevelResult` instead of score-based `computeStars`. */
+  awardedStars?: 1 | 2 | 3;
 }
 
 export interface LevelResult {
@@ -671,8 +673,30 @@ export interface ShooterLevelConfig extends CampaignLevelMeta {
 
 // ─── Breakout (YARN — Yarn Ball Bounce) ─────────────────────────────
 
-export type BreakoutBrickKind = 'NORMAL' | 'ARMORED' | 'EXPLOSIVE' | 'POWERUP_CARRIER';
+export type BreakoutBrickKind =
+  | 'NORMAL'
+  | 'ARMORED'
+  | 'EXPLOSIVE'
+  | 'POWERUP_CARRIER'
+  /**
+   * Yarn knot miniboss: max HP is `health`. Anchored until `currentHealth <= Math.ceil(maxHealth / 2)`
+   * once, then mobile phase (single transition; see spec).
+   */
+  | 'YARN_KNOT';
 export type BreakoutPowerupKind = 'WIDE_PADDLE' | 'MULTI_BALL' | 'STICKY_PADDLE' | 'SLOW_BALL';
+
+export interface BreakoutMinibossConfig {
+  patrolSpeedPx: number;
+  bonusDestroyPoints: number;
+}
+
+export interface BreakoutWaveTransitionConfig {
+  minDelayMs: number;
+  /** If true, SPACE skips remaining wait after minDelayMs */
+  skippableWithSpace: boolean;
+  /** Auto-advance after this many ms if player never skips (optional safety) */
+  autoAdvanceMs?: number;
+}
 
 export interface YarnBackgroundConfig {
   floorBandColor?: string;
@@ -687,6 +711,11 @@ export interface BreakoutPowerupConfig {
   slowMaxSpeedFactor?: number;
   maxBalls?: number;
   carrierDropChance?: number;
+  /** 0–1 chance per eligible NORMAL elimination to roll a drop (before pity) */
+  randomDropChance?: number;
+  /** After this many eligible breaks without a slow, next eligible forces slow */
+  pitySlowThreshold?: number;
+  pityMultiThreshold?: number;
 }
 
 export interface BreakoutHazardConfig {
@@ -722,6 +751,10 @@ export interface BreakoutLevelConfig extends CampaignLevelMeta {
   genre: 'breakout';
   /** Brick grid layout */
   bricks: BreakoutBrick[];
+  /** When set, length must be ≥ 1. Index 0 = first wave. If omitted, `bricks` is the only wave. */
+  waves?: BreakoutBrick[][];
+  miniboss?: BreakoutMinibossConfig;
+  waveTransition?: BreakoutWaveTransitionConfig;
   /** Grid dimensions */
   gridCols: number;
   gridRows: number;
@@ -908,6 +941,39 @@ export interface ClimberLevelConfig extends CampaignLevelMeta {
     springChance: number;
     /** Chance of breakable platform (0-1) */
     breakableChance: number;
+  };
+  /** Patrol enemies on platforms */
+  enemyConfig: {
+    /** Approximate spawns per 1000px of upward world distance */
+    spawnDensity: number;
+    patrolSpeed: number;
+    hitboxWidth: number;
+    hitboxHeight: number;
+  };
+  /** Rare static damage strips on platform tops */
+  prickleConfig: {
+    /** Chance (0–1) a generated platform row includes a prickle strip */
+    chancePerPlatform: number;
+    /** Fraction of platform width */
+    stripWidthFraction: number;
+  };
+  /** Sticky paws pickup */
+  stickyPawsConfig: {
+    durationMs: number;
+    /** Approximate pickups per 1000px climbed */
+    spawnDensity: number;
+    verticalStripWidth: number;
+    verticalStripHeight: number;
+    /** Max downward slide speed (px/s) while clinging */
+    maxSlideSpeed: number;
+    /** Horizontal nudge while sliding (px/s) */
+    horizontalSlideAccel: number;
+  };
+  /** Summit gauntlet + star timing */
+  summitConfig: {
+    /** World Y (negative = up) at which summit phase begins — must align with victoryHeight / highestY semantics */
+    entryWorldY: number;
+    parTimeMs: number;
   };
   /** Player horizontal speed */
   moveSpeed: number;

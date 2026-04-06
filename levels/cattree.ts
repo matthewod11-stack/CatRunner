@@ -20,6 +20,29 @@ export const CAT_TREE_LEVEL_CONFIG: ClimberLevelConfig = {
     breakableChance: 0.1,
   },
 
+  enemyConfig: {
+    spawnDensity: 0.35,
+    patrolSpeed: 80,
+    hitboxWidth: 28,
+    hitboxHeight: 24,
+  },
+  prickleConfig: {
+    chancePerPlatform: 0.06,
+    stripWidthFraction: 0.35,
+  },
+  stickyPawsConfig: {
+    durationMs: 3200,
+    spawnDensity: 0.12,
+    verticalStripWidth: 14,
+    verticalStripHeight: 72,
+    maxSlideSpeed: 120,
+    horizontalSlideAccel: 280,
+  },
+  summitConfig: {
+    entryWorldY: -9200,
+    parTimeMs: 240000,
+  },
+
   moveSpeed: 300,
   bounceForce: 500,
   victoryHeight: 10000,
