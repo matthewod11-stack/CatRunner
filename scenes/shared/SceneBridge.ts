@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import type { GameScore, GameStatus, LevelCompletePayload } from '../../types';
+import type { GameScore, GameStatus, LevelCompletePayload, LevelId } from '../../types';
 import { BRIDGE_EVENTS } from './bridgeProtocol';
 import type { SceneInitData, HudUpdatePayload } from './bridgeProtocol';
 
@@ -8,7 +8,7 @@ export { BRIDGE_EVENTS } from './bridgeProtocol';
 export type { SceneInitData, RunnerSceneInitData, PlatformerSceneInitData, LauncherSceneInitData, ShooterSceneInitData, BreakoutSceneInitData, FroggerSceneInitData, WhackSceneInitData, SnakeSceneInitData, ClimberSceneInitData } from './bridgeProtocol';
 
 export abstract class SceneBridge extends Phaser.Scene {
-  protected levelId!: string;
+  protected levelId!: LevelId;
   protected catSpriteUrl: string | null = null;
 
   init(data: SceneInitData): void {

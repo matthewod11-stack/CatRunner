@@ -31,7 +31,11 @@ export type ProceduralSfxType =
   | 'mult'
   | 'poop_launch'
   | 'shoot'
-  | 'powerup';
+  | 'powerup'
+  | 'brick_hit'
+  | 'brick_break'
+  | 'paddle_hit'
+  | 'ball_lost';
 
 // ---------------------------------------------------------------------------
 // Music note table (C-major pentatonic)
@@ -248,6 +252,42 @@ export class PhaserAudio {
         osc.frequency.exponentialRampToValueAtTime(880, t0 + 0.15);
         gain.gain.setValueAtTime(0.15, t0);
         duration = 0.2;
+        break;
+
+      // -- Breakout: brick tap ------------------------------------------------
+      case 'brick_hit':
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(320, t0);
+        osc.frequency.exponentialRampToValueAtTime(180, t0 + 0.06);
+        gain.gain.setValueAtTime(0.12, t0);
+        duration = 0.08;
+        break;
+
+      // -- Breakout: brick destroyed ------------------------------------------
+      case 'brick_break':
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(520, t0);
+        osc.frequency.exponentialRampToValueAtTime(220, t0 + 0.12);
+        gain.gain.setValueAtTime(0.14, t0);
+        duration = 0.14;
+        break;
+
+      // -- Breakout: paddle ----------------------------------------------------
+      case 'paddle_hit':
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(240, t0);
+        osc.frequency.exponentialRampToValueAtTime(360, t0 + 0.08);
+        gain.gain.setValueAtTime(0.1, t0);
+        duration = 0.1;
+        break;
+
+      // -- Breakout: ball lost -------------------------------------------------
+      case 'ball_lost':
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(180, t0);
+        osc.frequency.exponentialRampToValueAtTime(60, t0 + 0.25);
+        gain.gain.setValueAtTime(0.12, t0);
+        duration = 0.28;
         break;
 
       default: {
