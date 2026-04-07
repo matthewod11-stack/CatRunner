@@ -16,17 +16,41 @@ function generateBrickGrid(cols: number, rows: number): BreakoutBrick[] {
   const bricks: BreakoutBrick[] = [];
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
-      // Top rows are tougher
       const health = row < 2 ? 3 : row < 4 ? 2 : 1;
       const points = health * 10;
       const color = COLORS[row % COLORS.length];
-      bricks.push({ col, row, health, color, points });
+      const b: BreakoutBrick = { col, row, health, color, points };
+
+      if (row === 0 && col === Math.floor(cols / 2)) {
+        b.kind = 'EXPLOSIVE';
+      }
+      if (row === 3 && col === 2) {
+        b.kind = 'POWERUP_CARRIER';
+        b.powerupDrop = 'WIDE_PADDLE';
+      }
+      if (row === 3 && col === 7) {
+        b.kind = 'POWERUP_CARRIER';
+        b.powerupDrop = 'MULTI_BALL';
+      }
+
+      bricks.push(b);
     }
   }
   return bricks;
 }
 
+function generateWaveTwoBricks(): BreakoutBrick[] {
+  return generateBrickGrid(8, 5).map((brick) =>
+    brick.col === 4 && brick.row === 2
+      ? { ...brick, kind: 'YARN_KNOT' as const, health: 8, points: 200, color: 0xaa66ee }
+      : brick
+  );
+}
+
 // ─── Level Config ───────────────────────────────────────────────────
+
+const wave0Bricks = generateBrickGrid(10, 7);
+const wave1Bricks = generateWaveTwoBricks();
 
 export const YARN_LEVEL_CONFIG: BreakoutLevelConfig = {
   id: 'YARN',
@@ -37,7 +61,19 @@ export const YARN_LEVEL_CONFIG: BreakoutLevelConfig = {
   victoryCondition: { type: 'clear', description: 'Break all blocks' },
   starThresholds: [200, 500, 800],
 
-  bricks: generateBrickGrid(10, 7),
+  bricks: wave0Bricks,
+  waves: [wave0Bricks, wave1Bricks],
+
+  miniboss: {
+    patrolSpeedPx: 120,
+    bonusDestroyPoints: 200,
+  },
+
+  waveTransition: {
+    minDelayMs: 300,
+    skippableWithSpace: true,
+    autoAdvanceMs: 1200,
+  },
   gridCols: 10,
   gridRows: 7,
   brickWidth: 80,
@@ -57,7 +93,34 @@ export const YARN_LEVEL_CONFIG: BreakoutLevelConfig = {
     maxSpeed: 600,
   },
 
-  bgColor: '#1a1028', // dark purple
+  bgColor: '#1a1028',
+
+  background: {
+    floorBandColor: '#2a1820',
+    floorBandHeightPx: 56,
+  },
+
+  powerups: {
+    widePaddleScale: 1.45,
+    widePaddleDurationMs: 12000,
+    slowBallDurationMs: 8000,
+    slowMaxSpeedFactor: 0.5,
+    maxBalls: 3,
+    carrierDropChance: 1,
+    randomDropChance: 0.04,
+    pitySlowThreshold: 12,
+    pityMultiThreshold: 14,
+  },
+
+  hazards: {
+    enableDriftingFluff: false,
+    fluffNudgeRad: 0.1,
+  },
+
+  finale: {
+    enableUnravelCelebration: true,
+    unravelDurationMs: 1600,
+  },
 
   startLives: 3,
 };

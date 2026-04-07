@@ -3,7 +3,6 @@ import { SceneBridge } from './shared/SceneBridge';
 import type { LauncherSceneInitData } from './shared/bridgeProtocol';
 import { PhaserAudio } from './shared/PhaserAudio';
 import type { LauncherLevelConfig, LauncherStructure, GameScore, GameStatus } from '../types';
-import type { LauncherBlockKind } from '../types';
 import { loadCatSprite, CAT_TEXTURE_KEY } from './shared/SpriteLoader';
 import { EffectsManager } from './shared/EffectsManager';
 import { pickStructureKey, resolveActForRound } from './launcher/actPick';
@@ -50,6 +49,7 @@ export default class LauncherScene extends SceneBridge {
   private aimLine!: Phaser.GameObjects.Graphics;
 
   private projectile: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody | null = null;
+  private projCollider: Phaser.Physics.Arcade.Collider | null = null;
 
   private currentStructure: LauncherStructure | null = null;
 
@@ -378,9 +378,13 @@ export default class LauncherScene extends SceneBridge {
     this.projectile.body.setBounce(0.3, 0.3);
     this.projectile.body.setCollideWorldBounds(false);
 
-    this.physics.add.collider(this.projectile, this.structure.getBlockGroup(), (_proj, blockObj) => {
-      this.onBlockHit(blockObj as Phaser.Physics.Arcade.Sprite);
-    });
+    this.projCollider = this.physics.add.collider(
+      this.projectile,
+      this.structure.getBlockGroup(),
+      (_proj, blockObj) => {
+        this.onBlockHit(blockObj as Phaser.Physics.Arcade.Sprite);
+      }
+    );
 
     this.audio.playSfx('jump');
     this.tweens.add({
@@ -404,6 +408,7 @@ export default class LauncherScene extends SceneBridge {
   }
 
   private onBlockHit(block: Phaser.Physics.Arcade.Sprite): void {
+    if (this.hasWon) return;
     const data = this.structure.getBlockData().get(block);
     if (!data || !block.active) return;
 
@@ -413,33 +418,29 @@ export default class LauncherScene extends SceneBridge {
       return;
     }
 
-    let dmg = 1 + this.pendingPierceExtra;
+    const dmg = 1 + this.pendingPierceExtra;
     this.pendingPierceExtra = 0;
 
     const doCluster = this.pendingCluster;
     this.pendingCluster = false;
 
-    this.applyDamageToBlock(block, data, dmg);
-
-    if (doCluster && block.active) {
-      this.applyNeighborSplash(block, 1);
-    }
+    const clusterNeighborIds = doCluster
+      ? findExplosionNeighborIds(this.structure.getActiveBlockBounds(), data.id)
+      : [];
 
     if (data.kind === 'ice' && this.projectile?.body) {
       this.projectile.setBounce(0.88, 0.88);
     }
-  }
 
-  private applyNeighborSplash(fromBlock: Phaser.Physics.Arcade.Sprite, amount: number): void {
-    const data = this.structure.getBlockData().get(fromBlock);
-    if (!data) return;
-    const bounds = this.structure.getActiveBlockBounds();
-    const nids = findExplosionNeighborIds(bounds, data.id);
-    for (const nid of nids) {
-      const spr = this.structure.getSpriteById(nid);
-      const rt = spr ? this.structure.getBlockData().get(spr) : undefined;
-      if (spr && rt && spr.active) {
-        this.applyDamageToBlock(spr, rt, amount);
+    this.applyDamageToBlock(block, data, dmg);
+
+    if (doCluster) {
+      for (const nid of clusterNeighborIds) {
+        const spr = this.structure.getSpriteById(nid);
+        const rt = spr ? this.structure.getBlockData().get(spr) : undefined;
+        if (spr && rt && spr.active) {
+          this.applyDamageToBlock(spr, rt, 1);
+        }
       }
     }
   }
@@ -449,6 +450,7 @@ export default class LauncherScene extends SceneBridge {
     data: LauncherBlockRuntime,
     amount: number
   ): void {
+    if (this.hasWon) return;
     if (this.cheeseWardShielded(data)) return;
 
     data.health -= amount;
@@ -458,6 +460,10 @@ export default class LauncherScene extends SceneBridge {
       const cy = block.y;
       const kind = data.kind;
       const wasMixerCore = kind === 'mixer_core';
+      const explosiveNeighbors =
+        kind === 'explosive'
+          ? findExplosionNeighborIds(this.structure.getActiveBlockBounds(), data.id)
+          : [];
 
       this.gameScore.current += data.points;
       this.gameScore.streak++;
@@ -474,25 +480,19 @@ export default class LauncherScene extends SceneBridge {
         this.audio.playSfx('powerup');
       }
 
-      this.structure.getBlockData().delete(block);
-      this.structure.getSpriteById(data.id);
-      this.structure['idToSprite'].delete(data.id);
+      this.structure.removeBlock(block, data.id);
       block.destroy();
 
       this.emitScoreUpdate({ ...this.gameScore });
 
-      if (kind === 'explosive') {
-        const bounds = this.structure.getActiveBlockBounds();
-        for (const nid of findExplosionNeighborIds(bounds, data.id)) {
-          const spr = this.structure.getSpriteById(nid);
-          const rt = spr ? this.structure.getBlockData().get(spr) : undefined;
-          if (spr && rt) this.applyDamageToBlock(spr, rt, 1);
-        }
+      for (const nid of explosiveNeighbors) {
+        const spr = this.structure.getSpriteById(nid);
+        const rt = spr ? this.structure.getBlockData().get(spr) : undefined;
+        if (spr && rt) this.applyDamageToBlock(spr, rt, 1);
       }
 
       if (wasMixerCore && this.isBossRound()) {
         this.winLevel();
-        return;
       }
     } else {
       const tint = data.health === 1 ? 0xff8888 : 0xffcccc;
@@ -500,14 +500,6 @@ export default class LauncherScene extends SceneBridge {
       this.effects.shake(0.005, 50);
       this.audio.playSfx('hit');
     }
-  }
-
-  /** @internal exposed for explosive chain id map cleanup */
-  private removeBlockMapping(runtimeId: string, block: Phaser.Physics.Arcade.Sprite): void {
-    this.structure.getBlockData().delete(block);
-    (this.structure as unknown as { idToSprite: Map<string, Phaser.Physics.Arcade.Sprite> }).idToSprite.delete(
-      runtimeId
-    );
   }
 
   private addScoreDelta(delta: number, x: number, y: number, label?: string): void {
@@ -521,7 +513,6 @@ export default class LauncherScene extends SceneBridge {
     this.hasWon = true;
     this.cleanupProjectile();
     this.audio.playSfx('boss_hit');
-    this.time.delayedCall(200, () => this.audio.playSfx('boss_hit'));
     this.emitLevelComplete({
       levelId: 'KITCHEN',
       finalScore: this.gameScore.current,
@@ -532,6 +523,8 @@ export default class LauncherScene extends SceneBridge {
 
   private cleanupProjectile(): void {
     this.isLaunching = false;
+    this.projCollider?.destroy();
+    this.projCollider = null;
     if (this.projectile) {
       this.projectile.destroy();
       this.projectile = null;
@@ -539,13 +532,10 @@ export default class LauncherScene extends SceneBridge {
   }
 
   private onProjectileDone(): void {
+    if (this.hasWon) return;
     this.cleanupProjectile();
 
     const cleared = this.structure.getBlockGroup().countActive() === 0;
-
-    if (!cleared) {
-      this.critters.applyMouseStealIfNeeded(false, this.config.counterY);
-    }
 
     if (cleared) {
       const bonus = 50 * this.currentRound;
@@ -575,6 +565,10 @@ export default class LauncherScene extends SceneBridge {
     }
 
     if (this.projectilesLeft <= 0) {
+      if (!cleared) {
+        this.critters.applyMouseStealIfNeeded(false, this.config.counterY);
+      }
+
       this.lives--;
       this.gameScore.lives = this.lives;
       this.emitLivesChanged(this.lives);
@@ -587,11 +581,7 @@ export default class LauncherScene extends SceneBridge {
       }
 
       this.audio.playSfx('meow');
-      if (this.currentRound < this.config.totalRounds) {
-        this.time.delayedCall(800, () => this.startRound(true));
-      } else {
-        this.checkEndCondition();
-      }
+      this.time.delayedCall(800, () => this.startRound(true));
     }
   }
 
@@ -607,6 +597,7 @@ export default class LauncherScene extends SceneBridge {
       });
     } else {
       this.isGameOver = true;
+      this.audio.playSfx('hit');
       this.emitGameOver(this.gameScore.current);
     }
   }
@@ -641,6 +632,5 @@ export default class LauncherScene extends SceneBridge {
     this.structure?.destroy();
     this.kitchenBg?.destroy();
     this.audio?.destroy();
-    super.shutdown?.();
   }
 }

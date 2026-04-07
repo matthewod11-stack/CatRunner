@@ -1,61 +1,47 @@
 import Phaser from 'phaser';
 import { SceneBridge } from './shared/SceneBridge';
 import type { BreakoutSceneInitData } from './shared/bridgeProtocol';
-import type { BreakoutLevelConfig, BreakoutBrick, GameScore, GameStatus } from '../types';
-import { loadCatSprite, CAT_TEXTURE_KEY } from './shared/SpriteLoader';
+import type { BreakoutLevelConfig, BreakoutPowerupKind, GameScore, GameStatus } from '../types';
+import { loadCatSprite } from './shared/SpriteLoader';
 import { EffectsManager } from './shared/EffectsManager';
-
-// ─── Constants ──────────────────────────────────────────────────────
-
-const DEPTH = {
-  BG: 0,
-  BRICKS: 10,
-  BALL: 15,
-  PADDLE: 20,
-  EFFECTS: 30,
-  HUD: 50,
-};
-
-// ─── Scene ──────────────────────────────────────────────────────────
+import { PhaserAudio } from './shared/PhaserAudio';
+import { YarnBackgroundManager } from './breakout/YarnBackgroundManager';
+import { BrickFieldManager, type BrickHitOutcome } from './breakout/BrickFieldManager';
+import { BallPaddleManager } from './breakout/BallPaddleManager';
+import { BreakoutPowerupManager } from './breakout/BreakoutPowerupManager';
+import { BreakoutHazardManager } from './breakout/BreakoutHazardManager';
+import { initialAliveCells, orthogonalNeighborKeys } from './breakout/brickDamage';
+import { DEPTH } from './breakout/types';
 
 export default class BreakoutScene extends SceneBridge {
   private config!: BreakoutLevelConfig;
 
-  // Paddle
-  private paddle!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
+  private backgrounds!: YarnBackgroundManager;
+  private bricks!: BrickFieldManager;
+  private ballPaddle!: BallPaddleManager;
+  private powerups!: BreakoutPowerupManager;
+  private hazards!: BreakoutHazardManager;
 
-  // Ball
-  private ball!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
-  private ballSpeed = 350;
-  private ballLaunched = false;
+  private effects!: EffectsManager;
+  private audio!: PhaserAudio;
 
-  // Bricks
-  private brickGroup!: Phaser.Physics.Arcade.StaticGroup;
-  private brickDataMap: Map<Phaser.GameObjects.GameObject, { health: number; points: number; color: number }> = new Map();
-  private totalBricks = 0;
+  private aliveCells!: Set<string>;
 
-  // Deferred destruction (same pattern as ShooterScene)
-  private pendingDestroys: Set<Phaser.GameObjects.GameObject> = new Set();
-
-  // Game state
   private lives = 3;
   private gameScore: GameScore = {
-    current: 0, high: 0, coins: 0,
-    multiplier: 1, streak: 0, lives: 3,
+    current: 0,
+    high: 0,
+    coins: 0,
+    multiplier: 1,
+    streak: 0,
+    lives: 3,
   };
   private isGameOver = false;
   private hasWon = false;
+  private levelCompleteEmitted = false;
 
-  // Input
-  private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-
-  // Effects
-  private effects!: EffectsManager;
-
-  // HUD
-  private launchText!: Phaser.GameObjects.Text;
-
-  // ─── Lifecycle ──────────────────────────────────────────────────
+  private launchText: Phaser.GameObjects.Text | null = null;
+  private lastFluffNudgeMs = 0;
 
   init(data: BreakoutSceneInitData): void {
     super.init(data);
@@ -69,222 +55,228 @@ export default class BreakoutScene extends SceneBridge {
   }
 
   create(): void {
-    const { width, height } = this.scale;
+    this.effects = new EffectsManager(this);
+    this.audio = new PhaserAudio(this);
 
-    this.cameras.main.setBackgroundColor(this.config.bgColor);
-    this.ballSpeed = this.config.ballConfig.speed;
+    this.backgrounds = new YarnBackgroundManager(this, this.config);
+    this.backgrounds.create();
 
-    // Create textures
-    this.createTextures();
+    this.bricks = new BrickFieldManager(this, this.config);
+    this.bricks.create();
+    this.aliveCells = initialAliveCells(this.config.bricks);
 
-    // Paddle
-    const pConf = this.config.paddleConfig;
-    const hasCat = this.textures.exists(CAT_TEXTURE_KEY);
-    this.paddle = this.physics.add.sprite(width / 2, height - pConf.y, hasCat ? CAT_TEXTURE_KEY : 'paddle')
-      .setDisplaySize(pConf.width, pConf.height)
-      .setDepth(DEPTH.PADDLE)
-      .setImmovable(true)
-      .setCollideWorldBounds(true);
-    this.paddle.body.setAllowGravity(false);
+    this.ballPaddle = new BallPaddleManager(
+      this,
+      this.config,
+      (ball, kind) => this.handleBallLost(ball, kind),
+      () => this.clearLaunchHint()
+    );
+    this.ballPaddle.create();
 
-    // Ball
-    const bConf = this.config.ballConfig;
-    this.ball = this.physics.add.sprite(width / 2, height - pConf.y - 20, 'ball')
-      .setDisplaySize(bConf.radius * 2, bConf.radius * 2)
-      .setDepth(DEPTH.BALL)
-      .setCollideWorldBounds(true)
-      .setBounce(1, 1);
-    this.ball.body.setAllowGravity(false);
-    this.ball.body.setMaxVelocity(bConf.maxSpeed, bConf.maxSpeed);
-
-    // Enable world bounds collision event for bottom detection
-    this.ball.body.onWorldBounds = true;
-    this.physics.world.on('worldbounds', (_body: Phaser.Physics.Arcade.Body, _up: boolean, down: boolean) => {
-      if (down) this.onBallLost();
+    this.powerups = new BreakoutPowerupManager(this, this.config, {
+      onCollect: (kind) => this.applyPowerup(kind),
     });
+    this.powerups.create();
 
-    // Bricks
-    this.brickGroup = this.physics.add.staticGroup();
-    this.buildBricks();
+    this.hazards = new BreakoutHazardManager(this, this.config);
+    this.hazards.create();
 
-    // Collisions
-    this.physics.add.collider(this.ball, this.paddle, () => this.onBallHitPaddle());
-    this.physics.add.collider(this.ball, this.brickGroup, (_ball, brick) => {
-      this.onBallHitBrick(brick as Phaser.Physics.Arcade.Sprite);
-    });
+    for (const ball of this.ballPaddle.getAllBalls()) {
+      this.physics.add.collider(ball, this.ballPaddle.getPaddle(), () => {
+        this.ballPaddle.onBallHitPaddle(ball);
+        this.audio.playSfx('paddle_hit');
+      });
 
-    // Input
-    this.cursors = this.input.keyboard!.createCursorKeys();
+      this.physics.add.collider(ball, this.bricks.getGroup(), (_b, brick) => {
+        this.onBallHitBrick(brick as Phaser.Physics.Arcade.Sprite);
+      });
+    }
+
+    this.physics.add.overlap(
+      this.ballPaddle.getPaddle(),
+      this.powerups.getGroup(),
+      (_pad, pu) => {
+        this.audio.playSfx('powerup');
+        this.powerups.collectSprite(pu as Phaser.Physics.Arcade.Sprite);
+      }
+    );
+
+    const fluff = this.hazards.getFluff();
+    if (fluff) {
+      for (const ball of this.ballPaddle.getAllBalls()) {
+        this.physics.add.overlap(ball, fluff, () => this.nudgeBallFromFluff(ball));
+      }
+    }
+
     this.input.keyboard!.on('keydown-P', this.togglePause, this);
     this.input.keyboard!.on('keydown-ESC', this.togglePause, this);
 
-    // Effects
-    this.effects = new EffectsManager(this);
+    this.showLaunchHint();
 
-    // Launch instruction
-    this.launchText = this.add.text(width / 2, height / 2 + 80, 'Press SPACE to launch!', {
-      fontSize: '18px', fontFamily: 'system-ui, sans-serif', color: '#ffffff88',
-    }).setOrigin(0.5).setDepth(DEPTH.HUD);
-
-    // Init
     this.gameScore.lives = this.lives;
     this.emitScoreUpdate({ ...this.gameScore });
     this.emitStatusChange('PLAYING' as GameStatus);
   }
 
-  update(): void {
-    if (this.isGameOver || this.hasWon) return;
+  update(_time: number, delta: number): void {
+    if (this.isGameOver || this.levelCompleteEmitted) return;
 
-    this.handleInput();
-    this.flushDestroys();
-
-    // Pre-launch: ball follows paddle
-    if (!this.ballLaunched) {
-      this.ball.x = this.paddle.x;
-      this.ball.y = this.paddle.y - 20;
+    this.bricks.flushDestroys();
+    if (!this.hasWon) {
+      this.ballPaddle.update(_time, delta);
+      this.powerups.update(_time, delta);
+      this.hazards.update(_time, delta);
     }
 
     this.checkVictory();
   }
 
-  // ─── Textures ─────────────────────────────────────────────────
-
-  private createTextures(): void {
-    if (!this.textures.exists('paddle')) {
-      const g = this.make.graphics({}, false);
-      g.fillStyle(0xff8844);
-      g.fillRoundedRect(0, 0, this.config.paddleConfig.width, this.config.paddleConfig.height, 4);
-      g.generateTexture('paddle', this.config.paddleConfig.width, this.config.paddleConfig.height);
-      g.destroy();
-    }
-
-    if (!this.textures.exists('ball')) {
-      const r = this.config.ballConfig.radius;
-      const g = this.make.graphics({}, false);
-      g.fillStyle(0xffcc44);
-      g.fillCircle(r, r, r);
-      // Yarn lines
-      g.lineStyle(1, 0xff9900, 0.5);
-      g.arc(r, r, r * 0.6, 0, Math.PI * 1.5);
-      g.strokePath();
-      g.generateTexture('ball', r * 2, r * 2);
-      g.destroy();
-    }
+  private showLaunchHint(): void {
+    const { width, height } = this.scale;
+    this.launchText = this.add
+      .text(width / 2, height / 2 + 80, 'Press SPACE to launch!', {
+        fontSize: '18px',
+        fontFamily: 'system-ui, sans-serif',
+        color: '#ffffff88',
+      })
+      .setOrigin(0.5)
+      .setDepth(DEPTH.HUD);
   }
 
-  // ─── Bricks ───────────────────────────────────────────────────
-
-  private buildBricks(): void {
-    const { width } = this.scale;
-    const { brickWidth, brickHeight, gridCols } = this.config;
-    const gridWidth = gridCols * brickWidth;
-    const offsetX = (width - gridWidth) / 2;
-    const offsetY = 60;
-
-    this.totalBricks = this.config.bricks.length;
-
-    for (const brickDef of this.config.bricks) {
-      const bx = offsetX + brickDef.col * brickWidth + brickWidth / 2;
-      const by = offsetY + brickDef.row * brickHeight + brickHeight / 2;
-
-      const key = `brick-${brickDef.color.toString(16)}`;
-      if (!this.textures.exists(key)) {
-        const g = this.make.graphics({}, false);
-        g.fillStyle(brickDef.color);
-        g.fillRoundedRect(0, 0, brickWidth - 2, brickHeight - 2, 3);
-        // Shine
-        g.fillStyle(0xffffff, 0.15);
-        g.fillRect(2, 2, brickWidth - 6, brickHeight * 0.3);
-        g.generateTexture(key, brickWidth - 2, brickHeight - 2);
-        g.destroy();
-      }
-
-      const brick = this.brickGroup.create(bx, by, key) as Phaser.Physics.Arcade.Sprite;
-      brick.setDepth(DEPTH.BRICKS);
-      brick.refreshBody();
-
-      this.brickDataMap.set(brick, {
-        health: brickDef.health,
-        points: brickDef.points,
-        color: brickDef.color,
-      });
-    }
-  }
-
-  // ─── Input ────────────────────────────────────────────────────
-
-  private handleInput(): void {
-    const speed = this.config.paddleConfig.speed;
-
-    if (this.cursors.left.isDown) {
-      this.paddle.body.setVelocityX(-speed);
-    } else if (this.cursors.right.isDown) {
-      this.paddle.body.setVelocityX(speed);
-    } else {
-      this.paddle.body.setVelocityX(0);
-    }
-
-    // Launch ball
-    if (!this.ballLaunched && Phaser.Input.Keyboard.JustDown(this.cursors.space!)) {
-      this.ballLaunched = true;
-      // Launch at an angle
-      const angle = Phaser.Math.FloatBetween(-0.3, 0.3);
-      this.ball.body.setVelocity(
-        Math.sin(angle) * this.ballSpeed,
-        -this.ballSpeed
-      );
-      this.launchText.destroy();
-    }
-  }
-
-  // ─── Collisions ───────────────────────────────────────────────
-
-  private onBallHitPaddle(): void {
-    // Angle based on where ball hit paddle
-    const diff = this.ball.x - this.paddle.x;
-    const normalized = diff / (this.config.paddleConfig.width / 2);
-    const angle = normalized * 1.2; // max ~70 degrees
-
-    const speed = Math.sqrt(this.ball.body.velocity.x ** 2 + this.ball.body.velocity.y ** 2);
-    this.ball.body.setVelocity(
-      Math.sin(angle) * speed,
-      -Math.abs(Math.cos(angle) * speed) // always go up
-    );
+  private clearLaunchHint(): void {
+    this.launchText?.destroy();
+    this.launchText = null;
   }
 
   private onBallHitBrick(brick: Phaser.Physics.Arcade.Sprite): void {
-    const data = this.brickDataMap.get(brick);
-    if (!data) return;
+    const outcome = this.bricks.handleBallHitBrick(brick);
+    if (outcome.kind === 'noop') return;
 
-    data.health--;
+    if (outcome.kind === 'damaged') {
+      this.audio.playSfx('brick_hit');
+      this.applyDamagedTint(outcome);
+      return;
+    }
 
-    if (data.health <= 0) {
-      const cx = brick.x;
-      const cy = brick.y;
+    this.audio.playSfx('brick_break');
+    this.commitElimination(outcome, true);
+  }
 
-      this.gameScore.current += data.points;
-      this.gameScore.streak++;
-      if (this.gameScore.streak % 5 === 0) {
-        this.gameScore.multiplier = Math.min(this.gameScore.multiplier + 1, 5);
+  private commitElimination(
+    o: Extract<BrickHitOutcome, { kind: 'eliminated' }>,
+    allowExplosive: boolean
+  ): void {
+    this.aliveCells.delete(`${o.col},${o.row}`);
+
+    this.gameScore.current += o.points;
+    this.gameScore.streak++;
+    if (this.gameScore.streak % 5 === 0) {
+      this.gameScore.multiplier = Math.min(this.gameScore.multiplier + 1, 5);
+    }
+
+    this.effects.spawnParticles(o.cx, o.cy, o.color, 6, 120);
+    this.effects.floatingScore(o.cx, o.cy, `+${o.points}`);
+
+    this.emitScoreUpdate({ ...this.gameScore });
+    this.ballPaddle.bumpSpeedAfterBrick();
+
+    const def = this.config.bricks.find((b) => b.col === o.col && b.row === o.row);
+    if (def?.kind === 'POWERUP_CARRIER' && def.powerupDrop) {
+      this.powerups.spawn(o.cx, o.cy, def.powerupDrop);
+    }
+
+    if (allowExplosive && o.brickKind === 'EXPLOSIVE') {
+      for (const [nc, nr] of orthogonalNeighborKeys(o.col, o.row, this.aliveCells)) {
+        const spr = this.bricks.getSpriteAtCell(nc, nr);
+        if (!spr) continue;
+        const subs = this.bricks.applyDirectDamage(spr, 1);
+        for (const sub of subs) {
+          if (sub.kind === 'eliminated') {
+            this.audio.playSfx('brick_break');
+            this.commitElimination(sub, false);
+          } else if (sub.kind === 'damaged') {
+            this.audio.playSfx('brick_hit');
+            this.applyDamagedTint(sub);
+          }
+        }
       }
-
-      this.effects.spawnParticles(cx, cy, data.color, 6, 120);
-      this.effects.floatingScore(cx, cy, `+${data.points}`);
-
-      this.brickDataMap.delete(brick);
-      this.deferDestroy(brick);
-      this.emitScoreUpdate({ ...this.gameScore });
-
-      // Speed up slightly
-      this.ballSpeed = Math.min(this.config.ballConfig.maxSpeed, this.ballSpeed + this.config.ballConfig.speedIncrement);
-    } else {
-      // Tint darker to show damage
-      brick.setTint(0xffffff - 0x333333 * (this.config.bricks[0].health - data.health));
     }
   }
 
-  private onBallLost(): void {
-    this.ballLaunched = false;
+  private applyDamagedTint(
+    sub: Extract<BrickHitOutcome, { kind: 'damaged' }>
+  ): void {
+    const steps = sub.initialHealth - sub.currentHealth;
+    const tint = 0xffffff - 0x222222 * Math.min(steps, 5);
+    sub.sprite.setTint(tint);
+  }
+
+  private applyPowerup(kind: BreakoutPowerupKind): void {
+    const pc = this.config.powerups;
+    switch (kind) {
+      case 'WIDE_PADDLE':
+        this.ballPaddle.applyWidePaddle(
+          pc?.widePaddleDurationMs ?? 12000,
+          pc?.widePaddleScale ?? 1.4
+        );
+        break;
+      case 'SLOW_BALL':
+        this.ballPaddle.applySlowBall(pc?.slowBallDurationMs ?? 6000);
+        break;
+      case 'STICKY_PADDLE':
+        this.ballPaddle.setStickyNextHit();
+        break;
+      case 'MULTI_BALL':
+        if (this.ballPaddle.spawnExtraBall()) {
+          const balls = this.ballPaddle.getAllBalls();
+          this.wireNewBallColliders(balls[balls.length - 1]);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  /** Extra balls spawned mid-run need colliders (paddle, bricks, fluff). */
+  private wireNewBallColliders(ball: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody | undefined): void {
+    if (!ball || !ball.body) return;
+    this.physics.add.collider(ball, this.ballPaddle.getPaddle(), () => {
+      this.ballPaddle.onBallHitPaddle(ball);
+      this.audio.playSfx('paddle_hit');
+    });
+    this.physics.add.collider(ball, this.bricks.getGroup(), (_b, brick) => {
+      this.onBallHitBrick(brick as Phaser.Physics.Arcade.Sprite);
+    });
+    const fluff = this.hazards.getFluff();
+    if (fluff) {
+      this.physics.add.overlap(ball, fluff, () => this.nudgeBallFromFluff(ball));
+    }
+  }
+
+  private nudgeBallFromFluff(ball: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody): void {
+    const rad = this.config.hazards?.fluffNudgeRad ?? 0.12;
+    const now = this.time.now;
+    if (now - this.lastFluffNudgeMs < 280) return;
+    this.lastFluffNudgeMs = now;
+
+    const vx = ball.body.velocity.x;
+    const vy = ball.body.velocity.y;
+    ball.body.setVelocity(
+      vx * Math.cos(rad) - vy * Math.sin(rad),
+      vx * Math.sin(rad) + vy * Math.cos(rad)
+    );
+  }
+
+  private handleBallLost(ball: Phaser.GameObjects.GameObject, kind: 'primary' | 'extra'): void {
+    if (kind === 'extra') {
+      this.ballPaddle.removeExtraBall(ball);
+      return;
+    }
+
+    if (!this.ballPaddle.isLaunched()) return;
+
+    this.audio.playSfx('ball_lost');
+    this.ballPaddle.setLaunched(false);
     this.lives--;
     this.gameScore.lives = this.lives;
     this.gameScore.streak = 0;
@@ -300,48 +292,45 @@ export default class BreakoutScene extends SceneBridge {
       return;
     }
 
-    // Reset ball to paddle
-    this.ball.body.setVelocity(0, 0);
-    this.ball.setPosition(this.paddle.x, this.paddle.y - 20);
-    this.ballSpeed = this.config.ballConfig.speed;
-
-    // Show launch hint
-    this.launchText = this.add.text(this.scale.width / 2, this.scale.height / 2 + 80, 'Press SPACE to launch!', {
-      fontSize: '18px', fontFamily: 'system-ui, sans-serif', color: '#ffffff88',
-    }).setOrigin(0.5).setDepth(DEPTH.HUD);
+    this.ballPaddle.clearExtraBalls();
+    this.ballPaddle.attachBallToPaddle();
+    this.ballPaddle.resetBallSpeedToBase();
+    this.clearLaunchHint();
+    this.showLaunchHint();
   }
 
-  // ─── Victory ──────────────────────────────────────────────────
-
   private checkVictory(): void {
-    if (this.brickGroup.countActive() === 0 && !this.hasWon) {
-      this.hasWon = true;
+    if (this.hasWon || this.bricks.getActiveCount() !== 0) return;
+
+    this.hasWon = true;
+    this.ballPaddle.clearExtraBalls();
+    for (const b of this.ballPaddle.getAllBalls()) {
+      b.body.setVelocity(0, 0);
+    }
+    this.ballPaddle.setLaunched(false);
+
+    const ms = this.config.finale?.enableUnravelCelebration
+      ? (this.config.finale.unravelDurationMs ?? 1500)
+      : 0;
+
+    const finish = () => {
+      if (this.levelCompleteEmitted) return;
+      this.levelCompleteEmitted = true;
       this.effects.spawnParticles(this.scale.width / 2, this.scale.height / 2, 0xffcc44, 30, 300);
       this.emitLevelComplete({
-        levelId: 'YARN',
+        levelId: this.levelId,
         finalScore: this.gameScore.current,
         gameScore: { ...this.gameScore },
         victoryType: 'clear',
       });
+    };
+
+    if (ms > 0) {
+      this.time.delayedCall(ms, finish);
+    } else {
+      finish();
     }
   }
-
-  // ─── Deferred Destroy ─────────────────────────────────────────
-
-  private deferDestroy(obj: Phaser.GameObjects.GameObject): void {
-    if (this.pendingDestroys.has(obj)) return;
-    this.pendingDestroys.add(obj);
-    (obj as Phaser.Physics.Arcade.Sprite).setActive(false).setVisible(false);
-    const body = (obj as Phaser.Physics.Arcade.Sprite).body;
-    if (body) body.enable = false;
-  }
-
-  private flushDestroys(): void {
-    for (const obj of this.pendingDestroys) obj.destroy();
-    this.pendingDestroys.clear();
-  }
-
-  // ─── Pause ────────────────────────────────────────────────────
 
   private togglePause(): void {
     if (this.isGameOver || this.hasWon) return;
