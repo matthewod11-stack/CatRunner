@@ -1,17 +1,14 @@
 # Docs Index
 
-## Active
+Active documentation lives in:
 
-- `docs/architecture/`
-- `docs/product/`
-- `docs/plans/`
-- `docs/specs/`
+- `docs/architecture/` — runtime and technical reference
+- `docs/product/` — campaign, gameplay, and player-facing semantics
+- `docs/plans/` — active implementation plans
+- `docs/specs/` — active design specs
+- `docs/archive/` — superseded historical material
 
-## Historical
-
-- `docs/archive/`
-
-## Canonical Root Files
+Canonical root planning files:
 
 - `ROADMAP_V3.md`
 - `PROGRESS.md`
