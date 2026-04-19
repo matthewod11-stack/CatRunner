@@ -16,7 +16,7 @@ npm run dev          # Start dev server on port 3000
 npm run build        # Production build
 npm run preview      # Preview production build
 npm run test:run     # Vitest (CI-style single run)
-./scripts/dev-init.sh   # Session checklist (expects ROADMAP_V2.md, PROGRESS.md, KNOWN_ISSUES.md at repo root)
+./scripts/dev-init.sh   # Session checklist helper; active workflow starts from ROADMAP_V3.md and PROGRESS.md
 ```
 
 ## Environment Setup
@@ -87,11 +87,11 @@ Set `GEMINI_API_KEY` in `.env.local` for AI features (custom cat generation, wis
 
 ## Roadmap V2 and known gaps
 
-See **[ROADMAP_V2.md](./ROADMAP_V2.md)** and **[KNOWN_ISSUES.md](./KNOWN_ISSUES.md)** for the active backlog. Short summary for agents:
+See **[ROADMAP_V2.md](./ROADMAP_V2.md)** for historical V2 context and use GitHub Issues for active bugs and debt. Short summary for agents:
 
 - **GameEngine.tsx** remains a large monolith: physics, spawning, collisions, HUD, boss wiring. Background parallax SVGs and **`BEACH`** spawn helpers live under **`levels/beach/`**; further extraction (spawn manager, HUD) is optional in V2.
 - **`/api/cat/*`:** Shared handlers + **`RATE_LIMITED`** / **`REQUEST_TIMEOUT`** / **`BAD_REQUEST`** JSON errors; production hardening can add Edge/Redis limits beyond in-memory windows (see **docs/API_PROTECTION.md**).
-- **TypeScript:** `tsconfig.json` does not enable **`strict`** yet — deferred with rationale in [KNOWN_ISSUES.md](./KNOWN_ISSUES.md); `npm run build` and `npx tsc --noEmit` are used for ship checks.
+- **TypeScript:** `tsconfig.json` does not enable **`strict`** yet — deferred and now tracked through GitHub Issues / roadmap workstreams; `npm run build` and `npx tsc --noEmit` are used for ship checks.
 - **Tests:** **Vitest** — `npm run test:run` (CI-style), `npm test` (watch). Pure-module coverage in `services/`, `systems/`, `server/`, `levels/`; expand over time; UI/game loop remains mostly manual QA ([docs/QA_CHECKLIST.md](./docs/QA_CHECKLIST.md)).
 - **Gameplay types:** `GameStatus` trimmed to active flow values; pause is engine-local (`isPaused`). Optional `LevelConfig.bossEntryCoinThreshold`, `theme.skyProgressMode`, behavior `config` keys — see `docs/LEVEL_DEVELOPMENT.md` / `docs/BEHAVIOR_SYSTEM.md`.
 
@@ -119,4 +119,4 @@ Squash/stretch (Kitty), freeze frames, screen shake, hit flash, speed lines, dus
 - **[ROADMAP_V2.md](./ROADMAP_V2.md)** — Active roadmap for current work.
 - **[docs/ROADMAP_V1_COMPLETE.md](./docs/ROADMAP_V1_COMPLETE.md)** — Completed roadmap archive for phases 1–9.
 - **[PROGRESS.md](./PROGRESS.md)** — Session log (newest first).
-- **[KNOWN_ISSUES.md](./KNOWN_ISSUES.md)** — Parking lot and technical debt.
+- **`docs/archive/issues/KNOWN_ISSUES.md`** — Archived historical issue log; GitHub Issues are the active tracker.

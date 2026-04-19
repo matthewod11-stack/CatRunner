@@ -1,7 +1,7 @@
 # Beach Kitty Multi-Level System — Session Progress Log
 
 > **Purpose:** Track progress across development sessions. Each session adds an entry at the TOP.
-> **Related Docs:** [ROADMAP_V3.md](./ROADMAP_V3.md) | [KNOWN_ISSUES.md](./KNOWN_ISSUES.md) | [docs/ROADMAP_V1_COMPLETE.md](./docs/ROADMAP_V1_COMPLETE.md)
+> **Related Docs:** [ROADMAP_V3.md](./ROADMAP_V3.md) | [docs/archive/roadmaps/ROADMAP_V1_COMPLETE.md](./docs/archive/roadmaps/ROADMAP_V1_COMPLETE.md)
 
 ---
 
@@ -33,6 +33,19 @@ sed -n '1,100p' ROADMAP_V3.md
 === ADD NEW SESSIONS AT THE TOP ===
 Most recent session should be first.
 -->
+
+## Session: 2026-04-19 (repo cleanup and roadmap consolidation)
+
+### Completed
+- [x] Rewrote `ROADMAP_V3.md` as the only active roadmap
+- [x] Archived `KNOWN_ISSUES.md` and retired it from the workflow
+- [x] Reorganized active docs under `docs/`
+- [x] Created GitHub issues for surviving actionable repo/product concerns
+
+### Next Session Should
+1. Start from `ROADMAP_V3.md`
+2. Use GitHub Issues for bugs and technical debt
+3. Continue from the highest-priority open roadmap workstream
 
 ## Session: 2026-04-05 09:00 (City Heights Full Level Build)
 
@@ -89,7 +102,7 @@ Most recent session should be first.
 ## Session: 2026-03-30 07:45 (Issue-Driven Maintenance & Overnight Agent Setup)
 
 ### Completed
-- [x] **GitHub Issues strategy** — Shifted from KNOWN_ISSUES.md to GitHub Issues for all tech-debt tracking
+- [x] **GitHub Issues strategy** — Shifted from retired `KNOWN_ISSUES.md` tracking to GitHub Issues for all tech-debt tracking
 - [x] **Overnight agent trigger** — Created scheduled Claude Code remote trigger (`trig_01WdJuhzamc5XsGBm8MAkP5K`) running nightly at 2am Pacific, targeting issues #3, #4, #10
 - [x] **Autonomous agent prompt** — Drafted Level 2 autonomous prompt that triages `tech-debt` labeled issues, respects `needs-design-decision`/`deferred` labels, and uses issue-body-as-instructions pattern
 - [x] **Enhanced issue template** — Added `Automation Hints` section (scope, do-not-touch, risk, max-files-changed, blocked-by, bail-if) to all 8 tech-debt issues (#2-#5, #7-#10)
@@ -107,7 +120,7 @@ Most recent session should be first.
 1. **Review overnight agent results** — Check GitHub for PRs and/or issue comments from first run
 2. **Swap to autonomous prompt** — If pipeline validates, update trigger prompt from task-list to autonomous version
 3. **Retroactively update remaining issues** — Add `Automation Hints` to any new issues filed
-4. **Consider deleting KNOWN_ISSUES.md** — All items migrated to GitHub Issues
+4. **Keep `KNOWN_ISSUES.md` retired** — All items migrated to GitHub Issues
 
 ---
 
