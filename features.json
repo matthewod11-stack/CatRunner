@@ -1,109 +1,235 @@
 {
   "$schema": "./features.schema.json",
   "_meta": {
-    "description": "Multi-level system feature tracking. Status: not-started | in-progress | pass | fail | blocked",
-    "lastUpdated": "2026-03-19",
+    "description": "Historical feature tracking snapshot for the multi-genre campaign. Status: not-started | in-progress | pass | fail | blocked",
+    "lastUpdated": "2026-04-19",
     "planFile": "./ROADMAP_V3.md",
-    "v2PlanFile": "./ROADMAP_V2.md",
-    "v2Status": "complete",
-    "totalPhases": 9,
-    "completedPhases": 9,
-    "v3Status": "Phase 0 complete, Phase 1.5 beach polish merged to main, Phase 1 port in progress"
+    "historicalRoadmapsDir": "./docs/archive/roadmaps/",
+    "activeSessionLog": "./PROGRESS.md",
+    "activeDocsDir": "./docs/",
+    "issueTracker": "GitHub Issues",
+    "campaignStatus": "Roadmap V3 is active; docs and workflow alignment are in progress; hero-sheet and sprite-matting work remain active WIP."
   },
   "phase-1": {
     "description": "Session Protocol Infrastructure",
     "status": "pass",
     "tasks": {
-      "docs-roadmap": { "status": "pass", "notes": "Active ROADMAP_V2.md at repo root; ROADMAP.md and docs/ROADMAP.md are index stubs; completed roadmap archived in docs/ROADMAP_V1_COMPLETE.md" },
-      "docs-progress": { "status": "pass", "notes": "Canonical PROGRESS.md at repo root; docs/PROGRESS.md stub" },
-      "docs-known-issues": { "status": "pass", "notes": "Canonical KNOWN_ISSUES.md at root; docs/ stub" },
-      "features-json": { "status": "pass", "notes": "This file" },
-      "dev-init-script": { "status": "pass", "notes": "Created and tested" },
-      "commit": { "status": "pass", "notes": "Committed as c944986" }
+      "docs-roadmap": {
+        "status": "pass",
+        "notes": "Active roadmap is ROADMAP_V3.md; historical roadmaps are archived under docs/archive/roadmaps/"
+      },
+      "docs-progress": {
+        "status": "pass",
+        "notes": "Canonical PROGRESS.md remains at repo root"
+      },
+      "docs-known-issues": {
+        "status": "pass",
+        "notes": "Retired from the active workflow; GitHub Issues are the active tracker and historical issue material lives under docs/archive/issues/"
+      },
+      "features-json": {
+        "status": "pass",
+        "notes": "This file"
+      },
+      "dev-init-script": {
+        "status": "pass",
+        "notes": "Uses ROADMAP_V3.md and canonical root files"
+      },
+      "commit": {
+        "status": "pass",
+        "notes": "Committed as c944986"
+      }
     }
   },
   "phase-2": {
     "description": "Type System Foundation",
     "status": "pass",
     "tasks": {
-      "level-id-extension": { "status": "pass", "notes": "LevelId = 'BEACH' in types.ts" },
-      "behavior-type": { "status": "pass", "notes": "BehaviorType union added" },
-      "obstacle-definition": { "status": "pass", "notes": "ObstacleDefinition interface added" },
-      "level-config": { "status": "pass", "notes": "LevelConfig interface added with all sub-interfaces" },
-      "theme-config": { "status": "pass", "notes": "ThemeConfig interface added" },
-      "verification": { "status": "pass", "notes": "TypeScript compiles, game unchanged" }
+      "level-id-extension": {
+        "status": "pass",
+        "notes": "LevelId = 'BEACH' in types.ts"
+      },
+      "behavior-type": {
+        "status": "pass",
+        "notes": "BehaviorType union added"
+      },
+      "obstacle-definition": {
+        "status": "pass",
+        "notes": "ObstacleDefinition interface added"
+      },
+      "level-config": {
+        "status": "pass",
+        "notes": "LevelConfig interface added with all sub-interfaces"
+      },
+      "theme-config": {
+        "status": "pass",
+        "notes": "ThemeConfig interface added"
+      },
+      "verification": {
+        "status": "pass",
+        "notes": "TypeScript compiles, game unchanged"
+      }
     }
   },
   "phase-3": {
     "description": "Behavior System Library",
     "status": "pass",
     "tasks": {
-      "behaviors-ts": { "status": "pass", "notes": "Created systems/behaviors.ts with computeSwoopY and checkPoopDrop" },
-      "swoop-behavior": { "status": "pass", "notes": "Extracted seagull swoop easing into computeSwoopY" },
-      "drop-projectile": { "status": "pass", "notes": "Extracted seagull poop into checkPoopDrop" },
-      "bounceable": { "status": "pass", "notes": "Extracted into handleBounceCollision (CRAB/BEACHBALL/SEAGULL/SAND_PROJECTILE)" },
-      "slow-on-contact": { "status": "pass", "notes": "Extracted into handleSlowCollision (SANDCASTLE/TIDEPOOL)" },
-      "collision-handlers": { "status": "pass", "notes": "Created systems/collisionHandlers.ts with CollisionResult + 3 handlers, wired into GameEngine" }
+      "behaviors-ts": {
+        "status": "pass",
+        "notes": "Created systems/behaviors.ts with computeSwoopY and checkPoopDrop"
+      },
+      "swoop-behavior": {
+        "status": "pass",
+        "notes": "Extracted seagull swoop easing into computeSwoopY"
+      },
+      "drop-projectile": {
+        "status": "pass",
+        "notes": "Extracted seagull poop into checkPoopDrop"
+      },
+      "bounceable": {
+        "status": "pass",
+        "notes": "Extracted into handleBounceCollision (CRAB/BEACHBALL/SEAGULL/SAND_PROJECTILE)"
+      },
+      "slow-on-contact": {
+        "status": "pass",
+        "notes": "Extracted into handleSlowCollision (SANDCASTLE/TIDEPOOL)"
+      },
+      "collision-handlers": {
+        "status": "pass",
+        "notes": "Created systems/collisionHandlers.ts with CollisionResult + 3 handlers, wired into GameEngine"
+      }
     }
   },
   "phase-4": {
     "description": "Level Configuration Structure",
     "status": "pass",
     "tasks": {
-      "levels-directory": { "status": "pass", "notes": "Created levels/ directory" },
-      "beach-config": { "status": "pass", "notes": "Created levels/beach.ts with full BEACH_LEVEL_CONFIG" },
-      "beach-patterns": { "status": "pass", "notes": "GameEngine reads patterns from LEVEL_REGISTRY[levelId]" },
-      "level-registry": { "status": "pass", "notes": "levels/index.ts: LEVEL_REGISTRY, getLevelConfig" },
-      "wire-gameengine": { "status": "pass", "notes": "GameEngine uses config for patterns, harmfulTypes, theme, boss, background, spawns" }
+      "levels-directory": {
+        "status": "pass",
+        "notes": "Created levels/ directory"
+      },
+      "beach-config": {
+        "status": "pass",
+        "notes": "Created levels/beach.ts with full BEACH_LEVEL_CONFIG"
+      },
+      "beach-patterns": {
+        "status": "pass",
+        "notes": "GameEngine reads patterns from LEVEL_REGISTRY[levelId]"
+      },
+      "level-registry": {
+        "status": "pass",
+        "notes": "levels/index.ts: LEVEL_REGISTRY, getLevelConfig"
+      },
+      "wire-gameengine": {
+        "status": "pass",
+        "notes": "GameEngine uses config for patterns, harmfulTypes, theme, boss, background, spawns"
+      }
     }
   },
   "phase-5": {
     "description": "Obstacle Component Refactor",
     "status": "pass",
     "tasks": {
-      "beach-obstacles": { "status": "pass", "notes": "levels/beach/obstacles.tsx: BeachObstacleIcon, seagull ProcessedSprite" },
-      "level-context": { "status": "pass", "notes": "contexts/LevelContext.tsx; GameEngine LevelProvider" },
-      "obstacle-component": { "status": "pass", "notes": "Shared COIN/SHELL/powerups; beach via context + isBeachObstacleType" }
+      "beach-obstacles": {
+        "status": "pass",
+        "notes": "levels/beach/obstacles.tsx: BeachObstacleIcon, seagull ProcessedSprite"
+      },
+      "level-context": {
+        "status": "pass",
+        "notes": "contexts/LevelContext.tsx; GameEngine LevelProvider"
+      },
+      "obstacle-component": {
+        "status": "pass",
+        "notes": "Shared COIN/SHELL/powerups; beach via context + isBeachObstacleType"
+      }
     }
   },
   "phase-6": {
     "description": "GameEngine Abstraction",
     "status": "pass",
     "tasks": {
-      "session-6a": { "status": "pass", "notes": "Optional levelConfig prop; App passes getLevelConfig('BEACH')" },
-      "session-6b": { "status": "pass", "notes": "levelBehaviorHelpers + theme.groundKickParticles; stomp/slow/arc from behaviors" },
-      "session-6c": { "status": "pass", "notes": "bossSystem.ts, bossComponents lazy SandMonster, abstract boss projectile spawn" }
+      "session-6a": {
+        "status": "pass",
+        "notes": "Optional levelConfig prop; App passes getLevelConfig('BEACH')"
+      },
+      "session-6b": {
+        "status": "pass",
+        "notes": "levelBehaviorHelpers + theme.groundKickParticles; stomp/slow/arc from behaviors"
+      },
+      "session-6c": {
+        "status": "pass",
+        "notes": "bossSystem.ts, bossComponents lazy SandMonster, abstract boss projectile spawn"
+      }
     }
   },
   "phase-7": {
     "description": "Level Selection UI",
     "status": "pass",
     "tasks": {
-      "level-state": { "status": "pass", "notes": "selectedLevel, defeatedBosses; GameEngine key + getLevelConfig(selectedLevel)" },
-      "selection-component": { "status": "pass", "notes": "components/LevelSelection.tsx" },
-      "context-provider": { "status": "pass", "notes": "LevelProvider remains in GameEngine" },
-      "unlock-logic": { "status": "pass", "notes": "levels/catalog.ts linear unlock; handleVictory(levelBeat)" }
+      "level-state": {
+        "status": "pass",
+        "notes": "selectedLevel, defeatedBosses; GameEngine key + getLevelConfig(selectedLevel)"
+      },
+      "selection-component": {
+        "status": "pass",
+        "notes": "components/LevelSelection.tsx"
+      },
+      "context-provider": {
+        "status": "pass",
+        "notes": "LevelProvider remains in GameEngine"
+      },
+      "unlock-logic": {
+        "status": "pass",
+        "notes": "levels/catalog.ts linear unlock; handleVictory(levelBeat)"
+      }
     }
   },
   "phase-8": {
     "description": "Documentation & Polish",
     "status": "pass",
     "tasks": {
-      "level-dev-guide": { "status": "pass", "notes": "docs/LEVEL_DEVELOPMENT.md" },
-      "behavior-docs": { "status": "pass", "notes": "docs/BEHAVIOR_SYSTEM.md" },
-      "claude-md-update": { "status": "pass", "notes": "CLAUDE.md + AGENTS.md + README Documentation section" }
+      "level-dev-guide": {
+        "status": "pass",
+        "notes": "docs/architecture/level-development.md"
+      },
+      "behavior-docs": {
+        "status": "pass",
+        "notes": "docs/architecture/behavior-system.md"
+      },
+      "claude-md-update": {
+        "status": "pass",
+        "notes": "Root guidance and docs now align with ROADMAP_V3.md and the docs/ taxonomy"
+      }
     }
   },
   "phase-9": {
     "description": "Live Balancing + Telemetry",
     "status": "pass",
     "tasks": {
-      "dev-balance-panel": { "status": "pass", "notes": "BalancePanel with collapsible slider groups, backtick toggle" },
-      "tuning-presets": { "status": "pass", "notes": "Save/load/delete named presets via localStorage" },
-      "hit-death-logging": { "status": "pass", "notes": "Damage and death events logged with context" },
-      "run-summary": { "status": "pass", "notes": "Run summary at game over and victory" },
-      "telemetry-export": { "status": "pass", "notes": "JSON export via BalancePanel button" },
-      "verification": { "status": "pass", "notes": "Build passes, default tuning values match original constants" }
+      "dev-balance-panel": {
+        "status": "pass",
+        "notes": "BalancePanel with collapsible slider groups, backtick toggle"
+      },
+      "tuning-presets": {
+        "status": "pass",
+        "notes": "Save/load/delete named presets via localStorage"
+      },
+      "hit-death-logging": {
+        "status": "pass",
+        "notes": "Damage and death events logged with context"
+      },
+      "run-summary": {
+        "status": "pass",
+        "notes": "Run summary at game over and victory"
+      },
+      "telemetry-export": {
+        "status": "pass",
+        "notes": "JSON export via BalancePanel button"
+      },
+      "verification": {
+        "status": "pass",
+        "notes": "Build passes, default tuning values match original constants"
+      }
     }
   }
 }

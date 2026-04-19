@@ -1,141 +1,71 @@
 # CLAUDE.md
 
-**Twin:** [AGENTS.md](./AGENTS.md) — keep both files in sync when architecture changes.
+**Twin:** [AGENTS.md](./AGENTS.md) — keep both files aligned when architecture or workflow guidance changes.
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code when working in this repository.
 
 ## Project Overview
 
-Beach Kitty is a **nine-level campaign game** built with React 19 + TypeScript + Vite + **Phaser 3**. Each level is a different classic game genre (runner, platformer, launcher, shooter, breakout, frogger, whack-a-mole, snake, climber). A custom AI-generated cat character carries across all levels. Gemini AI requests are proxied through server-side API routes for key safety.
+Beach Kitty is a Phaser-based nine-level campaign built with React 19, TypeScript, and Vite. React owns menus, campaign flow, HUD, customizer, and persistence surfaces. Phaser owns runtime gameplay through genre-specific scenes for runner, platformer, launcher, shooter, breakout, frogger, whack, snake, and climber modes.
+
+## Canonical Files
+
+- `ROADMAP_V3.md` — the active roadmap
+- `PROGRESS.md` — the root session log
+- `docs/` — supporting architecture, product, plan, and spec material
+- GitHub Issues — active bug and technical-debt tracker
+
+Historical planning material lives under `docs/archive/`. The retired `KNOWN_ISSUES` workflow is not part of the active loop.
 
 ## Development Commands
 
 ```bash
-npm install          # Install dependencies
-npm run dev          # Start dev server on port 3000
-npm run build        # Production build
-npm run preview      # Preview production build
-npm run test:run     # Vitest (CI-style single run)
-./scripts/dev-init.sh   # Session checklist helper; active workflow starts from ROADMAP_V3.md and PROGRESS.md
+npm install
+npm run dev
+npm run build
+npm run preview
+npm run test:run
+npx tsc --noEmit
+./scripts/dev-init.sh
 ```
 
-## Environment Setup
+## Current Runtime Snapshot
 
-Set `GEMINI_API_KEY` in `.env.local` for AI features (custom cat generation, wisdom quotes, death messages). In production, configure `GEMINI_API_KEY` on the server environment.
+- `levels/index.ts` registers 9 runtime configs in `LEVEL_REGISTRY`.
+- `App.tsx` routes 9 lazy Phaser scene imports through `PhaserGame`.
+- `components/PhaserGame.tsx` and `scenes/shared/SceneBridge.ts` are the shared React/Phaser bridge.
+- `GameEngine.tsx` still matters for the beach runner path and for legacy/runtime extraction work.
+- Custom cat assets live in IndexedDB plus localStorage metadata, with server-side Gemini generation and sprite matting support.
 
-## Architecture
+## Active Docs
 
-### Core Game Loop
-- **App.tsx** — Root component: game states (`GameStatus`: LEVEL_SELECTION, PLAYING, BOSS_FIGHT, GAMEOVER, VICTORY, CUSTOMIZE), **`selectedLevel`** + **`LevelSelection`**, **`defeatedBosses`** persisted in **`beach-cat-defeated-bosses-v1`** (`services/levelProgress.ts`), linear unlock via **`levels/catalog.ts`** (`LEVEL_ORDER`, `isLevelUnlocked`). Hall of Fame + victory score merges: **`services/runOutcome.ts`**. **dev BalancePanel** toggled with **backtick** during play, telemetry callback from GameEngine. **Custom cat sprites:** metadata in **`beach-cat-cat-state-v1`** (localStorage JSON: `equippedAssetId`, `SavedCatLook[]`); PNG bytes in **IndexedDB** (`beach-kitty-assets` / `sprites`). On boot, **`migrateCatStorageIfNeeded`** migrates legacy `beach-cat-look` + `beach-cat-outfits` once; legacy keys are removed only after successful v1 persistence and successful blob puts for the data being cleared. If IndexedDB is unavailable, the app falls back to legacy keys only. Missing equipped sprite clears persisted **`equippedAssetId`**. New Hall of Fame rows store **`catAssetId`**; legacy rows keep **`catUrl`**.
-- **GameEngine.tsx** — Main loop (`requestAnimationFrame`): physics, collisions, spawning, boss fight. Accepts optional **`levelConfig`** (App passes **`getLevelConfig(levelId)`**); falls back to **`LEVEL_REGISTRY[levelId]`**. Boss defeat invokes **`onVictoryFinalize`(`VictoryFinalizePayload`)** before VICTORY so **`App`** Hall of Fame uses authoritative engine score. Stomp / slow-on-contact / arc projectile motion keyed off **`ObstacleDefinition.behaviors`** via **`systems/levelBehaviorHelpers.ts`**; stomp/slow outcomes prefer **`stompCollision` / `slowCollision`** on defs when present (**`collisionHandlers`**, engine passes **`getObstacleDef`**). Player layout from **`resolvePlayerAnchor(theme)`** (**`systems/playerAnchor.ts`**). Background spawn **`systems/backgroundSpawn.ts`**; parallax views **`levels/levelBackgroundViews.tsx`** + **`levels/beach/backgroundEntities.tsx`**. Boss pose and projectile spawn in **`systems/bossSystem.ts`** (`projectileAimX`); boss React UI loaded lazily from **`systems/bossComponents.tsx`** using **`BossConfig.componentId`**. Reads **runtime tuning** from `useTuningStore()`. Logs **telemetry** via `runTelemetry`. Uses **`systems/behaviors.ts`** and **`systems/collisionHandlers.ts`**.
+- `docs/architecture/level-development.md`
+- `docs/architecture/behavior-system.md`
+- `docs/architecture/level-runtime.md`
+- `docs/architecture/api-protection.md`
+- `docs/product/qa-checklist.md`
+- `docs/plans/`
+- `docs/specs/`
 
-### Game Mechanics (tuning + GameEngine)
-- **Defaults** (overridable in dev panel): gravity `0.75`, jump force `17`, ground Y `100`, boss entry after **`bossThreshold`** coins (default **50**), power-up spawn cadence via `powerupThreshold` / `streakRequired`, spawn intervals and assist graces in `TuningProfile`.
-- **Scoring:** Coins = 1, shells = 5; multiplier scales with streak.
-- **Double jump:** `jumpCount`, max 2 before landing.
-- **Power-ups:** SPEED (~1.7x), MAGNET, SUPER_SIZE (scale + invincibility) — exact tuning from store.
+## Game Studio Routing
 
-### Level configuration
-- **`levels/beach.ts`** — `BEACH_LEVEL_CONFIG` (`LevelConfig`). **`levels/index.ts`** — `LEVEL_REGISTRY`, `getLevelConfig`. **App** passes **`levelConfig`** into **GameEngine**. **`mergeLevelTuning`** / **`getBossEntryCoinThreshold`** (`levels/catalog.ts`) shared by App + engine — **[docs/LEVEL_RUNTIME.md](./docs/LEVEL_RUNTIME.md)**. [ROADMAP_V2.md](./ROADMAP_V2.md) (V2 complete); archive: `docs/ROADMAP_V1_COMPLETE.md`.
+Default execution model:
 
-### Dev tooling: balance panel and telemetry
-- **`components/dev/BalancePanel.tsx`** — Sliders for `TuningProfile`, named presets in **localStorage**, reset to defaults, **export telemetry JSON**.
-- **`systems/tuning/useTuningStore.ts`** — Hook for tuning + presets.
-- **`systems/telemetry/runTelemetry.ts`** — Factory for run logger; damage / death / run_summary events.
+- `game-studio` routes browser-game work
+- `phaser-2d-game` is the default implementation path for runtime/gameplay changes
+- `sprite-pipeline` is the default path for 2D sprite-sheet and hero-sheet work
+- `game-playtest` is the default path for browser smoke tests, screenshots, HUD review, and scene QA
 
-### Component Architecture
-- **LevelSelection.tsx** — Home-screen level cards; unlock copy from **`levels/catalog.ts`**.
-- **Kitty.tsx** — Player; Canvas API for AI-generated sprite backgrounds.
-- **ObstacleComponent.tsx** — Shared pickups (COIN, SHELL, power-ups); beach hazards via **`useLevelContext`** + **`levels/beach/obstacles.tsx`** (`BeachObstacleIcon`).
-- **contexts/LevelContext.tsx** — `levelId` for level-specific obstacle art (provided by **GameEngine**).
-- **SandMonster.tsx** — Boss.
-- **CatCustomizer.tsx** — Gemini-powered custom cats; **`mode: 'indexed'`** (asset ids + `ingestClosetDataUrl` w/ `contentKey` dedup, player vs look naming, **`onClosetLookDelete`** persists removals + IDB sprite delete) vs **`mode: 'legacy'`** (data URLs in localStorage).
-- **HallOfFameCatAvatar.tsx** — Resolves **`catAssetId`** via blob URL or falls back to **`catUrl`**.
-- **AnimatedWater.tsx** — Water background.
+## Current Focus
 
-### AI Integration (`services/geminiService.ts` + `api/cat/*` + `server/catApiHandlers.ts`)
-- Frontend calls same-origin **`/api/cat/*`**; Vercel handlers and Vite `devApiMiddleware` delegate to **`server/catApiHandlers.ts`**, with **`server/catApiProtection.ts`** / **`server/catApiVercelPreflight.ts`** for caps and rate limits (**[docs/API_PROTECTION.md](./docs/API_PROTECTION.md)**). Client **`fetch`** timeouts via **`AbortController`**; server Gemini calls use **`Promise.race`** timeouts in **`server/geminiGateway.ts`**.
-- Server uses `GEMINI_API_KEY`; image model `GEMINI_IMAGE_MODEL` (default `gemini-2.5-flash-image`).
-- `getCatWisdom`, `getDeathMessage`, `generateCustomCat` (returns **`GenerateCatImageResult`**: success + `meta` or `code`/`message` on failure). Image prompt: **`server/prompts/customCatSprite.ts`** (`CUSTOM_CAT_SPRITE_PROMPT_VERSION`; sanitized user block + injection-mitigation copy).
-- **Server matting:** After a successful PNG from Gemini, **`server/matCustomCatSprite.ts`** runs the same flood-fill / chroma-key logic as the client via **`services/catSpriteMattingCore.ts`** and **`sharp`**. Response **`meta.mattedOnServer`** is true when matting applied. On failure or non-PNG input, the raw image is returned. The client still runs **`useMatteCatUrl`** / **`catSpriteMatting.ts`** for legacy IndexedDB sprites and as a safety net.
+- Keep root guidance and docs aligned with the live V3 campaign rather than older V2-era assumptions.
+- Track active bugs and debt in GitHub Issues, not markdown parking lots.
+- Continue the current platformer hero-sheet and sprite-matting work as active WIP inside the asset pipeline/tooling workstream.
+- Address carried-forward correctness follow-ups such as non-runner victory labeling, hardcoded scene `levelId`s, Hall of Fame genre context, and bundle size.
 
-### Types (`types.ts`)
-- `GameStatus`, obstacle/power-up/entity unions, `WorldEntity`, `Obstacle`, `Bullet`, `Particle`, `PlayerState`, `GameScore`, persistence types.
-- **Multi-level scaffolding:** `LevelId`, `BehaviorType`, `ObstacleDefinition`, `LevelConfig`, `ThemeConfig`, `BossConfig`, `BackgroundConfig`, etc.
+## Contributor Notes
 
-### Pattern system
-- **Runtime:** `levelConfig.patterns` from **`LEVEL_REGISTRY`** (cloned into spawn queue; scaled by score / lives in engine).
-
-### Behavior and collision modules
-- **`systems/behaviors.ts`** — `computeSwoopY`, `checkPoopDrop(obs, …, spec)` (falling projectile spawn; `spec` from level `dropProjectile.projectileType`).
-- **`systems/levelBehaviorHelpers.ts`** — `obstacleHasBehavior`, `pickSeagullSpawnVariant`, `resolveDropProjectileSpec`.
-- **`systems/collisionHandlers.ts`** — `handleBounceCollision`, `handleSlowCollision`, `handleHarmfulCollision`, `CollisionResult`.
-- **`LevelConfig.magnetAttractTypes`** — entities pulled during MAGNET (default `['COIN']` in engine if omitted).
-- **`BossConfig.projectileObstacleType`** — boss shot obstacle type (default `SAND_PROJECTILE`).
-
-### Audio (`services/audioService.ts`, `services/sfxService.ts`)
-- **Music:** Web Audio procedural beats; tempo vs game speed; boss mode. **rAF + lookahead** scheduling (`nextBeatTime`) instead of `setInterval`.
-- **SFX:** `sfxService` — file-backed + procedural fallbacks; `GameEngine` preloads and routes `playSound` through it.
-
-### Phaser 3 Integration (V3)
-- **`components/PhaserGame.tsx`** — React wrapper that mounts a `Phaser.Game` (with Arcade Physics) inside a div. Accepts `sceneFactory` (lazy import), `levelId`, `catSpriteUrl`, `sceneInitData`, and callback props for bridge events. Full Phaser restart on `levelId` change; `applyRuntimePatch` for mid-run tuning updates.
-- **`scenes/shared/SceneBridge.ts`** — Abstract base class extending `Phaser.Scene`. All genre scenes extend this. Defines 6 bridge events: `SCORE_UPDATE`, `LIVES_CHANGED`, `LEVEL_COMPLETE`, `GAME_OVER`, `STATUS_CHANGE`, `HUD_UPDATE`. Protocol constants and interfaces live in `scenes/shared/bridgeProtocol.ts` (importable without Phaser browser globals).
-- **`scenes/shared/SpriteLoader.ts`** — Loads cat sprite blob URL into Phaser texture cache during `preload()`.
-- **Genre scenes (all 9 implemented as skeletons):**
-  - `scenes/RunnerScene.ts` — Beach runner (full port from GameEngine)
-  - `scenes/PlatformerScene.ts` — Mario-style platformer, **fully built** (modular orchestrator calling 6 managers in `scenes/platformer/`: BuildingGenerator, CityBackground, EnemyManager, HazardManager, PowerupManager, PigeonKingBoss). Pure logic in `generation.ts` + `bossPhases.ts` with Vitest coverage.
-  - `scenes/LauncherScene.ts` — Angry Birds slingshot, destructible blocks
-  - `scenes/ShooterScene.ts` — Galaga wave formations, deferred destroy pattern
-  - `scenes/BreakoutScene.ts` — Paddle + ball, brick grid
-  - `scenes/FroggerScene.ts` — Lane hazards, discrete grid movement
-  - `scenes/WhackScene.ts` — Garden Patrol: wave phases, qualify score, Gopher King boss; managers in `scenes/whack/` (grid, background, mole spawn, powerups, boss)
-  - `scenes/SnakeScene.ts` — Grid movement, grow tail, self-collision
-  - `scenes/ClimberScene.ts` — Doodle Jump auto-bounce, vertical scroll
-- **Scene factory routing:** `App.tsx` uses a genre-keyed object lookup (`{ runner: () => import(...), platformer: ... }[genre]`) for code-split scene loading.
-- **Type system:** `AnyLevelConfig` discriminated union on `genre` field; each genre has its own config interface extending `CampaignLevelMeta`. `getLevelConfig()` for runner-only, `getAnyLevelConfig()` for any genre.
-- **Rendering rule:** Phaser owns gameplay rendering; React owns UI (menus, HUD, campaign screen, cutscenes).
-- **Code splitting rule:** Never statically import all scene classes. Use `sceneFactory: () => import('./scenes/<Name>Scene')` for lazy loading.
-- **Deferred destroy pattern:** Scenes that destroy objects during Phaser Group iteration must use `deferDestroy()` + `flushDestroys()` to prevent iterator corruption (see ShooterScene for reference).
-- **Dev unlock:** `DEV_UNLOCK_ALL` flag (active in dev mode or `?unlock_all` URL param) bypasses linear level unlock progression.
-- **`CAMPAIGN_LEVEL_META` vs `LEVEL_REGISTRY`:** `CAMPAIGN_LEVEL_META` (in `levels/catalog.ts`) lists all 9 levels with display metadata. `LEVEL_REGISTRY` (in `levels/index.ts`) contains levels with runtime configs (now all 9). `LEVEL_ORDER` defines unlock progression.
-
-## Roadmap V2 and known gaps
-
-See **[ROADMAP_V2.md](./ROADMAP_V2.md)** for historical V2 context and use GitHub Issues for active bugs and debt. Short summary for agents:
-
-- **GameEngine.tsx** remains a large monolith: physics, spawning, collisions, HUD, boss wiring. Beach parallax lives in **`levels/beach/backgroundEntities.tsx`** with spawn in **`backgroundSpawn.ts`**; optional further splits in V2.
-- **`/api/cat/*`:** Rate limits, body caps, client/server timeouts, and prompt isolation are documented in **docs/API_PROTECTION.md**; upgrade path for serverless is shared-store / Edge limits.
-- **TypeScript:** `tsconfig.json` does not enable **`strict`** yet — deferred and now tracked through GitHub Issues / roadmap workstreams; `npm run build` and `npx tsc --noEmit` are used for ship checks.
-- **Tests:** **Vitest** — `npm run test:run` (CI-style), `npm test` (watch). Pure-module coverage in `services/`, `systems/`, `server/`, `levels/`; expand over time; UI/game loop remains mostly manual QA ([docs/QA_CHECKLIST.md](./docs/QA_CHECKLIST.md)).
-- **Gameplay types:** `GameStatus` trimmed to active flow values; pause is engine-local (`isPaused`). Optional `LevelConfig.bossEntryCoinThreshold`, `theme.skyProgressMode`, behavior `config` keys — see `docs/LEVEL_DEVELOPMENT.md` / `docs/BEHAVIOR_SYSTEM.md`.
-
-## Key Implementation Details
-
-- AABB collision with forgiveness padding.
-- Background entities: parallax depth layers.
-- Screen shake, hit flash, freeze frames (`triggerFreezeFrame`).
-- Seagull: spawn variant from **`swoop` / `dropProjectile`** behaviors; dive stomp requires **`swoop`** on the definition.
-- Styling: Tailwind via CDN.
-
-## Game Feel (“Juice”)
-
-Squash/stretch (Kitty), freeze frames, screen shake, hit flash, speed lines, dust trail, coin glow, floating score popups.
-
-## Documentation for contributors
-
-- **[docs/LEVEL_DEVELOPMENT.md](./docs/LEVEL_DEVELOPMENT.md)** — Adding a `LevelId`, `LevelConfig`, registry, obstacle art, boss UI.
-- **[docs/LEVEL_RUNTIME.md](./docs/LEVEL_RUNTIME.md)** — Runtime contract: tuning merge, boss threshold, ownership table.
-- **[docs/BEHAVIOR_SYSTEM.md](./docs/BEHAVIOR_SYSTEM.md)** — `BehaviorType`, `levelBehaviorHelpers`, `behaviors.ts`, `collisionHandlers.ts`, boss shots.
-- **[docs/QA_CHECKLIST.md](./docs/QA_CHECKLIST.md)** — Manual QA before releases; browser playthrough + customizer + `/api/cat/*` + reduced motion.
-
-## Project tracking
-
-- **[ROADMAP_V2.md](./ROADMAP_V2.md)** — Active roadmap for current work.
-- **[docs/ROADMAP_V1_COMPLETE.md](./docs/ROADMAP_V1_COMPLETE.md)** — Completed roadmap archive for phases 1–9.
-- **[PROGRESS.md](./PROGRESS.md)** — Session log (newest first).
-- **`docs/archive/issues/KNOWN_ISSUES.md`** — Archived historical issue log; GitHub Issues are the active tracker.
-- **[docs/OVERNIGHT_AGENT.md](./docs/OVERNIGHT_AGENT.md)** — Autonomous overnight agent prompt, issue template, and label conventions.
-- **[prompts/overnight-agent.md](./prompts/overnight-agent.md)** — Thin Desktop task entry point → reads OVERNIGHT_AGENT.md, writes run log.
-- **`state/overnight-agent-log.json`** — Runtime log from overnight agent (gitignored).
-- **GitHub Issues** — Primary tracker for tech-debt and bugs. Issues use `Automation Hints` section for overnight agent consumption.
-- **`/levelbuilder`** — Project command: builds a campaign level from skeleton to functional via brainstorm → spec → plan → subagent execution. 10-task template. Reference impl: City Heights (ROOFTOPS).
+- Prefer `ROADMAP_V3.md` and live code when secondary docs drift.
+- Treat `PROGRESS.md` as the durable handoff log at the repo root.
+- Keep `CLAUDE.md` and `AGENTS.md` aligned as twins where possible.
+- Do not reintroduce active backlog language around retired root files.

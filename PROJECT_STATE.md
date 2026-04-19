@@ -1,29 +1,45 @@
 # CatRunner — Project State
 
-> Cross-surface context document. Shared across Claude Chat, Claude Code, and Cowork sessions.
-> Last updated: 2026-03-24
+> Cross-surface context document. Shared across Claude Chat, Claude Code, and related sessions.
+> Last updated: 2026-04-19
 
 ---
 
 ## Elevator Pitch
 
-CatRunner is a polished endless runner game where a cat sprints along a beach dodging obstacles, collecting coins and shells, and battling bosses — built entirely with AI-assisted development. It features Gemini-powered custom cat generation, a multi-level system with boss fights, power-ups, a hall of fame, and a retro TV-screen aesthetic. It's a showcase of what one developer can build when AI handles the heavy lifting on game physics, sprite generation, and level design.
+CatRunner, branded in-product as Beach Kitty, is a nine-level multi-genre browser-game campaign built with React, TypeScript, Vite, and Phaser 3. The same custom AI-generated cat moves through runner, platformer, launcher, shooter, breakout, frogger, whack, snake, and climber scenes with shared campaign progression, Hall of Fame persistence, and custom sprite handling.
 
-## Project Overview
+## Current Reality
 
-Built with React 19 + TypeScript + Vite using Phaser 3 for the game engine. The core loop runs on requestAnimationFrame with physics, collision detection, and spawning systems. Features include double jump, power-ups (speed, magnet, super size), a multi-level system with boss fights (Sand Monster), and Gemini AI integration for custom cat sprite generation and in-game wisdom quotes. The game uses a level registry/catalog architecture for extensibility, with per-level tuning profiles, boss configurations, and background entity systems. Sprites are persisted in IndexedDB with localStorage metadata.
+- The multi-genre Phaser runtime already exists. This is not a pre-Phaser planning repo.
+- `levels/index.ts` registers 9 level configs in `LEVEL_REGISTRY`.
+- `App.tsx` routes 9 lazy scene imports through `PhaserGame`.
+- React owns shell/UI concerns; Phaser owns gameplay scenes.
+- The current cleanup work is about canonical docs and workflow alignment, not initial Phaser adoption.
 
-## Current Stack
+## Current Workstreams
+
+- Canonical roadmap and docs alignment around `ROADMAP_V3.md`, `PROGRESS.md`, `docs/`, and GitHub Issues
+- Correctness follow-ups from the repo audit, including non-runner victory labels, hardcoded scene `levelId`s, and Hall of Fame genre context
+- Asset pipeline/tooling work, with platformer hero-sheet and sprite-matting work as active WIP
+- Performance/shipping readiness, including oversized main bundle follow-up work
+
+## Stack Snapshot
 
 | Layer | Technology | Notes |
 |-------|-----------|-------|
-| Framework | React 19 + TypeScript | Vite 6 bundler |
-| Game Engine | Phaser 3 | Physics, collisions, spawning |
-| AI | Google Gemini | Custom cat generation, quotes, death messages |
-| Asset Storage | IndexedDB + localStorage | Sprite persistence, cat state, hall of fame |
-| Testing | Vitest 4 | Unit tests |
-| Styling | CSS | Retro TV-screen aesthetic |
+| Framework | React 19 + TypeScript | Vite app shell |
+| Runtime | Phaser 3 | Genre scenes and bridge architecture |
+| AI | Google Gemini | Custom cat generation and text features |
+| Image processing | sharp + in-app matting helpers | Server-side and client fallback paths |
+| Asset storage | IndexedDB + localStorage | Cat wardrobe, sprite metadata, Hall of Fame data |
+| Testing | Vitest + `npx tsc --noEmit` + Vite build | Current verification baseline |
 
-## Status
+## Canonical Workflow
 
-**V2 complete, V3 in progress.** V2 shipped multi-level system, boss fights, level selection, and hall of fame. V3 is adding the Phaser-based TV screen HUD redesign, new levels, and polish. Phase 0 and Phase 1 of V3 underway.
+- Start from `ROADMAP_V3.md` for active roadmap direction.
+- Use `PROGRESS.md` for session handoff and continuity.
+- Use `docs/` for supporting architecture, product, plans, and specs.
+- Use GitHub Issues for bugs and technical debt.
+
+Historical planning material lives under `docs/archive/`.
