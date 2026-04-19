@@ -11,7 +11,7 @@
 ./ROADMAP_V3.md
 ```
 
-**Start with `ROADMAP_V3.md` for active work.** V2 is complete. V1 archived at `docs/ROADMAP_V1_COMPLETE.md`.
+**Start with `ROADMAP_V3.md` for active work.** V2 is complete. V1 archived at `docs/archive/roadmaps/ROADMAP_V1_COMPLETE.md`.
 
 ---
 
@@ -41,6 +41,8 @@ Most recent session should be first.
 - [x] Archived `KNOWN_ISSUES.md` and retired it from the workflow
 - [x] Reorganized active docs under `docs/`
 - [x] Created GitHub issues for surviving actionable repo/product concerns
+- [x] Verified `npm run test:run`, `npx tsc --noEmit`, and `npm run build`
+- [x] Confirmed the repo now has one active roadmap and one active root progress log
 
 ### Next Session Should
 1. Start from `ROADMAP_V3.md`

@@ -8,7 +8,7 @@
 
 **Tech Stack:** Phaser 3, React 19, TypeScript, Vitest
 
-**Spec:** `docs/superpowers/specs/2026-04-05-busy-crossing-frogger-design.md`
+**Spec:** `docs/specs/2026-04-05-busy-crossing-frogger-design.md`
 
 ---
 
@@ -725,7 +725,7 @@ git commit -m "fix(frogger): QA follow-ups for STREET"
 
 ## Execution Handoff
 
-**Plan complete and saved to** `docs/superpowers/plans/2026-04-05-busy-crossing-frogger-implementation.md`.
+**Plan complete and saved to** `docs/plans/2026-04-05-busy-crossing-frogger-implementation.md`.
 
 **Two execution options:**
 

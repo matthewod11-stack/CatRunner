@@ -8,7 +8,7 @@
 
 **Tech Stack:** Phaser 3 (Arcade Physics), TypeScript, Vitest.
 
-**Spec:** `docs/superpowers/specs/2026-04-05-yarn-ball-bounce-design.md`
+**Spec:** `docs/specs/2026-04-05-yarn-ball-bounce-design.md`
 
 **Baseline:** `scenes/breakout/*` and `BreakoutScene.ts` already implement single-wave bricks, multiball/slow/wide/sticky power-ups, carriers, explosive bricks, hazards, yarn floor band, and procedural SFX. This plan is **delta work** to match the signed spec (not a greenfield scene).
 
@@ -566,7 +566,7 @@ Expected: success.
 
 ## Execution handoff
 
-Plan complete and saved to `docs/superpowers/plans/2026-04-05-yarn-ball-bounce-implementation.md`.
+Plan complete and saved to `docs/plans/2026-04-05-yarn-ball-bounce-implementation.md`.
 
 **1. Subagent-driven (recommended)** — dispatch a fresh subagent per task; review between tasks.  
 **2. Inline execution** — run tasks in this session with checkpoints between tasks.

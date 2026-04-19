@@ -8,7 +8,7 @@
 
 **Tech Stack:** Phaser 3, TypeScript, Vitest, existing `PhaserAudio` / `EffectsManager` / `SceneBridge`.
 
-**Spec:** `docs/superpowers/specs/2026-04-05-garden-patrol-whack-design.md`
+**Spec:** `docs/specs/2026-04-05-garden-patrol-whack-design.md`
 
 ---
 
@@ -413,7 +413,7 @@ export const DEPTH = {
 
 ## Execution handoff
 
-**Plan complete and saved to `docs/superpowers/plans/2026-04-05-garden-patrol-whack-implementation.md`.**
+**Plan complete and saved to `docs/plans/2026-04-05-garden-patrol-whack-implementation.md`.**
 
 **1. Subagent-driven (recommended)** — fresh subagent per task + review between tasks.  
 **2. Inline execution** — run tasks in this session with checkpoints.

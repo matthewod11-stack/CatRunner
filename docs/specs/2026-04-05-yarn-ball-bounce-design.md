@@ -131,4 +131,4 @@ The implementation plan should pin these (not left ambiguous in code):
 
 ## Approval
 
-This spec is ready for **`writing-plans`** (10-task implementation plan under `docs/superpowers/plans/`) after stakeholder sign-off.
+This spec is ready for **`writing-plans`** (10-task implementation plan under `docs/plans/`) after stakeholder sign-off.

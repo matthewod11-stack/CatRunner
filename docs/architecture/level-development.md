@@ -114,9 +114,9 @@ Global unions in [`types.ts`](../types.ts) (`ObstacleType`, `BackgroundEntityTyp
 
 ## Optional splits
 
-[`ROADMAP_V2.md`](../ROADMAP_V2.md) tracks current work, and the completed multi-level roadmap archive at [`ROADMAP_V1_COMPLETE.md`](./ROADMAP_V1_COMPLETE.md) notes the optional split of a large `beach.ts` into `config.ts` / `patterns.ts` — cosmetic organization only.
+[`ROADMAP_V3.md`](../../ROADMAP_V3.md) tracks current work, and the completed multi-level roadmap archive at [`ROADMAP_V1_COMPLETE.md`](../archive/roadmaps/ROADMAP_V1_COMPLETE.md) notes the optional split of a large `beach.ts` into `config.ts` / `patterns.ts` — cosmetic organization only.
 
 ## Related
 
-- [`docs/BEHAVIOR_SYSTEM.md`](./BEHAVIOR_SYSTEM.md) — behaviors and collisions
+- [`behavior-system.md`](./behavior-system.md) — behaviors and collisions
 - [`CLAUDE.md`](../CLAUDE.md) / [`AGENTS.md`](../AGENTS.md) — repo map for agents

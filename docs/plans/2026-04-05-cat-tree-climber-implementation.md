@@ -8,7 +8,7 @@
 
 **Tech Stack:** Phaser 3, TypeScript, Vitest, existing `SceneBridge`, `PhaserAudio`, `EffectsManager`.
 
-**Spec:** `docs/superpowers/specs/2026-04-05-cat-tree-climber-design.md`
+**Spec:** `docs/specs/2026-04-05-cat-tree-climber-design.md`
 
 ---
 
@@ -672,7 +672,7 @@ git commit -m "fix(cat-tree): honor awardedStars from climber LevelCompletePaylo
 
 ## Execution Handoff
 
-**Plan complete and saved to `docs/superpowers/plans/2026-04-05-cat-tree-climber-implementation.md`.**
+**Plan complete and saved to `docs/plans/2026-04-05-cat-tree-climber-implementation.md`.**
 
 **Execution options:**
 

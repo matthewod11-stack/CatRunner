@@ -132,4 +132,4 @@ Reuse existing `ProceduralSfxType` where possible:
 5. `npm run test:run` passes including new **pure** tests.
 6. `npm run build` passes; level loads from campaign with Phaser path.
 
-**Spec references:** `scenes/WhackScene.ts`, `levels/garden-whack.ts`, `types.ts` (`WhackLevelConfig`), `docs/superpowers/plans/2026-04-05-garden-patrol-whack-implementation.md`.
+**Spec references:** `scenes/WhackScene.ts`, `levels/garden-whack.ts`, `types.ts` (`WhackLevelConfig`), `docs/plans/2026-04-05-garden-patrol-whack-implementation.md`.

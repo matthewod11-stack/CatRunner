@@ -8,7 +8,7 @@
 
 **Tech Stack:** Phaser 3 (Arcade Physics), React 19, TypeScript, Vitest
 
-**Spec:** `docs/superpowers/specs/2026-04-05-city-heights-platformer-design.md`
+**Spec:** `docs/specs/2026-04-05-city-heights-platformer-design.md`
 
 ---
 

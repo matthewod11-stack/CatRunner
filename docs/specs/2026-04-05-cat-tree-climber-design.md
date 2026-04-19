@@ -138,4 +138,4 @@ Extend `ClimberLevelConfig` / related types as needed for:
 - Skeleton: `scenes/ClimberScene.ts`  
 - Config: `levels/cattree.ts`, `levels/catalog.ts`  
 - Types: `ClimberLevelConfig` in `types.ts`  
-- Reference process: `docs/superpowers/specs/2026-04-05-city-heights-platformer-design.md`
+- Reference process: `docs/specs/2026-04-05-city-heights-platformer-design.md`

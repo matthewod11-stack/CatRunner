@@ -8,7 +8,7 @@
 
 **Tech Stack:** Phaser 3, React 19, TypeScript, Vitest
 
-**Spec:** `docs/superpowers/specs/2026-04-05-garden-snake-design.md`
+**Spec:** `docs/specs/2026-04-05-garden-snake-design.md`
 
 ---
 
@@ -714,7 +714,7 @@ No placeholder tasks; `pickLongestPatrolSegment` must be fully implemented befor
 
 ## Execution handoff
 
-**Plan saved to** `docs/superpowers/plans/2026-04-05-garden-snake-implementation.md`.
+**Plan saved to** `docs/plans/2026-04-05-garden-snake-implementation.md`.
 
 **1. Subagent-driven (recommended)** — Dispatch a fresh subagent per task with spec + plan context; review after each task.
 

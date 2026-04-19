@@ -273,4 +273,4 @@ Extensions to `LauncherLevelConfig`:
 
 ## Approval Gate
 
-Implementation must not start until this spec is **explicitly approved** by the project owner. Next step after approval: **writing-plans** skill → `docs/superpowers/plans/2026-04-05-countertop-chaos-implementation.md` (10-task template).
+Implementation must not start until this spec is **explicitly approved** by the project owner. Next step after approval: **writing-plans** skill → `docs/plans/2026-04-05-countertop-chaos-implementation.md` (10-task template).
