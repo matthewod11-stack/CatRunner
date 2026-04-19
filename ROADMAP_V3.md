@@ -31,6 +31,7 @@
 - The intent of this consolidation is simple: one roadmap wins, while older planning artifacts become historical inputs or support docs rather than competing sources of truth.
 - Work that remains valid from earlier planning is carried forward here only if it matches live code, current repo shape, or active WIP already present in the project.
 - Repo cleanup decisions in this roadmap assume that supporting specs, plans, and architecture references live under `docs/`, while root-level project truth stays limited to the canonical roadmap and the active progress log.
+- While repo-entry docs are still being normalized, `ROADMAP_V3.md` and live code win whenever `README.md`, `AGENTS.md`, `CLAUDE.md`, `PROJECT_STATE.md`, or other support docs drift.
 
 ## Guardrails
 
@@ -93,7 +94,7 @@ Operational expectations:
 
 ## Active Sequence
 
-1. Complete repo/docs normalization so the repo has one unambiguous planning surface and aligned guidance.
+1. Complete repo/docs normalization first because it removes execution ambiguity and establishes one trusted planning surface, but do not artificially delay critical player-facing correctness fixes discovered during cleanup.
 2. Address correctness and campaign-coherence follow-ups that can mislead players or break genre-agnostic behavior:
    - non-runner victory label bug
    - hardcoded scene `levelId`s
