@@ -1,6 +1,4 @@
 import type { BossConfig, Obstacle, ObstacleType } from '../types';
-import type { TuningProfile } from './tuning/defaultTuning';
-
 export function computeBossProjectileSpawnRate(
   healthPercent: number,
   bossCfg: BossConfig,

@@ -472,7 +472,6 @@ export default class PlatformerScene extends SceneBridge {
     this.audio.playSfx('mult');
     this.effects.spawnParticles(this.player.x, this.player.y, 0xffdd44, 20, 300);
     this.emitLevelComplete({
-      levelId: 'ROOFTOPS',
       finalScore: this.gameScore.current,
       gameScore: { ...this.gameScore },
       victoryType: 'goal',

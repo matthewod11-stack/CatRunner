@@ -42,7 +42,6 @@ export class PigeonKingBoss implements SceneManager {
   private swoopDirection = 1;
   private swoopY = 0;
   private landX = 0;
-  private featherCooldown = 0;
   private diveBombCooldown = 0;
 
   /** True once boss is fully defeated */
@@ -86,7 +85,7 @@ export class PigeonKingBoss implements SceneManager {
     // Arena creation is deferred — call createArena() when player reaches boss zone
   }
 
-  update(time: number, delta: number): void {
+  update(_time: number, delta: number): void {
     if (this.defeated) return;
 
     switch (this.mode) {

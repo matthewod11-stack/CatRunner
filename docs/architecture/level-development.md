@@ -1,8 +1,8 @@
 # Level development guide
 
-How to add a new playable level to Beach Kitty. The game is built so **data** (config + optional art modules) drives **`GameEngine`**; avoid hardcoding new `levelId` checks in the engine when a config field already exists.
+How to add or evolve a playable level in Beach Kitty. The live project is Phaser-first: **`App`** selects a level, **`PhaserGame`** boots the genre scene, and **`SceneBridge`** carries shared bridge state back to React. The older **`GameEngine`** path still exists only for the legacy `?dom_runner` fallback.
 
-**Runtime ownership (App vs engine, tuning merge, boss coins):** [LEVEL_RUNTIME.md](./LEVEL_RUNTIME.md).
+**Runtime ownership (App vs Phaser bridge, tuning merge, boss coins):** [level-runtime.md](./level-runtime.md).
 
 ## Prerequisites
 
@@ -18,7 +18,7 @@ In [`types.ts`](../types.ts):
 - Add the new id to `LevelId` (e.g. `'VOLCANO'`).
 - If the level introduces **new hazard types**, extend `ObstacleType` and `EntityType` as needed. Shared pickups (`COIN`, `SHELL`, power-ups) usually stay global.
 
-### 2. Author `LevelConfig`
+### 2. Author `LevelConfig` and campaign metadata
 
 Create something like `levels/volcano.ts` exporting `VOLCANO_LEVEL_CONFIG: LevelConfig` that satisfies:
 
@@ -44,6 +44,8 @@ Boss shots must target an obstacle type that includes the **`arcProjectile`** be
 - **`bossEntryCoinThreshold`** — boss entry coin count for both engine trigger and App HUD / progressive sky (with the same merge as above for the fallback `bossThreshold`).
 - **`theme.skyProgressMode` / `skyGradient`** — `App` only: progressive sky/sun vs fixed gradient during play (see `getSkyStyle`).
 
+Then add a `CAMPAIGN_LEVEL_META` entry in [`levels/catalog.ts`](../levels/catalog.ts) in the intended campaign order. `LEVEL_ORDER` now derives from that metadata automatically, so do not maintain a separate manual order list.
+
 ### 3. Register the level
 
 In [`levels/index.ts`](../levels/index.ts):
@@ -51,25 +53,25 @@ In [`levels/index.ts`](../levels/index.ts):
 - Import the new config.
 - Add it to `LEVEL_REGISTRY`.
 
-In [`levels/catalog.ts`](../levels/catalog.ts):
-
-- Append the id to **`LEVEL_ORDER`** in campaign order (unlocking is linear: beat previous boss).
-
 ### 4. Obstacle rendering
 
 - **Shared entities** (`COIN`, `SHELL`, `SPEED`, `MAGNET`, `SUPER_SIZE`) render in [`components/ObstacleComponent.tsx`](../components/ObstacleComponent.tsx).
-- **Level-specific art** (today: beach) lives under `levels/<id>/obstacles.tsx` and is selected via [`contexts/LevelContext.tsx`](../contexts/LevelContext.tsx) inside **`GameEngine`**’s `LevelProvider`.
+- **Level-specific art in the legacy DOM runner path** (today: beach) lives under `levels/<id>/obstacles.tsx` and is selected via [`contexts/LevelContext.tsx`](../contexts/LevelContext.tsx) inside **`GameEngine`**’s `LevelProvider`.
 
-For a new level:
+For new Phaser-first genre scenes, prefer scene-local rendering and managers under `scenes/<genre>/` rather than routing new art through the DOM runner component stack.
+
+For the legacy DOM runner path:
 
 1. Add `levels/<id>/obstacles.tsx` exporting a memoized icon component and `is<MyLevel>ObstacleType` (or a generic pattern).
 2. In `ObstacleComponent`, branch on `levelId` and the type guard (mirror the `BEACH` + `BeachObstacleIcon` pattern).
 
 ### 5. Background parallax (spawn + art)
 
-- **Spawn (all levels):** [`systems/backgroundSpawn.ts`](../systems/backgroundSpawn.ts) — **`spawnBackgroundEntities`**. **`GameEngine`** passes the resolved `LevelConfig.background` plus `getBgEntityDef`; no `levelId` branch in the engine for spawn logic.
+- **Spawn in the legacy DOM runner path:** [`systems/backgroundSpawn.ts`](../systems/backgroundSpawn.ts) — **`spawnBackgroundEntities`**. **`GameEngine`** passes the resolved `LevelConfig.background` plus `getBgEntityDef`; no `levelId` branch in the engine for spawn logic.
 - **Renderer registry:** [`levels/levelBackgroundViews.tsx`](../levels/levelBackgroundViews.tsx) — add your level to **`BACKGROUND_ENTITY_VIEW_BY_LEVEL`**. Implement a `React.FC<{ b: BackgroundEntity }>` (see **`BeachBackgroundEntityView`** in [`levels/beach/backgroundEntities.tsx`](../levels/beach/backgroundEntities.tsx)).
 - Ensure every `BackgroundEntityType` you reference in **`entities`** / spawn pools has a matching case in your view component (or a shared default branch).
+
+For Phaser-first scenes, keep parallax/background rendering in the scene module or its managers unless you are explicitly extending the legacy DOM runner path.
 
 ### 6. Boss UI (optional new boss)
 
@@ -78,7 +80,7 @@ For a new level:
 
 ### 7. App / selection UI
 
-[`components/LevelSelection.tsx`](../components/LevelSelection.tsx) reads **`LEVEL_ORDER`** and `getLevelConfig`; no change required if the registry and order are updated. Unlock state is persisted in **`beach-cat-defeated-bosses-v1`** ([`services/levelProgress.ts`](../services/levelProgress.ts)).
+[`components/LevelSelection.tsx`](../components/LevelSelection.tsx) reads campaign metadata plus registry state; no extra UI wiring is required if the config and `CAMPAIGN_LEVEL_META` entry are registered. Unlock state persists through **`loadCompletedLevels`** / **`saveCompletedLevels`** in [`services/levelProgress.ts`](../services/levelProgress.ts), with one-way migration from the old defeated-bosses key.
 
 ### 8. Verify
 
@@ -107,7 +109,7 @@ Global unions in [`types.ts`](../types.ts) (`ObstacleType`, `BackgroundEntityTyp
 
 | Concern | Where to register |
 |--------|-------------------|
-| Config + unlock order | `LEVEL_REGISTRY`, `LEVEL_ORDER` |
+| Config + campaign order | `LEVEL_REGISTRY`, `CAMPAIGN_LEVEL_META` |
 | Parallax SVG | `BACKGROUND_ENTITY_VIEW_BY_LEVEL` in [`levels/levelBackgroundViews.tsx`](../levels/levelBackgroundViews.tsx) |
 | Obstacle art | `ObstacleComponent` + `levels/<id>/obstacles.tsx` |
 | Boss face | `bossComponents` + `BossComponentId` |

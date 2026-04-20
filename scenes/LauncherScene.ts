@@ -81,12 +81,12 @@ export default class LauncherScene extends SceneBridge {
   }
 
   create(): void {
-    const { width, height } = this.scale;
+    const { width } = this.scale;
 
     this.kitchenBg = new KitchenBackground(this, this.config);
     this.kitchenBg.create();
 
-    this.structure = new StructureBuilder(this, this.config);
+    this.structure = new StructureBuilder(this);
     this.structure.create();
 
     this.hazards = new HazardManager(
@@ -514,7 +514,6 @@ export default class LauncherScene extends SceneBridge {
     this.cleanupProjectile();
     this.audio.playSfx('boss_hit');
     this.emitLevelComplete({
-      levelId: 'KITCHEN',
       finalScore: this.gameScore.current,
       gameScore: { ...this.gameScore },
       victoryType: 'score',
@@ -548,7 +547,6 @@ export default class LauncherScene extends SceneBridge {
       if (this.gameScore.current >= target) {
         this.hasWon = true;
         this.emitLevelComplete({
-          levelId: 'KITCHEN',
           finalScore: this.gameScore.current,
           gameScore: { ...this.gameScore },
           victoryType: 'score',
@@ -590,7 +588,6 @@ export default class LauncherScene extends SceneBridge {
     if (this.gameScore.current >= target) {
       this.hasWon = true;
       this.emitLevelComplete({
-        levelId: 'KITCHEN',
         finalScore: this.gameScore.current,
         gameScore: { ...this.gameScore },
         victoryType: 'score',

@@ -1,11 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import * as levelProgress from './levelProgress';
 import {
   COMPLETED_LEVELS_STORAGE_KEY,
   DEFEATED_BOSSES_STORAGE_KEY,
   loadCompletedLevels,
   saveCompletedLevels,
-  loadDefeatedBosses,
-  saveDefeatedBosses,
 } from './levelProgress';
 import { isLevelUnlocked, LEVEL_ORDER } from '../levels/catalog';
 
@@ -35,26 +34,10 @@ function teardownMockStorage() {
   delete (globalThis as { localStorage?: Storage }).localStorage;
 }
 
-/* ── legacy API (deprecated wrappers) ───────────────────────── */
-
-describe('loadDefeatedBosses / saveDefeatedBosses (deprecated)', () => {
-  beforeEach(installMockStorage);
-  afterEach(teardownMockStorage);
-
-  it('returns empty object when missing or invalid', () => {
-    expect(loadDefeatedBosses()).toEqual({});
-    localStorage.setItem(DEFEATED_BOSSES_STORAGE_KEY, 'not-json');
-    expect(loadDefeatedBosses()).toEqual({});
-    localStorage.setItem(DEFEATED_BOSSES_STORAGE_KEY, '1');
-    expect(loadDefeatedBosses()).toEqual({});
-  });
-
-  it('round-trips defeated flags via new key', () => {
-    const state = { BEACH: true as const };
-    saveDefeatedBosses(state);
-    expect(loadDefeatedBosses()).toEqual(state);
-    // deprecated save writes to the NEW key
-    expect(localStorage.getItem(COMPLETED_LEVELS_STORAGE_KEY)).toContain('BEACH');
+describe('levelProgress public surface', () => {
+  it('does not expose deprecated defeated-bosses wrappers', () => {
+    expect('loadDefeatedBosses' in levelProgress).toBe(false);
+    expect('saveDefeatedBosses' in levelProgress).toBe(false);
   });
 });
 
@@ -148,8 +131,8 @@ describe('loadCompletedLevels migration', () => {
 
 describe('unlock persistence integration', () => {
   it('after recording beach boss defeat, first campaign level stays unlocked', () => {
-    const defeated = { BEACH: true };
+    const completedLevels = { BEACH: true };
     const first = LEVEL_ORDER[0];
-    expect(isLevelUnlocked(defeated, first)).toBe(true);
+    expect(isLevelUnlocked(completedLevels, first)).toBe(true);
   });
 });

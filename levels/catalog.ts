@@ -105,17 +105,39 @@ export const CAMPAIGN_LEVEL_META: CampaignLevelMeta[] = [
   },
 ];
 
-/** Campaign order; when adding levels, extend `LevelId` + registry and append here. */
-export const LEVEL_ORDER: LevelId[] = ['BEACH', 'ROOFTOPS', 'KITCHEN', 'SPACE', 'YARN', 'STREET', 'GARDEN_WHACK', 'GARDEN_SNAKE', 'CAT_TREE'];
+export function getCampaignLevelOrder(
+  meta: CampaignLevelMeta[] = CAMPAIGN_LEVEL_META,
+): LevelId[] {
+  const seen = new Set<LevelId>();
+
+  return meta.map((level) => {
+    if (seen.has(level.id)) {
+      throw new Error(`Duplicate campaign level id "${level.id}" in CAMPAIGN_LEVEL_META`);
+    }
+    seen.add(level.id);
+    return level.id;
+  });
+}
+
+/** Campaign order derives from metadata so progression cannot drift from the campaign grid. */
+export const LEVEL_ORDER: LevelId[] = getCampaignLevelOrder();
+
+export function getCampaignLevelMeta(id: LevelId): CampaignLevelMeta {
+  const meta = CAMPAIGN_LEVEL_META.find((level) => level.id === id);
+  if (!meta) {
+    throw new Error(`Unknown campaign level id "${id}"`);
+  }
+  return meta;
+}
 
 export function isLevelUnlocked(
-  defeatedBosses: Partial<Record<LevelId, boolean>>,
+  completedLevels: Partial<Record<LevelId, boolean>>,
   id: LevelId
 ): boolean {
   const i = LEVEL_ORDER.indexOf(id);
   if (i < 0) return false;
   if (i === 0) return true;
-  return !!defeatedBosses[LEVEL_ORDER[i - 1]];
+  return !!completedLevels[LEVEL_ORDER[i - 1]];
 }
 
 export function getNextLevelId(current: LevelId): LevelId | null {

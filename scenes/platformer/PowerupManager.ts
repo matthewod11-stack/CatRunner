@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import type { PlatformerLevelConfig } from '../../types';
-import { getZoneIndex } from './generation';
 import type { BuildingData, FireEscapeData, PlatformerPowerupType, SceneManager } from './types';
 import { DEPTH } from './types';
 import { EffectsManager } from '../shared/EffectsManager';
@@ -11,12 +10,6 @@ const POWERUP_COLORS: Record<PlatformerPowerupType, number> = {
   TRIPLE_JUMP: 0x44ddff,
   GLIDE: 0xaa88ff,
   SHIELD: 0x44ff88,
-};
-
-const POWERUP_LABELS: Record<PlatformerPowerupType, string> = {
-  TRIPLE_JUMP: '3x',
-  GLIDE: '~',
-  SHIELD: 'O',
 };
 
 export interface ActivePowerupState {

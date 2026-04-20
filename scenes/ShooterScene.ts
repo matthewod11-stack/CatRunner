@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { SceneBridge } from './shared/SceneBridge';
 import type { ShooterSceneInitData } from './shared/bridgeProtocol';
-import type { ShooterLevelConfig, ShooterEnemyDef, ShooterWave, GameScore, GameStatus } from '../types';
+import type { ShooterLevelConfig, ShooterEnemyDef, GameScore, GameStatus } from '../types';
 import { loadCatSprite, CAT_TEXTURE_KEY } from './shared/SpriteLoader';
 import { EffectsManager } from './shared/EffectsManager';
 
@@ -51,7 +51,6 @@ export default class ShooterScene extends SceneBridge {
   private enemyGroup!: Phaser.Physics.Arcade.Group;
   private enemyDataMap: Map<Phaser.GameObjects.GameObject, { def: ShooterEnemyDef; health: number; isBoss: boolean }> = new Map();
   private formationX = 0;
-  private formationDir = 1;
   private formationBaseY = 0;
 
   // Wave state
@@ -305,7 +304,6 @@ export default class ShooterScene extends SceneBridge {
       // All waves cleared — victory
       this.hasWon = true;
       this.emitLevelComplete({
-        levelId: 'SPACE',
         finalScore: this.gameScore.current,
         gameScore: { ...this.gameScore },
         victoryType: 'boss',
@@ -316,11 +314,9 @@ export default class ShooterScene extends SceneBridge {
     const wave = this.config.waves[this.currentWaveIndex];
     this.formationBaseY = wave.startY;
     this.formationX = 0;
-    this.formationDir = 1;
     this.waveStartTime = this.time.now;
 
     const screenCenterX = this.scale.width / 2;
-    const totalCols = Math.max(...wave.rows.map(r => r.length));
 
     for (let row = 0; row < wave.rows.length; row++) {
       const cols = wave.rows[row];

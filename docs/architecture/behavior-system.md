@@ -1,6 +1,6 @@
 # Behavior system
 
-Obstacle **movement** and **collision routing** mix declarative **`ObstacleDefinition.behaviors`** with small pure modules. **`GameEngine`** applies side effects (sound, particles, refs); pure functions return data only.
+This document describes the legacy DOM-runner behavior stack used by **`GameEngine`**. Obstacle **movement** and **collision routing** mix declarative **`ObstacleDefinition.behaviors`** with small pure modules; `GameEngine` applies side effects (sound, particles, refs) while the helper modules stay pure. New Phaser-first genre scenes may use different local managers and do not need to adopt this exact behavior stack unless they are intentionally reusing it.
 
 ## `BehaviorType` (`types.ts`)
 
@@ -40,7 +40,7 @@ Pure **`CollisionResult`** builders (points, sounds, `markAs`, bounce force, slo
 - `handleSlowCollision(obsType, obstacleDef?)` — prefers `obstacleDef.slowCollision` when set; else legacy tidepool vs sandcastle tint defaults.
 - `handleHarmfulCollision()` — generic hurt (lives handled in engine).
 
-`GameEngine` maps results through a local **`applyCollisionResult`** (particles, score popups, refs).
+The legacy DOM runner maps results through a local **`applyCollisionResult`** (particles, score popups, refs).
 
 ## `harmfulTypes` vs behaviors
 
@@ -55,9 +55,9 @@ Spawn rate and pose: [`systems/bossSystem.ts`](../systems/bossSystem.ts). Projec
 
 ## Tuning
 
-Runtime difficulty knobs live in **`useTuningStore`** / [`systems/tuning/defaultTuning.ts`](../systems/tuning/defaultTuning.ts). Per-level **`LevelConfig.tuningOverrides`** are shallow-merged over the store inside **`GameEngine`** (and the same merge is applied in **`App`** for boss coin target / HUD alignment).
+Runtime difficulty knobs live in **`useTuningStore`** / [`systems/tuning/defaultTuning.ts`](../systems/tuning/defaultTuning.ts). Per-level **`LevelConfig.tuningOverrides`** are shallow-merged over the store inside the legacy DOM runner (and the same merge is applied in **`App`** for runner boss coin target / HUD alignment).
 
 ## Related
 
-- [`docs/LEVEL_DEVELOPMENT.md`](./LEVEL_DEVELOPMENT.md)
-- Phase 3 plan (historical): `docs/plans/2026-03-01-phase3-behavior-system-design.md`
+- [`level-development.md`](./level-development.md)
+- Phase 3 plan (historical): `docs/archive/plans/2026-03-01-phase3-behavior-system-design.md`

@@ -47,18 +47,3 @@ export function saveCompletedLevels(state: CompletedLevelsState): void {
     /* ignore quota / private mode */
   }
 }
-
-/* ── legacy aliases (deprecated — remove after full migration) ── */
-
-/** @deprecated Use `CompletedLevelsState` */
-export type DefeatedBossesState = CompletedLevelsState;
-
-/** @deprecated Use `loadCompletedLevels` */
-export function loadDefeatedBosses(): DefeatedBossesState {
-  return loadCompletedLevels();
-}
-
-/** @deprecated Use `saveCompletedLevels` */
-export function saveDefeatedBosses(state: DefeatedBossesState): void {
-  saveCompletedLevels(state);
-}

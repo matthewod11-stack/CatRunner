@@ -1,7 +1,7 @@
 # CatRunner — Project State
 
 > Cross-surface context document. Shared across Claude Chat, Claude Code, and related sessions.
-> Last updated: 2026-04-19
+> Last updated: 2026-04-20
 
 ---
 
@@ -20,7 +20,7 @@ CatRunner, branded in-product as Beach Kitty, is a nine-level multi-genre browse
 ## Current Workstreams
 
 - Canonical roadmap and docs alignment around `ROADMAP_V3.md`, `PROGRESS.md`, `docs/`, and GitHub Issues
-- Correctness follow-ups from the repo audit, including non-runner victory labels, hardcoded scene `levelId`s, and Hall of Fame genre context
+- Cleanup/hardening work to keep active code paths, catalog helpers, and public APIs aligned with the live campaign runtime
 - Asset pipeline/tooling work, with platformer hero-sheet and sprite-matting work as active WIP
 - Performance/shipping readiness, including oversized main bundle follow-up work
 
@@ -39,7 +39,7 @@ CatRunner, branded in-product as Beach Kitty, is a nine-level multi-genre browse
 
 - Start from `ROADMAP_V3.md` for active roadmap direction.
 - Use `PROGRESS.md` for session handoff and continuity.
-- Use `docs/` for supporting architecture, product, plans, and specs.
+- Use `docs/` for active architecture and product docs, plus `docs/plans/README.md` and `docs/specs/README.md` as the current working entrypoints.
 - Use GitHub Issues for bugs and technical debt.
 
 Historical planning material lives under `docs/archive/`.

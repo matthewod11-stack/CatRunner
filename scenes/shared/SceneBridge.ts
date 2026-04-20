@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
-import type { GameScore, GameStatus, LevelCompletePayload, LevelId } from '../../types';
+import type { GameScore, GameStatus, LevelId } from '../../types';
 import { BRIDGE_EVENTS } from './bridgeProtocol';
-import type { SceneInitData, HudUpdatePayload } from './bridgeProtocol';
+import { withSceneLevelId } from './bridgeProtocol';
+import type { SceneInitData, HudUpdatePayload, LevelCompleteDetails } from './bridgeProtocol';
 
 // Re-export protocol types so consumers can import everything from SceneBridge
 export { BRIDGE_EVENTS } from './bridgeProtocol';
@@ -24,8 +25,8 @@ export abstract class SceneBridge extends Phaser.Scene {
     this.events.emit(BRIDGE_EVENTS.LIVES_CHANGED, lives);
   }
 
-  protected emitLevelComplete(payload: LevelCompletePayload): void {
-    this.events.emit(BRIDGE_EVENTS.LEVEL_COMPLETE, payload);
+  protected emitLevelComplete(payload: LevelCompleteDetails): void {
+    this.events.emit(BRIDGE_EVENTS.LEVEL_COMPLETE, withSceneLevelId(this.levelId, payload));
   }
 
   protected emitGameOver(finalScore: number): void {

@@ -169,7 +169,6 @@ export default class ClimberScene extends SceneBridge {
       this.hasWon = true;
       this.effects.spawnParticles(width / 2, height / 2, 0xffcc44, 30, 300);
       this.emitLevelComplete({
-        levelId: 'CAT_TREE',
         finalScore: this.gameScore.current,
         gameScore: { ...this.gameScore },
         victoryType: 'goal',

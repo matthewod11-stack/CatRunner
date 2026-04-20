@@ -34,7 +34,7 @@ npx tsc --noEmit
 - `levels/index.ts` registers 9 runtime configs in `LEVEL_REGISTRY`.
 - `App.tsx` routes 9 lazy Phaser scene imports through `PhaserGame`.
 - `components/PhaserGame.tsx` and `scenes/shared/SceneBridge.ts` are the shared React/Phaser bridge.
-- `GameEngine.tsx` still matters for the beach runner path and for legacy/runtime extraction work.
+- `GameEngine.tsx` is the legacy DOM-runner fallback behind `?dom_runner` plus a reference point for beach/runtime extraction work.
 - Custom cat assets live in IndexedDB plus localStorage metadata, with server-side Gemini generation and sprite matting support.
 
 ## Active Docs
@@ -44,8 +44,8 @@ npx tsc --noEmit
 - `docs/architecture/level-runtime.md`
 - `docs/architecture/api-protection.md`
 - `docs/product/qa-checklist.md`
-- `docs/plans/`
-- `docs/specs/`
+- `docs/plans/README.md`
+- `docs/specs/README.md`
 
 ## Game Studio Routing
 
@@ -60,12 +60,14 @@ Default execution model:
 
 - Keep root guidance and docs aligned with the live V3 campaign rather than older V2-era assumptions.
 - Track active bugs and debt in GitHub Issues, not markdown parking lots.
+- Continue repo cleanup/hardening so active docs describe the current Phaser-first runtime truth.
 - Continue the current platformer hero-sheet and sprite-matting work as active WIP inside the asset pipeline/tooling workstream.
-- Address carried-forward correctness follow-ups such as non-runner victory labeling, hardcoded scene `levelId`s, Hall of Fame genre context, and bundle size.
+- Keep bundle-size/shipping follow-ups visible while the main application bundle remains oversized.
 
 ## Contributor Notes
 
 - Prefer `ROADMAP_V3.md` and live code when secondary docs drift.
 - Treat `PROGRESS.md` as the durable handoff log at the repo root.
+- Treat `docs/plans/` and `docs/specs/` as active-only landing zones; move dated superseded artifacts into `docs/archive/`.
 - Keep `AGENTS.md` and `CLAUDE.md` aligned as twins where possible.
 - Do not reintroduce active backlog language around retired root files.

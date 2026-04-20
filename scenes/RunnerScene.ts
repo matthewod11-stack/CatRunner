@@ -29,7 +29,6 @@ import {
   computeBossWorldPose,
   computeBossProjectileSpawnRate,
   createBossProjectileObstacle,
-  facingFromBossSway,
 } from '../systems/bossSystem';
 import { spawnBackgroundEntities } from '../systems/backgroundSpawn';
 import { getBossEntryCoinThreshold } from '../levels/catalog';
@@ -62,9 +61,7 @@ export default class RunnerScene extends SceneBridge {
   private playerY = 0;
   private playerVy = 0;
   private jumpCount = 0;
-  private isJumping = false;
   private isDucking = false;
-  private isHurt = false;
   private invincibleUntil = 0;
 
   // ── Game state ──
@@ -121,9 +118,6 @@ export default class RunnerScene extends SceneBridge {
   // ── Environment layer refs (for resize) ──
   private envSky!: Phaser.GameObjects.Graphics;
   private envSun!: Phaser.GameObjects.Image;
-  private envOcean!: Phaser.GameObjects.TileSprite;
-  private envFoam!: Phaser.GameObjects.TileSprite;
-  private envSand!: Phaser.GameObjects.TileSprite;
 
   // ── Obstacle spawning state (Task 1.3) ──
   private obstacles: WorldEntity[] = [];
@@ -292,15 +286,15 @@ export default class RunnerScene extends SceneBridge {
 
     // Layer 4: Ocean (below sky, above sand)
     const oceanY = this.groundYScreen - 80;
-    this.envOcean = this.add.tileSprite(width / 2, oceanY, width, 100, 'env-ocean')
+    this.add.tileSprite(width / 2, oceanY, width, 100, 'env-ocean')
       .setDepth(4);
 
     // Layer 5: Waterline foam
-    this.envFoam = this.add.tileSprite(width / 2, this.groundYScreen - 4, width, 16, 'env-foam')
+    this.add.tileSprite(width / 2, this.groundYScreen - 4, width, 16, 'env-foam')
       .setDepth(5);
 
     // Layer 6: Sand ground
-    this.envSand = this.add.tileSprite(width / 2, this.groundYScreen + this.themeGroundY / 2, width, this.themeGroundY, 'env-sand')
+    this.add.tileSprite(width / 2, this.groundYScreen + this.themeGroundY / 2, width, this.themeGroundY, 'env-sand')
       .setDepth(6);
 
     // Canvas is fixed-size — no resize handling needed
@@ -367,9 +361,7 @@ export default class RunnerScene extends SceneBridge {
     this.playerY = 0;
     this.playerVy = 0;
     this.jumpCount = 0;
-    this.isJumping = false;
     this.isDucking = false;
-    this.isHurt = false;
     this.invincibleUntil = 0;
     this.isPaused = false;
 
@@ -479,7 +471,6 @@ export default class RunnerScene extends SceneBridge {
     if (this.playerY <= 0) {
       this.playerY = 0;
       this.playerVy = 0;
-      this.isJumping = false;
       this.jumpCount = 0;
     }
 
@@ -586,7 +577,6 @@ export default class RunnerScene extends SceneBridge {
     if (this.jumpCount < 2) {
       this.playerVy = this.tuning.jumpForce;
       this.jumpCount += 1;
-      this.isJumping = true;
       this.isDucking = false;
     }
   }
@@ -944,8 +934,6 @@ export default class RunnerScene extends SceneBridge {
    */
   private updateMagnetPull(): void {
     const catX = this.playerX + 64; // hitboxCenterX
-    const catScreenY = this.groundYScreen - this.playerY - 40;
-    // Convert screen catY back to DOM engine coords for distance calc
     const catY = this.playerY + 40;
 
     for (const obs of this.obstacles) {
@@ -1682,7 +1670,6 @@ export default class RunnerScene extends SceneBridge {
       };
 
       this.emitLevelComplete({
-        levelId: this.levelId as import('../types').LevelId,
         finalScore,
         gameScore,
         victoryType: 'boss',

@@ -51,6 +51,7 @@ export function getAnyLevelConfig(id: LevelId): AnyLevelConfig {
 export {
   CAMPAIGN_LEVEL_META,
   LEVEL_ORDER,
+  getCampaignLevelMeta,
   isLevelUnlocked,
   getNextLevelId,
   getPreviousLevelId,

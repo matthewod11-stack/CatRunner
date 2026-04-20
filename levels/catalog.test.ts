@@ -1,7 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import {
+  CAMPAIGN_LEVEL_META,
+  getCampaignLevelMeta,
   isLevelUnlocked,
   getNextLevelId,
+  getCampaignLevelOrder,
   LEVEL_ORDER,
   getBossEntryCoinThreshold,
   mergeLevelTuning,
@@ -28,6 +31,35 @@ describe('getNextLevelId', () => {
   it('returns null after the last level', () => {
     const last = LEVEL_ORDER[LEVEL_ORDER.length - 1];
     expect(getNextLevelId(last)).toBeNull();
+  });
+});
+
+describe('getCampaignLevelOrder', () => {
+  it('derives campaign order from metadata instead of a separate manual list', () => {
+    expect(getCampaignLevelOrder()).toEqual(CAMPAIGN_LEVEL_META.map((meta) => meta.id));
+  });
+
+  it('rejects duplicate level ids in campaign metadata', () => {
+    expect(() =>
+      getCampaignLevelOrder([
+        CAMPAIGN_LEVEL_META[0],
+        { ...CAMPAIGN_LEVEL_META[0] },
+      ])
+    ).toThrow(/Duplicate campaign level id/);
+  });
+});
+
+describe('getCampaignLevelMeta', () => {
+  it('returns canonical metadata for a known level id', () => {
+    expect(getCampaignLevelMeta('ROOFTOPS')).toMatchObject({
+      id: 'ROOFTOPS',
+      name: 'City Heights',
+      genre: 'platformer',
+    });
+  });
+
+  it('throws for an unknown level id', () => {
+    expect(() => getCampaignLevelMeta('NOPE' as never)).toThrow(/Unknown campaign level id/);
   });
 });
 

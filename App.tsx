@@ -17,7 +17,6 @@ import AnimatedWater from './components/AnimatedWater';
 import { getCatWisdom, getDeathMessage } from './services/geminiService';
 import BalancePanel from './components/dev/BalancePanel';
 import MatteCatImage from './components/MatteCatImage';
-import HallOfFameCatAvatar from './components/HallOfFameCatAvatar';
 import { TelemetryEvent } from './systems/telemetry/runTelemetry';
 import { migrateCatStorageIfNeeded, readCatCharacterState, writeCatCharacterState, backfillContentKeys } from './services/migrateCatStorage';
 import {
@@ -35,7 +34,7 @@ import {
   getLevelConfig,
   getAnyLevelConfig,
   LEVEL_ORDER,
-  CAMPAIGN_LEVEL_META,
+  getCampaignLevelMeta,
   isLevelUnlocked,
   getNextLevelId,
   getBossEntryCoinThreshold,
@@ -49,6 +48,7 @@ import {
   nextCompletedLevelsAfterWin,
   nextGameScoreAfterVictory,
 } from './services/runOutcome';
+import { getVictoryProgressCopy } from './services/victoryProgress';
 import { useTuningStore } from './systems/tuning/useTuningStore';
 import { useDocumentReducedMotionClass } from './hooks/usePrefersReducedMotion';
 import PhaserGame from './components/PhaserGame';
@@ -57,14 +57,6 @@ import type { HudUpdatePayload } from './scenes/shared/bridgeProtocol';
 const MAX_LIVES = 9;
 const USE_PHASER_RUNNER = !new URLSearchParams(window.location.search).has('dom_runner');
 const DEV_UNLOCK_ALL = import.meta.env.DEV || new URLSearchParams(window.location.search).has('unlock_all');
-
-function formatHallOfFameDate(ts: number): string {
-  try {
-    return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-  } catch {
-    return '';
-  }
-}
 
 const App: React.FC = () => {
   const prefersReducedMotion = useDocumentReducedMotionClass();
@@ -77,7 +69,7 @@ const App: React.FC = () => {
   const [startAtBoss, setStartAtBoss] = useState<boolean>(false);
   const [phaserPaused, setPhaserPaused] = useState(false);
   const [shellAmmo, setShellAmmo] = useState<number | undefined>(undefined);
-  const [defeatedBosses, setDefeatedBosses] = useState(() => loadCompletedLevels());
+  const [completedLevels, setCompletedLevels] = useState(() => loadCompletedLevels());
   const [selectedLevel, setSelectedLevel] = useState<LevelId>(() => LEVEL_ORDER[0]);
 
   const { tuning } = useTuningStore();
@@ -96,6 +88,10 @@ const App: React.FC = () => {
     [levelConfig, mergedTuning]
   );
   const skyProgressMode = levelConfig?.theme.skyProgressMode ?? 'coinsToBoss';
+  const victoryProgress = useMemo(
+    () => getVictoryProgressCopy(selectedLevel, completedLevels),
+    [selectedLevel, completedLevels]
+  );
 
   const [kittyName, setKittyName] = useState<string>("Beach Kitty");
   const [customCatUrl, setCustomCatUrl] = useState<string | null>(null);
@@ -161,8 +157,8 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    saveCompletedLevels(defeatedBosses);
-  }, [defeatedBosses]);
+    saveCompletedLevels(completedLevels);
+  }, [completedLevels]);
 
   useEffect(() => {
     let cancelled = false;
@@ -428,7 +424,7 @@ const App: React.FC = () => {
   const handleVictoryFinalize = useCallback(
     (payload: VictoryFinalizePayload) => {
       const { finalScore, levelId: levelBeat, gameScore } = payload;
-      setDefeatedBosses((prev) => nextCompletedLevelsAfterWin(prev, levelBeat));
+      setCompletedLevels((prev) => nextCompletedLevelsAfterWin(prev, levelBeat));
 
       setHighScores((prev) => {
         const newEntry: HighScoreEntry = {
@@ -464,17 +460,15 @@ const App: React.FC = () => {
       const { finalScore, levelId: levelBeat, gameScore } = payload;
 
       // Update completed levels (useEffect persists via saveCompletedLevels)
-      setDefeatedBosses(prev => nextCompletedLevelsAfterWin(prev, levelBeat));
+      setCompletedLevels(prev => nextCompletedLevelsAfterWin(prev, levelBeat));
 
       // Save per-level result with stars
-      const meta = CAMPAIGN_LEVEL_META.find(m => m.id === levelBeat);
-      if (meta) {
-        saveLevelResult({
-          levelId: levelBeat,
-          score: finalScore,
-          stars: computeStars(finalScore, meta.starThresholds),
-        });
-      }
+      const meta = getCampaignLevelMeta(levelBeat);
+      saveLevelResult({
+        levelId: levelBeat,
+        score: finalScore,
+        stars: computeStars(finalScore, meta.starThresholds),
+      });
 
       // Hall of Fame entry
       setHighScores(prev => {
@@ -509,7 +503,7 @@ const App: React.FC = () => {
   }, []);
 
   const startGame = (bossMode: boolean = false) => {
-    if (!DEV_UNLOCK_ALL && !isLevelUnlocked(defeatedBosses, selectedLevel)) return;
+    if (!DEV_UNLOCK_ALL && !isLevelUnlocked(completedLevels, selectedLevel)) return;
     const currentLives = score.lives <= 0 ? MAX_LIVES : score.lives;
     setStartAtBoss(bossMode);
     setStatus(GameStatus.PLAYING);
@@ -709,7 +703,7 @@ const App: React.FC = () => {
       {status === GameStatus.CAMPAIGN && (
         <main className="z-10 w-full animate-[fadeIn_0.5s_ease-out]">
           <CampaignScreen
-            defeatedBosses={defeatedBosses}
+            completedLevels={completedLevels}
             selectedLevel={selectedLevel}
             onSelectLevel={setSelectedLevel}
             onPlay={() => startGame(false)}
@@ -1171,17 +1165,14 @@ const App: React.FC = () => {
 
           <p className="text-center text-lg font-black text-amber-900 uppercase tracking-wide mb-6 relative z-10 leading-snug">
             {(() => {
-              const nextId = getNextLevelId(selectedLevel);
-              const nextUnlocked =
-                nextId !== null && isLevelUnlocked(defeatedBosses, nextId);
-              if (nextUnlocked) {
+              if (victoryProgress.nextUnlockedLevelName) {
                 return (
                   <>
                     <span className="block text-sm font-bold text-amber-800/90 normal-case tracking-normal mb-1">
                       Progress
                     </span>
                     Next level unlocked:{' '}
-                    <span className="text-yellow-600">{getLevelConfig(nextId).name}</span>
+                    <span className="text-yellow-600">{victoryProgress.nextUnlockedLevelName}</span>
                   </>
                 );
               }
@@ -1190,7 +1181,7 @@ const App: React.FC = () => {
                   <span className="block text-sm font-bold text-amber-800/90 normal-case tracking-normal mb-1">
                     Progress
                   </span>
-                  {getLevelConfig(selectedLevel).name} cleared — you can run it again anytime.
+                  {victoryProgress.currentLevelName} cleared — you can run it again anytime.
                 </>
               );
             })()}
@@ -1201,7 +1192,7 @@ const App: React.FC = () => {
               type="button"
               onClick={() => {
                 const nextId = getNextLevelId(selectedLevel);
-                if (nextId !== null && isLevelUnlocked(defeatedBosses, nextId)) {
+                if (nextId !== null && isLevelUnlocked(completedLevels, nextId)) {
                   setSelectedLevel(nextId);
                 }
                 setStatus(GameStatus.CAMPAIGN);

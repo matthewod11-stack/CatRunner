@@ -454,7 +454,7 @@ const GameEngine: React.FC<GameEngineProps> = ({
     }
   }, [isPaused, performJump, performDuck]);
 
-  const handleTouchEnd = useCallback((e: TouchEvent) => {
+  const handleTouchEnd = useCallback(() => {
     performDuck(false);
   }, [performDuck]);
 
@@ -1422,8 +1422,6 @@ const GameEngine: React.FC<GameEngineProps> = ({
           // Calculate if poop is above or below the boss body
           // Boss uses bottom positioning: boss.y is distance from bottom, boss.y + boss.height is top
           // Poop also uses bottom positioning: poop.y is center, so bottom is poop.y - poop.size/2
-          const bossBottom = boss.y;
-          const bossTop = boss.y + boss.height;
           const bossMidpoint = boss.y + boss.height * 0.5; // Middle of boss body
           const poopCenterY = poop.y;
           // Poops below the boss midpoint should render behind the boss body

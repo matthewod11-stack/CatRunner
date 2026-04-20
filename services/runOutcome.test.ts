@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
+import * as runOutcome from './runOutcome';
 import {
   HALL_OF_FAME_MAX_ENTRIES,
   mergeHallOfFameAfterRun,
-  nextDefeatedBossesAfterVictory,
+  nextCompletedLevelsAfterWin,
   nextGameScoreAfterVictory,
 } from './runOutcome';
 import type { HighScoreEntry, GameScore } from '../types';
@@ -37,10 +38,16 @@ describe('mergeHallOfFameAfterRun', () => {
   });
 });
 
-describe('nextDefeatedBossesAfterVictory', () => {
+describe('nextCompletedLevelsAfterWin', () => {
   it('sets the beaten level without dropping prior flags', () => {
-    expect(nextDefeatedBossesAfterVictory({}, 'BEACH')).toEqual({ BEACH: true });
-    expect(nextDefeatedBossesAfterVictory({ BEACH: true }, 'BEACH')).toEqual({ BEACH: true });
+    expect(nextCompletedLevelsAfterWin({}, 'BEACH')).toEqual({ BEACH: true });
+    expect(nextCompletedLevelsAfterWin({ BEACH: true }, 'BEACH')).toEqual({ BEACH: true });
+  });
+});
+
+describe('runOutcome public surface', () => {
+  it('does not expose deprecated defeated-bosses helpers', () => {
+    expect('nextDefeatedBossesAfterVictory' in runOutcome).toBe(false);
   });
 });
 

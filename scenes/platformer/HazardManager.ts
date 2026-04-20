@@ -7,7 +7,6 @@ import { DEPTH } from './types';
 const AC_UNIT_SIZE = { w: 30, h: 25 };
 const SATELLITE_SIZE = { w: 28, h: 20 };
 const NEON_SIZE = { w: 10, h: 30 };
-const CLOTHESLINE_SPEED = 100;
 const NEON_CYCLE_MS = 1500;
 
 interface ActiveHazard {

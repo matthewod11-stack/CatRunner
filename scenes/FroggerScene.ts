@@ -214,7 +214,6 @@ export default class FroggerScene extends SceneBridge {
       this.hasWon = true;
       this.timer.stop();
       this.emitLevelComplete({
-        levelId: 'STREET',
         finalScore: this.gameScore.current,
         gameScore: { ...this.gameScore },
         victoryType: 'goal',

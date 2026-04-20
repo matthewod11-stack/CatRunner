@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import type { LauncherBlock, LauncherBlockKind, LauncherLevelConfig, LauncherStructure } from '../../types';
+import type { LauncherBlock, LauncherBlockKind, LauncherStructure } from '../../types';
 import { DEPTH, type SceneManager } from './types';
 
 const MATERIAL_COLORS: Record<string, number> = {
@@ -34,14 +34,12 @@ function textureKeyForBlock(def: LauncherBlock): string {
 
 export class StructureBuilder implements SceneManager {
   private scene: Phaser.Scene;
-  private config: LauncherLevelConfig;
   private blockGroup!: Phaser.Physics.Arcade.StaticGroup;
   private blockData = new Map<Phaser.Physics.Arcade.Sprite, LauncherBlockRuntime>();
   private idToSprite = new Map<string, Phaser.Physics.Arcade.Sprite>();
 
-  constructor(scene: Phaser.Scene, config: LauncherLevelConfig) {
+  constructor(scene: Phaser.Scene) {
     this.scene = scene;
-    this.config = config;
   }
 
   create(): void {

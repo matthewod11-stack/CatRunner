@@ -73,7 +73,7 @@ export default class BreakoutScene extends SceneBridge {
     );
     this.ballPaddle.create();
 
-    this.powerups = new BreakoutPowerupManager(this, this.config, {
+    this.powerups = new BreakoutPowerupManager(this, {
       onCollect: (kind) => this.applyPowerup(kind),
     });
     this.powerups.create();
@@ -318,7 +318,6 @@ export default class BreakoutScene extends SceneBridge {
       this.levelCompleteEmitted = true;
       this.effects.spawnParticles(this.scale.width / 2, this.scale.height / 2, 0xffcc44, 30, 300);
       this.emitLevelComplete({
-        levelId: this.levelId,
         finalScore: this.gameScore.current,
         gameScore: { ...this.gameScore },
         victoryType: 'clear',

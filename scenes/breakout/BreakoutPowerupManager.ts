@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import type { BreakoutLevelConfig, BreakoutPowerupKind } from '../../types';
+import type { BreakoutPowerupKind } from '../../types';
 import { DEPTH, type SceneManager } from './types';
 
 export interface BreakoutPowerupManagerDeps {
@@ -14,7 +14,6 @@ export class BreakoutPowerupManager implements SceneManager {
 
   constructor(
     private readonly scene: Phaser.Scene,
-    private readonly _config: BreakoutLevelConfig,
     private readonly deps: BreakoutPowerupManagerDeps
   ) {}
 

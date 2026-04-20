@@ -162,7 +162,6 @@ export default class WhackScene extends SceneBridge {
     this.phase = 'victory';
     this.effects.spawnParticles(this.scale.width / 2, this.scale.height / 2, 0xffcc44, 25, 300);
     this.emitLevelComplete({
-      levelId: 'GARDEN_WHACK',
       finalScore: this.gameScore.current,
       gameScore: { ...this.gameScore },
       victoryType: 'score',

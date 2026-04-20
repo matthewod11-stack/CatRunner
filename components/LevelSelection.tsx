@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
-import type { LevelId, CampaignLevelMeta, HighScoreEntry, LevelResult } from '../types';
-import { CAMPAIGN_LEVEL_META, LEVEL_ORDER, isLevelUnlocked } from '../levels';
+import type { LevelId, HighScoreEntry, LevelResult } from '../types';
+import { CAMPAIGN_LEVEL_META, getCampaignLevelMeta, isLevelUnlocked } from '../levels';
 import { LEVEL_REGISTRY } from '../levels';
-import type { DefeatedBossesState } from '../services/levelProgress';
+import type { CompletedLevelsState } from '../services/levelProgress';
+import { getHallOfFameEntryContext } from '../services/hallOfFame';
 import { loadLevelResult } from '../services/levelCompletion';
 
 /** Emoji icon per level id — placeholder until real art exists */
@@ -19,7 +20,7 @@ const LEVEL_EMOJI: Record<LevelId, string> = {
 };
 
 export interface CampaignScreenProps {
-  defeatedBosses: DefeatedBossesState;
+  completedLevels: CompletedLevelsState;
   selectedLevel: LevelId;
   onSelectLevel: (id: LevelId) => void;
   onPlay: () => void;
@@ -32,7 +33,7 @@ export interface CampaignScreenProps {
 }
 
 const CampaignScreen: React.FC<CampaignScreenProps> = ({
-  defeatedBosses,
+  completedLevels,
   selectedLevel,
   onSelectLevel,
   onPlay,
@@ -50,12 +51,12 @@ const CampaignScreen: React.FC<CampaignScreenProps> = ({
       if (r) results[meta.id] = r;
     }
     return results;
-  }, [defeatedBosses]); // re-read when completion state changes
+  }, [completedLevels]); // re-read when completion state changes
 
-  const completedCount = CAMPAIGN_LEVEL_META.filter(m => !!defeatedBosses[m.id]).length;
+  const completedCount = CAMPAIGN_LEVEL_META.filter(m => !!completedLevels[m.id]).length;
   const totalStars = (Object.values(levelResults) as (LevelResult | undefined)[]).reduce<number>((sum, r) => sum + (r?.stars ?? 0), 0);
 
-  const selectedMeta = CAMPAIGN_LEVEL_META.find(m => m.id === selectedLevel);
+  const selectedMeta = getCampaignLevelMeta(selectedLevel);
 
   return (
     <div className="w-full max-w-5xl px-4 md:px-12 animate-[fadeIn_0.5s_ease-out]">
@@ -86,8 +87,8 @@ const CampaignScreen: React.FC<CampaignScreenProps> = ({
           <div className="grid grid-cols-3 gap-3" role="group" aria-label="Level selection">
             {CAMPAIGN_LEVEL_META.map(meta => {
               const isImplemented = !!LEVEL_REGISTRY[meta.id];
-              const unlocked = isImplemented && (devUnlockAll || isLevelUnlocked(defeatedBosses, meta.id));
-              const cleared = !!defeatedBosses[meta.id];
+              const unlocked = isImplemented && (devUnlockAll || isLevelUnlocked(completedLevels, meta.id));
+              const cleared = !!completedLevels[meta.id];
               const selected = selectedLevel === meta.id;
               const playable = unlocked && isImplemented;
 
@@ -194,24 +195,43 @@ const CampaignScreen: React.FC<CampaignScreenProps> = ({
             {highScores.length > 0 ? (
               <ul className="flex flex-col gap-2 list-none p-0 m-0" role="list">
                 {highScores.slice(0, 3).map((entry, idx) => (
-                  <li
-                    key={`${entry.date}-${idx}`}
-                    className="flex items-center justify-between bg-amber-50 px-3 py-2 rounded-xl border border-amber-100 gap-2"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span
-                        className={`shrink-0 w-6 h-6 flex items-center justify-center rounded-full font-black text-white text-[10px] ${idx === 0 ? 'bg-yellow-500' : 'bg-slate-400'}`}
-                        aria-hidden
+                  (() => {
+                    const entryContext = getHallOfFameEntryContext(entry);
+                    const levelEmoji = entry.levelId ? LEVEL_EMOJI[entry.levelId] : null;
+                    const contextLabel = entryContext.genreName
+                      ? `${entryContext.levelName} · ${entryContext.genreName}`
+                      : entryContext.levelName;
+
+                    return (
+                      <li
+                        key={`${entry.date}-${idx}`}
+                        className="flex items-center justify-between bg-amber-50 px-3 py-2 rounded-xl border border-amber-100 gap-2"
                       >
-                        {idx + 1}
-                      </span>
-                      <span className="text-xs font-bold text-slate-700 truncate flex items-center gap-1">
-                        {entry.name}
-                        {entry.isVictory && <span className="text-yellow-500 text-[10px]">🏆</span>}
-                      </span>
-                    </div>
-                    <span className="text-sm font-black text-amber-900 tabular-nums shrink-0">{entry.score}</span>
-                  </li>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span
+                            className={`shrink-0 w-6 h-6 flex items-center justify-center rounded-full font-black text-white text-[10px] ${idx === 0 ? 'bg-yellow-500' : 'bg-slate-400'}`}
+                            aria-hidden
+                          >
+                            {idx + 1}
+                          </span>
+                          <span className="min-w-0 flex flex-col">
+                            <span className="text-xs font-bold text-slate-700 truncate flex items-center gap-1">
+                              {entry.name}
+                              {entry.isVictory && <span className="text-yellow-500 text-[10px]">🏆</span>}
+                            </span>
+                            <span
+                              className={`text-[10px] font-black uppercase tracking-wider truncate ${entryContext.isLegacy ? 'text-slate-400' : 'text-amber-700/80'}`}
+                              title={contextLabel}
+                            >
+                              {levelEmoji ? `${levelEmoji} ` : ''}
+                              {contextLabel}
+                            </span>
+                          </span>
+                        </div>
+                        <span className="text-sm font-black text-amber-900 tabular-nums shrink-0">{entry.score}</span>
+                      </li>
+                    );
+                  })()
                 ))}
               </ul>
             ) : (
@@ -227,4 +247,4 @@ const CampaignScreen: React.FC<CampaignScreenProps> = ({
 export default CampaignScreen;
 
 // Re-export type for App.tsx backwards compat
-export type { DefeatedBossesState };
+export type { CompletedLevelsState };

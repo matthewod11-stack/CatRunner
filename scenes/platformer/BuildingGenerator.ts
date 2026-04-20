@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import type { PlatformerLevelConfig, PlatformGenerationConfig } from '../../types';
+import type { PlatformerLevelConfig } from '../../types';
 import { getZoneIndex, resolveZoneParams } from './generation';
 import type { BuildingData, FireEscapeData, SceneManager } from './types';
 import { DEPTH } from './types';
@@ -9,9 +9,6 @@ const PLATFORM_BUFFER = 600;
 const CLEANUP_BUFFER = 400;
 const FIRE_ESCAPE_WIDTH = 28;
 const FIRE_ESCAPE_HEIGHT = 6;
-
-/** Decorative props randomly placed on rooftops (visual only) */
-const PROP_POOL = ['waterTank', 'antenna', 'vent', 'pipe'] as const;
 
 export class BuildingGenerator implements SceneManager {
   private scene: Phaser.Scene;

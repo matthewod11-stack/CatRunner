@@ -1,5 +1,5 @@
 import type { GameScore, HighScoreEntry, LevelId } from '../types';
-import type { CompletedLevelsState, DefeatedBossesState } from './levelProgress';
+import type { CompletedLevelsState } from './levelProgress';
 
 export const HALL_OF_FAME_STORAGE_KEY = 'beach-cat-scores-v2';
 
@@ -19,14 +19,6 @@ export function nextCompletedLevelsAfterWin(
   levelBeat: LevelId
 ): CompletedLevelsState {
   return { ...prev, [levelBeat]: true };
-}
-
-/** @deprecated Use `nextCompletedLevelsAfterWin` */
-export function nextDefeatedBossesAfterVictory(
-  prev: DefeatedBossesState,
-  levelBeat: LevelId
-): DefeatedBossesState {
-  return nextCompletedLevelsAfterWin(prev, levelBeat);
 }
 
 /**

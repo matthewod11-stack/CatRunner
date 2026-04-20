@@ -132,7 +132,6 @@ export default class SnakeScene extends SceneBridge {
         this.audio.playSfx('mult');
         this.effects.spawnParticles(this.scale.width / 2, this.scale.height / 2, 0x44ff44, 25, 300);
         this.emitLevelComplete({
-          levelId: 'GARDEN_SNAKE',
           finalScore: this.gameScore.current,
           gameScore: { ...this.gameScore },
           victoryType: 'goal',

@@ -67,8 +67,6 @@ npm install
 npm run dev
 ```
 
-The dev server starts on port `3000`.
-
 ### AI features
 
 Add a `.env.local` file with your Gemini API key:
@@ -97,6 +95,7 @@ The game still runs without it, but AI cat generation, wisdom quotes, and death 
 npm run dev
 npm run build
 npm run test:run
+npm run preview
 npx tsc --noEmit
 ./scripts/dev-init.sh
 ```
@@ -115,8 +114,8 @@ npx tsc --noEmit
 - `docs/architecture/level-runtime.md`
 - `docs/architecture/api-protection.md`
 - `docs/product/qa-checklist.md`
-- `docs/plans/`
-- `docs/specs/`
+- `docs/plans/README.md`
+- `docs/specs/README.md`
 
 Historical material lives under `docs/archive/`.
 

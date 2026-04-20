@@ -3,7 +3,7 @@
  * Separated from SceneBridge.ts so Node-only tests (Vitest) can import
  * without pulling in Phaser's browser globals.
  */
-import type { LevelId, LevelConfig, PlatformerLevelConfig, LauncherLevelConfig, ShooterLevelConfig, BreakoutLevelConfig, FroggerLevelConfig, WhackLevelConfig, SnakeLevelConfig, ClimberLevelConfig } from '../../types';
+import type { LevelId, LevelConfig, PlatformerLevelConfig, LauncherLevelConfig, ShooterLevelConfig, BreakoutLevelConfig, FroggerLevelConfig, WhackLevelConfig, SnakeLevelConfig, ClimberLevelConfig, LevelCompletePayload } from '../../types';
 import type { TuningProfile } from '../../systems/tuning/defaultTuning';
 import type { TelemetryEvent } from '../../systems/telemetry/runTelemetry';
 
@@ -19,6 +19,18 @@ export const BRIDGE_EVENTS = {
 export interface HudUpdatePayload {
   isPaused?: boolean;
   shellAmmo?: number;
+}
+
+export type LevelCompleteDetails = Omit<LevelCompletePayload, 'levelId'>;
+
+export function withSceneLevelId(
+  levelId: LevelId,
+  payload: LevelCompleteDetails,
+): LevelCompletePayload {
+  return {
+    levelId,
+    ...payload,
+  };
 }
 
 export interface SceneInitData {
