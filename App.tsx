@@ -7,10 +7,8 @@ import {
   Outfit,
   SavedCatLook,
   LevelId,
-  VictoryFinalizePayload,
   LevelCompletePayload,
 } from './types';
-import GameEngine from './components/GameEngine';
 import CampaignScreen from './components/LevelSelection';
 import CatCustomizer from './components/CatCustomizer';
 import AnimatedWater from './components/AnimatedWater';
@@ -55,8 +53,8 @@ import PhaserGame from './components/PhaserGame';
 import type { HudUpdatePayload } from './scenes/shared/bridgeProtocol';
 
 const MAX_LIVES = 9;
-const USE_PHASER_RUNNER = !new URLSearchParams(window.location.search).has('dom_runner');
 const DEV_UNLOCK_ALL = import.meta.env.DEV || new URLSearchParams(window.location.search).has('unlock_all');
+const DEV_SMOKE_TEST_API = import.meta.env.DEV;
 
 const App: React.FC = () => {
   const prefersReducedMotion = useDocumentReducedMotionClass();
@@ -421,39 +419,6 @@ const App: React.FC = () => {
     [kittyName, customCatUrl, useIndexedCatAssets, equippedAssetId, selectedLevel]
   );
 
-  const handleVictoryFinalize = useCallback(
-    (payload: VictoryFinalizePayload) => {
-      const { finalScore, levelId: levelBeat, gameScore } = payload;
-      setCompletedLevels((prev) => nextCompletedLevelsAfterWin(prev, levelBeat));
-
-      setHighScores((prev) => {
-        const newEntry: HighScoreEntry = {
-          name: kittyName,
-          score: finalScore,
-          date: Date.now(),
-          levelId: levelBeat,
-          ...(useIndexedCatAssets
-            ? { catAssetId: equippedAssetId ?? undefined }
-            : { catUrl: customCatUrl || undefined }),
-          isVictory: true,
-        };
-        const next = mergeHallOfFameAfterRun(prev, newEntry);
-        try {
-          localStorage.setItem(HALL_OF_FAME_STORAGE_KEY, JSON.stringify(next));
-        } catch {
-          /* ignore */
-        }
-        return next;
-      });
-
-      localStorage.setItem('beach-cat-lives', MAX_LIVES.toString());
-      setScore((prev) =>
-        nextGameScoreAfterVictory(gameScore, finalScore, MAX_LIVES, prev.high)
-      );
-    },
-    [kittyName, customCatUrl, useIndexedCatAssets, equippedAssetId]
-  );
-
   // Phaser bridge: level complete (victory via RunnerScene)
   const handleLevelComplete = useCallback(
     (payload: LevelCompletePayload) => {
@@ -583,6 +548,56 @@ const App: React.FC = () => {
   const handleTelemetryReady = useCallback((getter: () => TelemetryEvent[]) => {
     setGetTelemetryEvents(() => getter);
   }, []);
+
+  useEffect(() => {
+    if (!DEV_SMOKE_TEST_API) return;
+
+    // Dev-only bridge for browser smoke tests to hit the live App completion handlers.
+    window.__BEACH_KITTY_TEST_API__ = {
+      forceVictory: (options) => {
+        const finalScore = options?.finalScore ?? Math.max(score.current, 500);
+        const levelId = options?.levelId ?? selectedLevel;
+        const level = getAnyLevelConfig(levelId);
+        if (levelId !== selectedLevel) {
+          setSelectedLevel(levelId);
+        }
+        handleLevelComplete({
+          levelId,
+          finalScore,
+          gameScore: {
+            ...score,
+            current: finalScore,
+            high: Math.max(score.high, finalScore),
+            lives: score.lives > 0 ? score.lives : MAX_LIVES,
+          },
+          victoryType: level.victoryCondition.type,
+          ...(options?.awardedStars !== undefined ? { awardedStars: options.awardedStars } : {}),
+        });
+      },
+      forceGameOver: async (finalScore = score.current) => {
+        await handleGameOver(finalScore);
+      },
+      getSnapshot: () => ({
+        status,
+        selectedLevel,
+        completedLevels,
+        highScores,
+        score,
+      }),
+    };
+
+    return () => {
+      delete window.__BEACH_KITTY_TEST_API__;
+    };
+  }, [
+    completedLevels,
+    handleGameOver,
+    handleLevelComplete,
+    highScores,
+    score,
+    selectedLevel,
+    status,
+  ]);
 
   const isBossMoment = status === GameStatus.BOSS_FIGHT;
 
@@ -749,7 +764,6 @@ const App: React.FC = () => {
         ))}
 
       {(status === GameStatus.PLAYING || status === GameStatus.BOSS_FIGHT) && (
-        USE_PHASER_RUNNER ? (
           <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #2d2d44 100%)' }}>
             {/* Retro TV/VCR Frame */}
             <div className="relative" style={{ width: '85vw', maxWidth: '1100px' }}>
@@ -1047,22 +1061,6 @@ const App: React.FC = () => {
               </div>
             </div>
           </div>
-        ) : (
-          <GameEngine
-            key={selectedLevel}
-            initialLives={score.lives}
-            levelId={selectedLevel}
-            levelConfig={levelConfig}
-            startAtBoss={startAtBoss}
-            customCatUrl={customCatUrl}
-            equippedCatMatting={equippedMattedState}
-            onGameOver={handleGameOver}
-            onScoreUpdate={handleScoreUpdate}
-            onVictoryFinalize={handleVictoryFinalize}
-            onStatusChange={handleStatusChange}
-            onTelemetryReady={handleTelemetryReady}
-          />
-        )
       )}
 
       {status === GameStatus.GAMEOVER && (
@@ -1217,50 +1215,6 @@ const App: React.FC = () => {
               100% { transform: translateY(-200px) rotate(360deg); opacity: 0; }
             }
           `}</style>
-        </div>
-      )}
-
-      {(status === GameStatus.PLAYING || status === GameStatus.BOSS_FIGHT) && !USE_PHASER_RUNNER && (
-        <div
-          className="absolute top-6 left-6 z-20 flex flex-col gap-4 pointer-events-none animate-[slideDown_0.3s_ease-out]"
-          style={{ marginTop: 'env(safe-area-inset-top)', marginLeft: 'env(safe-area-inset-left)' }}
-        >
-          <div className="bg-white/90 backdrop-blur-md px-6 py-4 rounded-3xl border-2 border-white shadow-xl flex items-center gap-6">
-            <div className="flex flex-col">
-              <span className="text-[10px] uppercase font-black text-amber-800/60">SCORE</span>
-              <span className="text-3xl font-black text-amber-900 tabular-nums leading-none">
-                {score.current}
-              </span>
-            </div>
-            <div className="w-px h-10 bg-amber-900/10" />
-            
-            <div className="flex flex-col">
-              <span className="text-[10px] uppercase font-black text-red-800/60">Lives</span>
-              <div className="flex items-center gap-1">
-                 <span className="text-2xl">🐾</span>
-                 <span className="text-3xl font-black text-red-600 leading-none">{score.lives}</span>
-              </div>
-            </div>
-
-            <div className="w-px h-10 bg-amber-900/10" />
-            <div className="flex flex-col relative">
-              <span className="text-[10px] uppercase font-black text-purple-800/60">Multiplier</span>
-              <div className="flex items-end gap-2">
-                <span className="text-3xl font-black text-purple-700 tabular-nums leading-none">x{score.multiplier}</span>
-                <div className="h-1.5 w-16 bg-purple-100 rounded-full overflow-hidden mb-1 border border-purple-200">
-                   <div className="h-full bg-purple-500 transition-all duration-300" style={{ width: `${(score.streak / 5) * 100}%` }} />
-                </div>
-              </div>
-            </div>
-            
-            <div className="w-px h-10 bg-amber-900/10" />
-            <div className="flex flex-col">
-              <span className="text-[10px] uppercase font-black text-yellow-800/60">Stars</span>
-              <span className="text-3xl font-black text-yellow-600 tabular-nums leading-none flex items-center gap-1">
-                <span className="text-xl">★</span>{score.coins}<span className="text-xs text-yellow-800/40">/{bossCoinTarget}</span>
-              </span>
-            </div>
-          </div>
         </div>
       )}
 

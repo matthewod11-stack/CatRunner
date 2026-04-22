@@ -1,5 +1,7 @@
 # V4 Phaser-Only Reset Design
 
+> Archived on 2026-04-21 after the Phaser-only reset landed.
+
 ## Summary
 
 Beach Kitty should reset in place around the architecture that is already winning: `App` as the React shell, `PhaserGame` as the gameplay host, and `SceneBridge` as the React/Phaser boundary. The V4 reset is a hard cut, not a gradual migration. `GameEngine`, `?dom_runner`, and the DOM-runner extension path stop being part of the supported runtime.

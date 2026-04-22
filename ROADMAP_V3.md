@@ -12,9 +12,12 @@
 - Beach Kitty is a multi-genre Phaser campaign with React owning shell/UI and Phaser owning gameplay scenes.
 - The repo currently has 9 registered level configs and 9 scene routes covering runner, platformer, launcher, shooter, breakout, frogger, whack, snake, and climber.
 - `App.tsx` routes genre-specific lazy scene imports through `PhaserGame`, and `levels/index.ts` registers all 9 runtime configs.
+- The supported gameplay runtime is Phaser-only; the old DOM-runner fallback is retired.
+- Browser smoke coverage now exists for campaign boot, Kitty Closet, Phaser boot/eject, victory/game-over mutation, and Hall of Fame ordering/cap behavior.
 - The current baseline is green for `npm run test:run`, `npx tsc --noEmit`, and `npm run build`.
-- Current verification baseline on 2026-04-19:
-  - `npm run test:run` -> 39 test files passing, 185 tests passing
+- Current verification baseline on 2026-04-21:
+  - `npm run test:run` -> 42 test files passing, 196 tests passing
+  - `npm run test:smoke` -> 3 Playwright browser tests passing
   - `npx tsc --noEmit` -> exit 0
   - `npm run build` -> exit 0, with an oversized main bundle warning (`dist/assets/index-*.js` about 1.85 MB minified / 452 kB gzip)
 - The codebase is ahead of several repo docs: campaign runtime is real, but some guidance files still describe earlier endless-runner or V2-era assumptions.
@@ -58,6 +61,7 @@ Operational expectations:
 - Scene work should keep lazy imports intact and avoid reintroducing static all-scenes bundling.
 - Sprite and hero-sheet work should flow through the existing cat asset, matting, and scene-integration pipeline rather than becoming one-off local hacks.
 - QA should combine automated checks (`npm run test:run`, `npx tsc --noEmit`, `npm run build`) with browser playtest coverage for HUD, progression, victory, and custom-cat flows.
+- QA should keep the Playwright smoke harness (`npm run test:smoke`) aligned with the stable campaign boot and outcome flows.
 
 ## Workstreams
 
@@ -77,6 +81,7 @@ Operational expectations:
 ### QA infrastructure
 
 - Keep the green baseline on `npm run test:run`, `npx tsc --noEmit`, and `npm run build`.
+- Keep the green baseline on `npm run test:run`, `npm run test:smoke`, `npx tsc --noEmit`, and `npm run build`.
 - Expand scene-aware smoke coverage and QA checklists around HUD, victory/game-over flow, progression unlocks, and custom-cat rendering.
 - Build a durable playtest loop that makes browser verification normal rather than ad hoc.
 

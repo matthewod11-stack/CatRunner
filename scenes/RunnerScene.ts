@@ -43,7 +43,7 @@ import { PhaserAudio } from './shared/PhaserAudio';
 
 /**
  * Phaser scene for the endless-runner genre (BEACH level and future runner levels).
- * Ports the gameplay from components/GameEngine.tsx into Phaser's renderer.
+ * Ports the retired DOM-runner gameplay into Phaser's renderer.
  *
  * Phase 1 builds this incrementally — each task adds one system.
  *
@@ -625,7 +625,7 @@ export default class RunnerScene extends SceneBridge {
   }
 
   /**
-   * Time-based spawn logic ported from GameEngine.tsx lines 755-811.
+   * Time-based spawn logic carried forward from the retired DOM runner.
    * Called once per frame; spawns entities when the spawn timer fires.
    */
   private updateSpawning(now: number): void {
@@ -696,7 +696,7 @@ export default class RunnerScene extends SceneBridge {
   }
 
   /**
-   * Spawn a single entity. Ported from GameEngine.tsx spawnEntity() lines 461-575.
+   * Spawn a single entity using the runner config and weighted spawn pool.
    * Handles type selection (coin chance, harmful streak limits, safe-spawn grace),
    * sizing, and Y positioning.
    */
@@ -819,7 +819,7 @@ export default class RunnerScene extends SceneBridge {
    * Move all obstacles leftward and remove off-screen ones.
    * Also tracks streak: when a harmful obstacle scrolls past the player
    * without collision, streak increments and multiplier may increase.
-   * Ported from GameEngine.tsx obstacle movement loop (lines 1055-1099).
+   * Behavior preserved from the retired DOM runner.
    */
   private updateObstacles(frames: number): void {
     const now = Date.now();
@@ -930,7 +930,7 @@ export default class RunnerScene extends SceneBridge {
 
   /**
    * When MAGNET power-up is active, pull eligible collectibles toward the player.
-   * Ported from GameEngine.tsx lines 736-748.
+   * Behavior preserved from the retired DOM runner.
    */
   private updateMagnetPull(): void {
     const catX = this.playerX + 64; // hitboxCenterX
@@ -956,7 +956,7 @@ export default class RunnerScene extends SceneBridge {
 
   /**
    * AABB collision detection with forgiveness padding.
-   * Matches the DOM engine's collision loop (GameEngine.tsx lines 1125-1267).
+   * Matches the legacy runner collision semantics.
    */
   private updateCollisions(now: number): void {
     const scale = RunnerScene.ENTITY_SCALE;
@@ -1086,7 +1086,7 @@ export default class RunnerScene extends SceneBridge {
 
   /**
    * Apply a CollisionResult to game state — shared by stomp/bounce and slow-on-contact.
-   * Ported from GameEngine.tsx applyCollisionResult (lines 1101-1123).
+   * Keeps the legacy runner scoring and particle side effects in one place.
    */
   private applyCollisionResult(result: CollisionResult, obs: WorldEntity, obsScreenY: number): void {
     // Play sounds
@@ -1540,7 +1540,7 @@ export default class RunnerScene extends SceneBridge {
 
   /**
    * Boss defeat animation: poop pyramid burial.
-   * Ported from GameEngine.tsx lines 909-1040.
+   * Preserves the legacy runner boss-finish sequence.
    */
   private updateBossDefeatAnimation(now: number, frames: number): void {
     if (!this.boss) return;

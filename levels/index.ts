@@ -18,8 +18,6 @@ export { STREET_LEVEL_CONFIG } from './street';
 export { GARDEN_WHACK_LEVEL_CONFIG } from './garden-whack';
 export { GARDEN_SNAKE_LEVEL_CONFIG } from './garden-snake';
 export { CAT_TREE_LEVEL_CONFIG } from './cattree';
-export { BeachObstacleIcon, isBeachObstacleType } from './beach/obstacles';
-export { BackgroundEntityRenderer, BACKGROUND_ENTITY_VIEW_BY_LEVEL } from './levelBackgroundViews';
 
 export const LEVEL_REGISTRY: Partial<Record<LevelId, AnyLevelConfig>> = {
   BEACH: BEACH_LEVEL_CONFIG,

@@ -135,7 +135,6 @@ export const BEACH_LEVEL_CONFIG: LevelConfig = {
     spawnYOffset: 100,
     movement: { swayAmountNormal: 15, swayAmountLow: 30, swayFrequency: 800, bobFrequency: 500, bobAmplitude: 50 },
     projectile: { baseSpeed: 12, speedRange: 4, spawnRateByHealth: { high: 0.4, mid: 0.5, low: 0.65 } },
-    componentId: 'sandMonster',
     projectileObstacleType: 'SAND_PROJECTILE',
   },
 

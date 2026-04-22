@@ -108,16 +108,6 @@ export interface GameScore {
   lives: number;
 }
 
-/** Authoritative snapshot from GameEngine when the boss is defeated (avoids stale App React score). */
-export interface VictoryFinalizePayload {
-  levelId: LevelId;
-  /** Display / Hall of Fame score (e.g. Math.floor(internalScore / 10)). */
-  finalScore: number;
-  /** Engine ref snapshot; App merges `high` with persisted best and resets lives on victory. */
-  gameScore: GameScore;
-  wasBossFight: boolean;
-}
-
 export interface HighScoreEntry {
   name: string;
   score: number;
@@ -159,7 +149,7 @@ export interface CatCharacterStateV1 {
 
 // ─── Phase 2: Multi-Level Type Foundation ───────────────────────────
 
-/** A single step in a spawn pattern (promotes local interface from GameEngine.tsx) */
+/** A single step in a spawn pattern shared by runner-level configs. */
 export interface PatternStep {
   type: EntityType;
   delay: number;
@@ -180,9 +170,6 @@ export type BehaviorType =
   | 'static'         // no special movement (crab, palm tree)
   | 'stomp'          // stomp-from-above (e.g. crab) — distinct from beachball bounce tuning
   | 'arcProjectile'; // parabolic / aimed projectile physics (e.g. boss sand shot)
-
-/** Registered lazy boss UI ids (see systems/bossComponents.tsx) */
-export type BossComponentId = 'sandMonster';
 
 export interface BehaviorConfig {
   type: BehaviorType;
@@ -270,8 +257,6 @@ export interface BossConfig {
   spawnYOffset: number;
   movement: BossMovementConfig;
   projectile: BossProjectileConfig;
-  /** Lazy-loaded boss component; defaults to sandMonster when omitted */
-  componentId?: BossComponentId;
   /** Level obstacle type for boss shots (must define `arcProjectile`); default SAND_PROJECTILE */
   projectileObstacleType?: ObstacleType;
 }
@@ -344,7 +329,7 @@ export interface CutsceneConfig {
   frames: CutsceneFrame[];
 }
 
-/** Emitted by any Phaser scene when the level is completed. Additive — does NOT replace VictoryFinalizePayload. */
+/** Emitted by any Phaser scene when the level is completed. */
 export interface LevelCompletePayload {
   levelId: LevelId;
   /** Raw genre-specific score. NOT normalized (0-999 normalization is deferred). */

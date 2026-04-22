@@ -1,124 +1,116 @@
-# Level development guide
+# Level Development Guide
 
-How to add or evolve a playable level in Beach Kitty. The live project is Phaser-first: **`App`** selects a level, **`PhaserGame`** boots the genre scene, and **`SceneBridge`** carries shared bridge state back to React. The older **`GameEngine`** path still exists only for the legacy `?dom_runner` fallback.
+How to add or evolve a playable level in Beach Kitty. The only supported gameplay runtime is Phaser-first: **`App`** selects a level, **`PhaserGame`** boots the genre scene, and **`SceneBridge`** carries shared runtime state back to React.
 
 **Runtime ownership (App vs Phaser bridge, tuning merge, boss coins):** [level-runtime.md](./level-runtime.md).
 
 ## Prerequisites
 
-- Read [`types.ts`](../types.ts) for `LevelId`, `LevelConfig`, `ObstacleDefinition`, `PatternStep`, `ThemeConfig`, `BossConfig`, `BackgroundConfig`.
-- Reference implementation: [`levels/beach.ts`](../levels/beach.ts), [`levels/beach/obstacles.tsx`](../levels/beach/obstacles.tsx).
+- Read [`types.ts`](../types.ts) for `LevelId`, genre config types, `ObstacleDefinition`, `PatternStep`, `ThemeConfig`, `BossConfig`, and `BackgroundConfig`.
+- Reference implementations:
+  - Runner: [`levels/beach.ts`](../levels/beach.ts) + [`scenes/RunnerScene.ts`](../scenes/RunnerScene.ts)
+  - Non-runner: [`levels/rooftops.ts`](../levels/rooftops.ts) + [`scenes/PlatformerScene.ts`](../scenes/PlatformerScene.ts)
 
-## Checklist (new level)
+## Checklist
 
-### 1. Extend `LevelId` and obstacle types (if needed)
+### 1. Extend shared ids only when the runtime truly shares them
 
 In [`types.ts`](../types.ts):
 
-- Add the new id to `LevelId` (e.g. `'VOLCANO'`).
-- If the level introduces **new hazard types**, extend `ObstacleType` and `EntityType` as needed. Shared pickups (`COIN`, `SHELL`, power-ups) usually stay global.
+- Add the new id to `LevelId` when you are creating a new campaign level.
+- Extend shared unions such as `ObstacleType`, `EntityType`, or `BackgroundEntityType` only when the new concept must flow through level config, bridge payloads, persistence, or shared systems.
+- Keep purely scene-local art and manager state local to `scenes/<genre>/` whenever possible.
 
-### 2. Author `LevelConfig` and campaign metadata
+### 2. Author the level config and campaign metadata
 
-Create something like `levels/volcano.ts` exporting `VOLCANO_LEVEL_CONFIG: LevelConfig` that satisfies:
+Create something like `levels/volcano.ts` exporting the genre-appropriate config:
 
-| Section | Purpose |
-|--------|---------|
-| `obstacles` | `ObstacleDefinition[]`: `type`, `width`, `height`, `behaviors`, `isHarmful`, `spawnWeight`, optional `spawnY`, optional **`stompCollision`** / **`slowCollision`** (see `systems/collisionHandlers.ts`) |
-| `patterns` | `PatternStep[][]` — spawn sequences (`type`, `delay`, optional `y`) |
-| `theme` | `groundY`, `skyGradient`, optional `skyProgressMode` (`coinsToBoss` default vs `static`), `particleColors`, `speedLineThreshold`, `screenShakeDecay`, optional `groundKickParticles`, optional **`playerAnchorLeftPx`** / **`playerAnchorLeftPxSuperSized`** (see `systems/playerAnchor.ts`) |
-| `boss` | Health, hitbox, movement, `projectile`, optional `componentId`, optional `projectileObstacleType` |
-| `background` | `entities` + `spawnInterval`; optional **`chaosSpawnTypes`**, **`midLayerSpawnTypes`**, **`cloudSpawnChance`**, **`cloudEntityType`** (see [`systems/backgroundSpawn.ts`](../systems/backgroundSpawn.ts)); per-entity **`spawnYRange`**, **`spawnEdge`**, **`defaultBannerText`** |
-| `harmfulTypes` | `EntityType[]` used for damage and spawn safety |
-| `magnetAttractTypes` | Optional; default in engine is `['COIN']` |
-| `tuningOverrides` | Shallow-merged over dev `useTuningStore` values inside **`GameEngine`** for this run |
-| `bossEntryCoinThreshold` | Optional; overrides coin (star) count needed to trigger the boss (else merged tuning `bossThreshold`). App HUD / sky use the same rule via `getBossEntryCoinThreshold` |
+| Concern | Where it lives |
+|--------|-----------------|
+| Runner-specific spawn/config data | `LevelConfig` in `levels/<id>.ts` |
+| Other genres | Their genre-specific config types in `types.ts` and `levels/<id>.ts` |
+| Campaign name, description, pose, stars, victory copy | `CAMPAIGN_LEVEL_META` in [`levels/catalog.ts`](../levels/catalog.ts) |
 
-Boss shots must target an obstacle type that includes the **`arcProjectile`** behavior (see [`docs/BEHAVIOR_SYSTEM.md`](./BEHAVIOR_SYSTEM.md)).
+Runner configs still own:
 
-### `LevelConfig` vs runtime (what the engine actually uses)
+- `obstacles`, `patterns`, `harmfulTypes`, `background`, `boss`, `magnetAttractTypes`
+- `tuningOverrides`, merged through `mergeLevelTuning`
+- `bossEntryCoinThreshold`, resolved through `getBossEntryCoinThreshold`
 
-- **Patterns, obstacles, harmfulTypes, magnet, boss, background** — read each run from the resolved `LevelConfig` in **`GameEngine`**.
-- **`spawnY` on `ObstacleDefinition`** — used when spawning from the weighted pool (e.g. seagull); pattern steps can still pass explicit `y`.
-- **`tuningOverrides`** — merged with the global tuning store for all engine physics/spawn tuning on that level.
-- **`bossEntryCoinThreshold`** — boss entry coin count for both engine trigger and App HUD / progressive sky (with the same merge as above for the fallback `bossThreshold`).
-- **`theme.skyProgressMode` / `skyGradient`** — `App` only: progressive sky/sun vs fixed gradient during play (see `getSkyStyle`).
-
-Then add a `CAMPAIGN_LEVEL_META` entry in [`levels/catalog.ts`](../levels/catalog.ts) in the intended campaign order. `LEVEL_ORDER` now derives from that metadata automatically, so do not maintain a separate manual order list.
+Non-runner configs should stay honest to their scene needs instead of imitating the runner schema.
 
 ### 3. Register the level
 
 In [`levels/index.ts`](../levels/index.ts):
 
-- Import the new config.
+- Import the config.
 - Add it to `LEVEL_REGISTRY`.
 
-### 4. Obstacle rendering
+In [`levels/catalog.ts`](../levels/catalog.ts):
 
-- **Shared entities** (`COIN`, `SHELL`, `SPEED`, `MAGNET`, `SUPER_SIZE`) render in [`components/ObstacleComponent.tsx`](../components/ObstacleComponent.tsx).
-- **Level-specific art in the legacy DOM runner path** (today: beach) lives under `levels/<id>/obstacles.tsx` and is selected via [`contexts/LevelContext.tsx`](../contexts/LevelContext.tsx) inside **`GameEngine`**’s `LevelProvider`.
+- Add or update the matching `CAMPAIGN_LEVEL_META` entry.
+- Let `LEVEL_ORDER` derive from metadata; do not create a separate manual order list.
 
-For new Phaser-first genre scenes, prefer scene-local rendering and managers under `scenes/<genre>/` rather than routing new art through the DOM runner component stack.
+### 4. Implement or evolve the scene
 
-For the legacy DOM runner path:
+- Add or update the scene class under `scenes/`.
+- Keep the scene rooted in [`scenes/shared/SceneBridge.ts`](../scenes/shared/SceneBridge.ts).
+- Pass only the scene init data the genre actually needs through [`scenes/shared/bridgeProtocol.ts`](../scenes/shared/bridgeProtocol.ts).
+- Emit score, HUD, game-over, and level-complete events through the bridge instead of mutating React state directly.
 
-1. Add `levels/<id>/obstacles.tsx` exporting a memoized icon component and `is<MyLevel>ObstacleType` (or a generic pattern).
-2. In `ObstacleComponent`, branch on `levelId` and the type guard (mirror the `BEACH` + `BeachObstacleIcon` pattern).
+### 5. Keep rendering and managers scene-local by default
 
-### 5. Background parallax (spawn + art)
+- Backgrounds, hazards, enemies, bosses, and hit effects should usually live under `scenes/<genre>/` or the scene file itself.
+- Promote logic into `systems/` only when multiple scenes truly share it or when the helper is already part of the runner runtime.
+- Avoid rebuilding React-side render layers for gameplay entities; gameplay presentation belongs in Phaser now.
 
-- **Spawn in the legacy DOM runner path:** [`systems/backgroundSpawn.ts`](../systems/backgroundSpawn.ts) — **`spawnBackgroundEntities`**. **`GameEngine`** passes the resolved `LevelConfig.background` plus `getBgEntityDef`; no `levelId` branch in the engine for spawn logic.
-- **Renderer registry:** [`levels/levelBackgroundViews.tsx`](../levels/levelBackgroundViews.tsx) — add your level to **`BACKGROUND_ENTITY_VIEW_BY_LEVEL`**. Implement a `React.FC<{ b: BackgroundEntity }>` (see **`BeachBackgroundEntityView`** in [`levels/beach/backgroundEntities.tsx`](../levels/beach/backgroundEntities.tsx)).
-- Ensure every `BackgroundEntityType` you reference in **`entities`** / spawn pools has a matching case in your view component (or a shared default branch).
+### 6. Reuse runner helpers only when you are changing the runner
 
-For Phaser-first scenes, keep parallax/background rendering in the scene module or its managers unless you are explicitly extending the legacy DOM runner path.
+These shared helpers remain valid because the Phaser runner uses them:
 
-### 6. Boss UI (optional new boss)
+- [`systems/backgroundSpawn.ts`](../systems/backgroundSpawn.ts)
+- [`systems/bossSystem.ts`](../systems/bossSystem.ts)
+- [`systems/collisionHandlers.ts`](../systems/collisionHandlers.ts)
+- [`systems/levelBehaviorHelpers.ts`](../systems/levelBehaviorHelpers.ts)
 
-- Register a lazy component in [`systems/bossComponents.tsx`](../systems/bossComponents.tsx) and extend `BossComponentId` in `types.ts`.
-- Set `boss.componentId` on the level config.
+If you are working on platformer, launcher, shooter, breakout, frogger, whack, snake, or climber flows, prefer genre-local managers instead of bending them into runner abstractions.
 
-### 7. App / selection UI
+### 7. App and selection UI
 
-[`components/LevelSelection.tsx`](../components/LevelSelection.tsx) reads campaign metadata plus registry state; no extra UI wiring is required if the config and `CAMPAIGN_LEVEL_META` entry are registered. Unlock state persists through **`loadCompletedLevels`** / **`saveCompletedLevels`** in [`services/levelProgress.ts`](../services/levelProgress.ts), with one-way migration from the old defeated-bosses key.
+[`components/LevelSelection.tsx`](../components/LevelSelection.tsx) reads campaign metadata plus registry state; no extra UI wiring is required if the config and `CAMPAIGN_LEVEL_META` entry are registered. Unlock state persists through [`services/levelProgress.ts`](../services/levelProgress.ts), with one-way migration from the old defeated-bosses key.
 
 ### 8. Verify
 
+- `npm run test:run`
+- `npx tsc --noEmit`
 - `npm run build`
-- Play from level select, full run, boss defeat, reload — confirm unlock persistence and no console errors.
+- Play from level select, finish or fail a run, reload, and confirm unlock persistence plus Hall of Fame/result behavior.
 
-## Type vocabulary (multi-level)
+## Type Vocabulary
 
 Global unions in [`types.ts`](../types.ts) (`ObstacleType`, `BackgroundEntityType`, `LevelId`) should stay **small and shared**. Use this decision guide when adding content:
 
-**Extend `ObstacleType` / include in `LevelConfig.obstacles`** when:
+**Promote to a shared type** when:
 
-- The hazard participates in the **weighted spawn pool**, **patterns**, **boss projectiles**, or **magnet** lists typed as `EntityType` / `ObstacleType`, or
-- Another level might **reuse** the same mechanic with the same collision/behavior semantics.
+- The concept must live in level config, persistence, bridge payloads, or reusable helper systems.
+- Another level is likely to reuse the same mechanic with the same behavior semantics.
 
-**Keep level-local instead** (custom component + string literals or a level-local union) when:
+**Keep it scene-local** when:
 
-- The asset is **purely decorative** or only used inside one level module, or
-- You are **experimenting** — promote to a global type once the obstacle is wired into `GameEngine` spawn/collision paths.
+- The asset is decorative or presentation-only.
+- The mechanic is experimental and only one scene understands it.
+- The data never needs to leave that scene’s managers or config file.
 
-**`BackgroundEntityType`** follows the same idea: parallax rows referenced from **`BackgroundConfig.entities`** and spawn pools must use global types so `BackgroundEntity` stays serializable and engine-agnostic. Level-unique deco that never goes through `background.entities` could stay inside a level-only TS module until you need it in config.
-
-**`PatternStep.type` / `harmfulTypes`:** must use `EntityType` members that the engine understands; add to global unions when introducing a new harm/stomp/slow obstacle.
-
-**Registration surfaces for a new level**
+## Registration Surfaces
 
 | Concern | Where to register |
 |--------|-------------------|
 | Config + campaign order | `LEVEL_REGISTRY`, `CAMPAIGN_LEVEL_META` |
-| Parallax SVG | `BACKGROUND_ENTITY_VIEW_BY_LEVEL` in [`levels/levelBackgroundViews.tsx`](../levels/levelBackgroundViews.tsx) |
-| Obstacle art | `ObstacleComponent` + `levels/<id>/obstacles.tsx` |
-| Boss face | `bossComponents` + `BossComponentId` |
-
-## Optional splits
-
-[`ROADMAP_V3.md`](../../ROADMAP_V3.md) tracks current work, and the completed multi-level roadmap archive at [`ROADMAP_V1_COMPLETE.md`](../archive/roadmaps/ROADMAP_V1_COMPLETE.md) notes the optional split of a large `beach.ts` into `config.ts` / `patterns.ts` — cosmetic organization only.
+| Scene boot | `PhaserGame` scene factory + `SceneBridge` init contract |
+| Shared HUD / completion flow | `bridgeProtocol` + `App.tsx` handlers |
+| Runner-only helper reuse | `systems/backgroundSpawn.ts`, `bossSystem.ts`, `collisionHandlers.ts`, `levelBehaviorHelpers.ts` |
 
 ## Related
 
-- [`behavior-system.md`](./behavior-system.md) — behaviors and collisions
+- [`behavior-system.md`](./behavior-system.md) — runner helper stack
 - [`CLAUDE.md`](../CLAUDE.md) / [`AGENTS.md`](../AGENTS.md) — repo map for agents

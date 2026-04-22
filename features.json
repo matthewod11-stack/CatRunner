@@ -2,13 +2,13 @@
   "$schema": "./features.schema.json",
   "_meta": {
     "description": "Historical feature tracking snapshot for the multi-genre campaign. Status: not-started | in-progress | pass | fail | blocked",
-    "lastUpdated": "2026-04-19",
+    "lastUpdated": "2026-04-21",
     "planFile": "./ROADMAP_V3.md",
     "historicalRoadmapsDir": "./docs/archive/roadmaps/",
     "activeSessionLog": "./PROGRESS.md",
     "activeDocsDir": "./docs/",
     "issueTracker": "GitHub Issues",
-    "campaignStatus": "Roadmap V3 is active; docs and workflow alignment are in progress; hero-sheet and sprite-matting work remain active WIP."
+    "campaignStatus": "Phaser-only runtime is active, browser smoke coverage now exists for the core campaign/outcome flows, and hero-sheet plus sprite-matting work remain active WIP."
   },
   "phase-1": {
     "description": "Session Protocol Infrastructure",
@@ -229,6 +229,24 @@
       "verification": {
         "status": "pass",
         "notes": "Build passes, default tuning values match original constants"
+      }
+    }
+  },
+  "phase-10": {
+    "description": "Phaser-only Runtime Reset + Browser Smoke Coverage",
+    "status": "pass",
+    "tasks": {
+      "phaser-only-runtime": {
+        "status": "pass",
+        "notes": "Gameplay now boots only through PhaserGame; the DOM-runner fallback and legacy support subtree were retired."
+      },
+      "browser-smoke-harness": {
+        "status": "pass",
+        "notes": "Playwright smoke covers campaign boot, Kitty Closet, Phaser boot and eject, victory and game-over mutation, and Hall of Fame persistence plus ordering."
+      },
+      "verification": {
+        "status": "pass",
+        "notes": "npm test, npm run test:smoke, npx tsc --noEmit, and npm run build all pass on the 2026-04-21 session snapshot."
       }
     }
   }

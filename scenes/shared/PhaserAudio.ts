@@ -2,8 +2,8 @@
  * PhaserAudio — Procedural SFX and music for the Phaser 3 port.
  *
  * Wraps Phaser's WebAudioSoundManager.context so all audio shares a
- * single AudioContext (no dual-context issues).  Replaces the legacy
- * audioService.ts (music) and sfxService.ts (SFX).
+ * single AudioContext (no dual-context issues). Replaces the retired
+ * DOM-runner audio helpers.
  *
  * Usage:
  *   const audio = new PhaserAudio(scene);

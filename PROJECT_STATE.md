@@ -1,7 +1,7 @@
 # CatRunner — Project State
 
 > Cross-surface context document. Shared across Claude Chat, Claude Code, and related sessions.
-> Last updated: 2026-04-20
+> Last updated: 2026-04-21
 
 ---
 
@@ -14,7 +14,9 @@ CatRunner, branded in-product as Beach Kitty, is a nine-level multi-genre browse
 - The multi-genre Phaser runtime already exists. This is not a pre-Phaser planning repo.
 - `levels/index.ts` registers 9 level configs in `LEVEL_REGISTRY`.
 - `App.tsx` routes 9 lazy scene imports through `PhaserGame`.
+- Gameplay is Phaser-only; there is no supported DOM-runner fallback.
 - React owns shell/UI concerns; Phaser owns gameplay scenes.
+- A Playwright smoke harness now covers campaign boot, Phaser boot/eject, victory/game-over mutation, and Hall of Fame ordering/cap behavior.
 - The current cleanup work is about canonical docs and workflow alignment, not initial Phaser adoption.
 
 ## Current Workstreams
@@ -33,7 +35,7 @@ CatRunner, branded in-product as Beach Kitty, is a nine-level multi-genre browse
 | AI | Google Gemini | Custom cat generation and text features |
 | Image processing | sharp + in-app matting helpers | Server-side and client fallback paths |
 | Asset storage | IndexedDB + localStorage | Cat wardrobe, sprite metadata, Hall of Fame data |
-| Testing | Vitest + `npx tsc --noEmit` + Vite build | Current verification baseline |
+| Testing | Vitest + Playwright smoke + `npx tsc --noEmit` + Vite build | Current verification baseline |
 
 ## Canonical Workflow
 

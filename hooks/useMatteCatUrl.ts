@@ -4,7 +4,7 @@ import { matCustomCatDataUrl } from '../services/catSpriteMatting';
 /** Bump when matting heuristics change so we don’t reuse stale “still pink” cached PNGs. */
 const MATTING_CACHE_VERSION = 9;
 
-/** LRU cap for matted data URLs (see also `MAX_PROCESSED_SPRITE_CACHE` in `levels/beach/obstacles.tsx`). */
+/** LRU cap for client-side matted data URLs. */
 const MAX_RESOLVED_CACHE_ENTRIES = 48;
 
 const resolvedCache = new Map<string, string>();

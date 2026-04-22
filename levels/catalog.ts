@@ -3,7 +3,7 @@ import type { TuningProfile } from '../systems/tuning/defaultTuning';
 
 /**
  * Single merge rule for runtime tuning: global dev panel store + level overrides.
- * **`App` and `GameEngine` must both use this** so boss entry, HUD, sky/sun, and physics stay aligned.
+ * **`App` and the runner scene must both use this** so boss entry, HUD, sky/sun, and physics stay aligned.
  */
 export function mergeLevelTuning(
   storeTuning: TuningProfile,

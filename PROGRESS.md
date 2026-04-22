@@ -34,6 +34,42 @@ sed -n '1,100p' ROADMAP_V3.md
 Most recent session should be first.
 -->
 
+## Session: 2026-04-21 21:34
+
+### Completed
+- Landed the Phaser-only reset execution pass and verified the runtime now boots gameplay only through `PhaserGame`
+- Added Playwright browser smoke coverage for campaign boot, Kitty Closet, Phaser scene boot, victory, game over, Hall of Fame persistence, and Hall of Fame ordering/cap behavior
+- Verified `npm test`, `npm run test:smoke`, and `npx tsc --noEmit` all pass on the final session snapshot
+
+### In Progress
+- Platformer hero-sheet and sprite-matting work remains active WIP and was intentionally left out of this session's changes
+- A true `CAMPAIGN_COMPLETE` UI path is still not wired even though the enum exists
+
+### Issues Encountered
+- Vitest initially picked up the new Playwright spec; fixed by excluding `playwright/` from the Vite test runner config
+- No stored `/tmp` session-start test baseline existed for today, so the comparison step was skipped
+
+### Next Session Should
+- Resume the platformer hero-sheet and sprite-matting workstream on top of the now-stable Phaser-only runtime
+- Decide whether to wire a real `CAMPAIGN_COMPLETE` surface or keep campaign-complete state implicit through progression and Hall of Fame flows
+- Keep bundle-size follow-up visible while `dist/assets/index-*.js` remains oversized
+
+## Session: 2026-04-21 (V4 Phaser-only reset)
+
+### Completed
+- [x] Removed the `?dom_runner` gate from `App.tsx`; gameplay now boots only through `PhaserGame`
+- [x] Deleted `components/GameEngine.tsx` and the retired DOM-runner support subtree, including legacy React renderers and audio helpers
+- [x] Rewrote active architecture/root guidance to describe the Phaser-only runtime and archived the executed reset spec
+- [x] Verified `npm run test:run` (42 files, 196 tests), `npx tsc --noEmit`, and `npm run build`
+- [x] Ran a headless Chrome smoke pass covering campaign boot, gameplay boot, pause overlay, EJECT back to menu, and Kitty Closet route boot
+
+### Remaining Verification Gap
+- [ ] Full interactive browser coverage for victory/game-over/Hall of Fame mutation still needs a deeper playtest pass
+
+### Next Session Should
+1. Run a deeper browser playtest across victory/game-over flows once richer browser control is available
+2. Continue from the next highest-priority roadmap workstream in `ROADMAP_V3.md`
+
 ## Session: 2026-04-19 (repo cleanup and roadmap consolidation)
 
 ### Completed
@@ -276,203 +312,3 @@ Most recent session should be first.
 7. After visual polish complete → merge `phase-1.5-beach-polish` into main → begin Phase 2
 
 ---
-
-## Session: 2026-03-22 13:00 (Phase 1.5: Beach Polish — Implementation)
-
-### Completed
-- [x] Generated 13 environment sprites via nanobanana MCP (sand, ocean, foam, sky, sun, clouds, boats, planes, surfer, jetski)
-- [x] Generated 2 gameplay sprite variants (crab-2, seagull-2) with green-screen chroma key pipeline
-- [x] Added PhasedPattern type, maxSpeed tuning (8.5), reduced speedIncrement (0.0003), HudUpdatePayload
-- [x] Converted beach patterns to phase-tagged format (early/mid/late/any), boss HP 20, coin threshold 25, cloud Y fix
-- [x] Fixed render-anchoring with ENTITY_SCALE 0.6 — sprites 40% smaller, collision hitboxes scaled to match
-- [x] Sprite-based environment layers (sky gradient, ocean, waterline foam, textured sand, pulsing sun, cloud variants)
-- [x] Background entities now use Image sprites instead of Graphics rectangles (boats bob, planes have variants)
-- [x] JVC CRT/VHS combo TV frame restyle (boxy gray plastic, black CRT bezel, scanlines, green OSD, VCR section, speaker grille)
-- [x] Shell ammo boss fight system (shells = ammo not coins, 5-hit boss, discoverability hint, HUD counter, boss-phase shell spawns)
-- [x] Phase-weighted pattern selection (early <20s, mid <40s, late 40s+), speed clamped at maxSpeed
-- [x] All ship checks pass: `tsc --noEmit` clean, 76 tests passing, build clean
-
-### Key Commits (branch: phase-1.5-beach-polish)
-1. `4171773` art: add environment sprites for Phase 1.5 beach polish
-2. `7311ae9` art: add crab and seagull sprite variants
-3. `016275b` types+tuning: PhasedPattern, HudUpdatePayload, maxSpeed 8.5, speedIncrement 0.0003
-4. `8f9faa6` config: phase-tagged patterns, boss HP 20, coin threshold 25, cloud Y fix
-5. `7a8e7a7` fix: render-anchor ground alignment, ENTITY_SCALE 0.6, speed clamp, wider spawn margin
-6. `3078f45` feat: sprite-based environment layers with parallax and entity variants
-7. `b13abf9` style: restyle TV frame to JVC CRT/VHS combo aesthetic
-8. `85d9f14` feat: shell ammo boss fight system with HUD, 5-hit boss, discoverability hint
-9. `324f388` feat: phase-weighted pattern selection, elapsed-time difficulty curve
-10. `3da1aa0` fix: catalog test for bossEntryCoinThreshold
-
-### Next Session Should
-- Playtest the beach level end-to-end with the new visuals and boss fight
-- Merge `phase-1.5-beach-polish` into main after playtesting
-- Begin Phase 2: next genre level implementation
-
----
-
-## Session: 2026-03-22 11:00 (Phase 1.5: Beach Polish — Design & Planning)
-
-### Completed
-- [x] Playtested Phaser BEACH runner, identified 8 visual/gameplay issues
-- [x] Brainstormed and designed Phase 1.5 polish mini-phase (with visual companion mockups)
-- [x] Decided on sprite-based environment art via nanobanana MCP (option C — highest quality)
-- [x] Designed JVC CRT/VHS combo TV frame from user-provided reference photo
-- [x] Designed shell-ammo boss fight system (5-hit fight, shells as ammo + score)
-- [x] Designed composition-based difficulty curve (constant speed, 3 phases: early/mid/late)
-- [x] Wrote and reviewed design spec (3 review iterations, all issues resolved)
-- [x] Wrote and reviewed implementation plan (2 review iterations, 18 total issues fixed)
-- [x] All ship checks pass: `tsc --noEmit` clean, 76 tests passing, build clean
-
-### In Progress
-- Nothing in progress — all planning complete, ready for implementation
-
-### Key Files
-- **Design spec:** `docs/superpowers/specs/2026-03-22-phase-1.5-beach-polish-design.md`
-- **Implementation plan:** `docs/superpowers/plans/2026-03-22-phase-1.5-beach-polish.md`
-- **Visual mockups:** `.superpowers/brainstorm/` (gitignored)
-
-### Next Session Should
-1. **Start implementation using subagent-driven-development** — invoke `superpowers:subagent-driven-development` skill
-2. **Read the plan first:** `docs/superpowers/plans/2026-03-22-phase-1.5-beach-polish.md`
-3. **Begin with Task 1:** Generate environment sprites via nanobanana MCP (art-first approach)
-4. **Then Task 2:** Generate crab/seagull sprite variants
-5. **Then Tasks 3-9:** Code changes (types, tuning, config, coordinate fix, env layers, TV frame, boss fight, pacing)
-6. **Task 10:** Final verification and ship check
-7. nanobanana MCP is available for image generation — the art pipeline (generate + sharp background removal) is proven from Phase 1
-
----
-
-## Machine Sync Note: 2026-03-22
-
-> **`npm install` required** — `phaser@^3.90.0` was added as a dependency during the V3 port (Phase 0–1).
-> Run `npm install` before `npm run dev`. ROADMAP_V3.md updated with full V3 plan.
-
----
-
-## Session: 2026-03-21 14:00 (Phase 0 + Phase 1: Phaser port complete)
-
-### Completed
-- [x] **Phase 0 complete** — Phaser installed, SceneBridge + PhaserGame bridge, V3 types, campaign 3×3 grid screen, persistence migration, levelCompletion service
-- [x] **Phase 1 complete (Tasks 1.1–1.12)** — Full BEACH runner ported to Phaser:
-  - Player physics (custom per-frame matching DOM engine ±5%), input (keyboard + touch), pause
-  - Obstacle spawning (weighted pool, patterns, life-assist, safe-spawn grace)
-  - Collectibles + scoring (coins/shells/power-ups, streak/multiplier)
-  - Collision detection (manual AABB with forgiveness padding, stomp/bounce/slow/harmful)
-  - Seagull behaviors (swoop via computeSwoopY, poop drops)
-  - Boss fight (Sand Monster: movement, arc projectiles, health, defeat animation)
-  - Background parallax (depth layers, chaos spawns)
-  - EffectsManager (shake, flash, freeze frame, particles)
-  - PhaserAudio (12 procedural SFX, music with tempo scaling + boss mode)
-- [x] **Sprite art generated** via nanobanana MCP (Gemini): 9 sprites (cat, crab, coin, seagull, beachball, shell, sandcastle, sand-monster, palm-tree)
-- [x] Background removal post-processing with sharp (Gemini bakes checkerboard as pixels)
-- [x] Retro TV/VCR frame for Phaser canvas with CRT scanlines and screen glare
-- [x] HUD moved inside TV screen bezel with dark translucent CRT style
-- [x] Phaser runner is now the default (add `?dom_runner` for DOM fallback)
-- [x] Campaign screen design spec written: `docs/superpowers/specs/2026-03-21-campaign-screen-design.md`
-
-### Key Learnings
-- Nanobanana MCP: use `conversation_id` + `use_image_history` for session consistency; "transparent background" in prompts doesn't produce actual transparency — need sharp post-processing
-- Custom per-frame physics (not Phaser Arcade) was the right call for jump/float parity
-- SceneBridge split into bridgeProtocol.ts (importable in Node tests) + SceneBridge.ts (needs browser)
-- CAMPAIGN_LEVEL_META (display) vs LEVEL_REGISTRY (runtime) split prevents crashes on unimplemented levels
-
-### Stats
-- RunnerScene.ts: 1,714 lines (matching GameEngine.tsx's ~1,630)
-- Tests: 76 passing (up from 56 baseline), 0 failing
-- New files: 12 created (scenes/, assets/sprites/, services/)
-- Sprites: 9 generated + cleaned
-
-### Next Session Should
-- Playtest Phaser runner thoroughly against the 16 Beach Port Exit Criteria
-- Fix remaining visual gaps: background entities (still gray shapes), sprite animations
-- Task 1.13 (archive GameEngine) — gated on parity verification + bridge reuse proof
-- Consider starting Phase 2 (second level) to prove bridge reuse
-
----
-
-## Session: 2026-03-21 13:00 (Campaign screen live review + smoke verification)
-
-### Completed
-- [x] Started local dev server from current worktree on port 3001 and reviewed the live campaign screen + BEACH gameplay entry flow
-- [x] Captured campaign and in-run screenshots:
-  - `output/review-direct-menu.png`
-  - `output/review-direct-run.png`
-- [x] Verified no browser console errors during the smoke flow (`output/review-direct-errors.json`)
-- [x] Verified ship checks still pass on current branch:
-  - `npm run test:run` → 76/76 tests passing
-  - `npx tsc --noEmit` → clean
-
-### Review Findings
-- Hall of Fame still stores `levelId` but does not render it or group scores by level; raw-score sort remains cross-genre ambiguous
-- Campaign star UI is still placeholder-only (`totalStars = 0`, cleared tiles always show `★★★`) even though `services/levelCompletion.ts` exists
-- `handleGameOver` writes `levelId: selectedLevel` but omits `selectedLevel` from the callback dependency list, which will become a stale-closure bug once a second playable level exists
-- Campaign progression has two sources of truth (`CAMPAIGN_LEVEL_META` vs `LEVEL_ORDER`), and `LEVEL_ORDER` is still `['BEACH']`, so progression logic is not aligned with the 9-node campaign UI yet
-
-### Next Session Should
-1. Fix the Hall of Fame presentation to surface `entry.levelId` before more playable genres land
-2. Wire `CampaignScreen` to `services/levelCompletion.ts` so tile stars and footer totals reflect real saved progress
-3. Clean up progression state naming (`defeatedBosses` → `completedLevels`) and collapse campaign ordering into one authoritative source
-4. Add at least one component/browser test for the campaign screen states (implemented, locked, coming soon, completed)
-
-## Session: 2026-03-20 12:00 (Roadmap V3 hardening + new machine setup)
-
-### Completed
-- [x] Set up repo on new machine — installed deps, verified .env.local, started dev server (port 3001)
-- [x] Established baseline: 56 tests passing, build clean, tsc clean
-- [x] Bootstrapped project memory for this machine (V3 plan, tech stack, video factory reference)
-- [x] **Major ROADMAP_V3.md hardening** — 7 new front-matter sections + 7 task modifications:
-  - Added: Current Baseline, Shared Phaser Contract, React→Phaser Runtime Sync Rules, Level Config Model, Beach Port Exit Criteria, Fallback Policy, Score Semantics
-  - Task 0.2: Replaced "add optional fields to LevelConfig" → `CampaignLevelMeta` + `RunnerLevelConfig` split
-  - Task 0.3: Made SceneBridge genre-agnostic (only `levelId` + `catSpriteUrl`); runner fields → `RunnerSceneInitData`
-  - Task 0.4: Made PhaserGame generic; added `applyRuntimePatch` effect for post-boot updates
-  - Task 0.8: Added scope note — persistence migration independent from Hall of Fame/LevelResult
-  - Task 1.12: Fixed `mattedCatUrl` → `customCatUrl` + `equippedMattedState` (matches actual app state)
-  - Task 1.13: Made archiving conditional — gated on beach parity + bridge reuse proof
-  - Phase 9 Task 17: Added deterministic Playwright support (`__GAME_TEST_API`)
-- [x] Integrated DaVinci Resolve video factory (`demo-video-factory-catrunner/`) into cutscene pipeline references
-
-### Issues Encountered
-- PROGRESS.md was overwritten by a prior review session on the other machine — restored from git HEAD
-
-### Next Session Should
-1. **Execute Phase 0** of ROADMAP_V3.md — the plan is now hardened and ready for implementation
-2. Tasks 0.1–0.9 have clear boundaries — ideal for subagent-driven parallel development
-3. Start with Task 0.1 (install Phaser, configure Vite) as the unblocking prerequisite
-4. Consider using `demo-video-factory-catrunner/` to produce the BEACH intro cutscene video as a proof-of-concept
-
----
-
-## Session: 2026-03-20 (Roadmap review — live inspection + findings)
-
-**Focus:** Reviewed ROADMAP_V3.md against live codebase via Playwright inspection. Identified 7 categories of drift between the roadmap and current app state: runner-specific concepts baked into "generic" bridge, `propsRef` insufficient for runtime sync, LevelConfig god-config risk, premature archiving, `mattedCatUrl` snippet drift, missing exit criteria, missing test determinism. Findings fed directly into the hardening session above.
-
----
-
-## Session: 2026-03-19 15:00 (V3 Spec Design + Implementation Plan)
-
-### Completed
-- [x] Walked through all 9 open questions in ROADMAP_V3_SPEC.md — decisions validated and documented
-- [x] Design spec written: `docs/superpowers/specs/2026-03-19-v3-open-questions-design.md`
-  - Spec reviewed twice by automated reviewer (10 issues → 0), then user-reviewed (3 findings → fixed)
-  - Key decisions: feel-identical port, Phaser graphics primitives, code-defined levels, hybrid audio, desktop-primary, per-level stars, self-contained difficulty, static cutscenes, code-split scenes
-- [x] Generic completion contract: `LevelCompletePayload` replaces boss-specific `VictoryFinalizePayload`
-- [x] Persistence model: `completedLevels` replaces `defeatedBosses`, best-of merge for `LevelResult`, Hall of Fame gains `levelId`
-- [x] Audio ownership: single AudioContext owned by Phaser, sfxService migrates in Phase 1
-- [x] Implementation plan written: `ROADMAP_V3.md` (30 tasks across 10 phases)
-  - Plan reviewed twice — fixed PhaserGame instantiation, event race condition, SceneInitData contract, phase ordering, LevelConfig evolution, twin-doc requirement
-- [x] Parent spec updated: cutscene shape aligned, bridge language updated to `levelComplete`
-- [x] Memory saved: DaVinci Resolve MCP connector for cutscene video production (other machine)
-
-### Issues Encountered
-- PhaserGame.tsx scene instantiation required careful design: inline scene config breaks prototype chain, autoStart races with event wiring, inline sceneFactory causes re-renders
-- LevelId expansion from 1→9 values breaks `Record<LevelId, LevelConfig>` — needed `Partial<Record<...>>`
-
-### Next Session Should
-1. **Execute Phase 0** of ROADMAP_V3.md — install Phaser, define V3 types, create SceneBridge, PhaserGame wrapper, TestScene, docs, SpriteLoader, persistence migration, levelCompletion service
-2. **Then Phase 1** — port Beach runner to Phaser RunnerScene (largest phase, ~13 tasks)
-3. The plan is designed for subagent-driven development — Phase 0 tasks 0.1–0.9 have clear boundaries
-
----
-
-*(Sessions older than 10 archived to [PROGRESS_ARCHIVE.md](./PROGRESS_ARCHIVE.md))*

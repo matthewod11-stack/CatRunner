@@ -25,6 +25,7 @@ npm run dev
 npm run build
 npm run preview
 npm run test:run
+npm run test:smoke
 npx tsc --noEmit
 ./scripts/dev-init.sh
 ```
@@ -34,7 +35,8 @@ npx tsc --noEmit
 - `levels/index.ts` registers 9 runtime configs in `LEVEL_REGISTRY`.
 - `App.tsx` routes 9 lazy Phaser scene imports through `PhaserGame`.
 - `components/PhaserGame.tsx` and `scenes/shared/SceneBridge.ts` are the shared React/Phaser bridge.
-- `GameEngine.tsx` is the legacy DOM-runner fallback behind `?dom_runner` plus a reference point for beach/runtime extraction work.
+- Gameplay is Phaser-only; there is no supported DOM-runner fallback path.
+- `playwright/smoke.spec.ts` covers campaign boot, Kitty Closet, Phaser boot/eject, victory/game-over mutation, and Hall of Fame ordering/cap behavior.
 - Custom cat assets live in IndexedDB plus localStorage metadata, with server-side Gemini generation and sprite matting support.
 
 ## Active Docs
