@@ -1,17 +1,17 @@
 # Beach Kitty Multi-Level System — Session Progress Log
 
 > **Purpose:** Track progress across development sessions. Each session adds an entry at the TOP.
-> **Related Docs:** [ROADMAP_V3.md](./ROADMAP_V3.md) | [docs/archive/roadmaps/ROADMAP_V1_COMPLETE.md](./docs/archive/roadmaps/ROADMAP_V1_COMPLETE.md)
+> **Related Docs:** [ROADMAP_V4.md](./ROADMAP_V4.md) | [docs/archive/roadmaps/ROADMAP_V3_2026-04-23_phaser-runtime-cleanup.md](./docs/archive/roadmaps/ROADMAP_V3_2026-04-23_phaser-runtime-cleanup.md)
 
 ---
 
 ## **ACTIVE ROADMAP**
 
 ```
-./ROADMAP_V3.md
+./ROADMAP_V4.md
 ```
 
-**Start with `ROADMAP_V3.md` for active work.** V2 is complete. V1 archived at `docs/archive/roadmaps/ROADMAP_V1_COMPLETE.md`.
+**Start with `ROADMAP_V4.md` for active work.** `ROADMAP_V3.md` is now archived at `docs/archive/roadmaps/ROADMAP_V3_2026-04-23_phaser-runtime-cleanup.md`. V1 remains archived at `docs/archive/roadmaps/ROADMAP_V1_COMPLETE.md`.
 
 ---
 
@@ -22,7 +22,7 @@
 ./scripts/dev-init.sh
 
 # 2. Read the active roadmap:
-sed -n '1,100p' ROADMAP_V3.md
+sed -n '1,160p' ROADMAP_V4.md
 
 # 3. Check the latest session entry below for handoff notes
 ```
@@ -33,6 +33,26 @@ sed -n '1,100p' ROADMAP_V3.md
 === ADD NEW SESSIONS AT THE TOP ===
 Most recent session should be first.
 -->
+
+## Session: 2026-04-23 13:20 (Roadmap V4 reset and WIP cleanup)
+
+### Completed
+- Archived `ROADMAP_V3.md`, created `ROADMAP_V4.md`, and added `docs/architecture/asset-pipeline.md` as the new active planning surface
+- Repointed root guidance, docs indexes, `features.json`, and `scripts/dev-init.sh` at `ROADMAP_V4.md`
+- Removed the experimental platformer hero-sheet / matting WIP and restored `PlatformerScene` to the prior single-sprite path
+- Verified `npm run test:run`, `npm run test:smoke`, `npx tsc --noEmit`, and `npm run build` on the cleaned snapshot
+
+### In Progress
+- `ROADMAP_V4.md` Phase 0 has not started yet; Level 1 (`BEACH`) is the next active execution target
+- Unrelated local `vite.config.ts` and `.cursor/` changes remain outside this session’s commit scope
+
+### Issues Encountered
+- Test count dropped from 196 to 194 because the discarded hero-sheet experiment and its two tests were intentionally removed; no failures were introduced
+
+### Next Session Should
+- Kick off `ROADMAP_V4.md` Phase 0: lock the Beach gameplay-cat strategy and finalize the Beach asset inventory
+- Start the Beach art brief / prompt pack using `docs/architecture/asset-pipeline.md`
+- Keep unrelated local WIP isolated unless it becomes part of the V4 execution plan
 
 ## Session: 2026-04-21 21:34
 
@@ -272,43 +292,5 @@ Most recent session should be first.
 2. After Phase 1.5 visual polish → merge `phase-1.5-beach-polish` into main
 3. Begin Phase 0 tasks from ROADMAP_V3 (Phaser install, V3 types, SceneBridge)
 4. Task 1.14 (Beach sprite validation) can happen any time after sprite generation pipeline exists (Phase 3)
-
----
-
-## Session: 2026-03-22 16:00 (Phase 1.5: Beach Polish — Implementation + TV Frame Debugging)
-
-### Completed
-- [x] All 10 Phase 1.5 plan tasks implemented via subagent-driven development (Tasks 1-9 code, Task 10 verification)
-- [x] 15 sprites generated via nanobanana MCP, flood-fill bg removal pipeline established
-- [x] Phaser canvas ↔ CRT TV frame integration solved: `parent: null` + manual `appendChild` + `enforceCanvasFill`
-- [x] Sky gradient replaced with Phaser Graphics (generated asset had black borders baked in)
-- [x] Tile sprites (sand, ocean, foam) restored as fully opaque — tiles should never have bg removal
-- [x] Functional TV transport buttons: PLAY (resume), PAUSE, EJECT (main menu)
-- [x] All ship checks pass: `tsc --noEmit` clean, 76 tests passing, build clean
-
-### Issues Encountered
-- Gemini image gen renders "transparent" as gray/white checkerboard baked into pixels — requires post-processing
-- Phaser Scale manager fights with CSS canvas sizing; 6 approaches tried before finding working solution
-- `sky-gradient.png` had a small sky window baked into a mostly-black image, looked like a viewport bug
-- Tile sprites (sand/ocean/foam) destroyed by threshold bg removal — tiles need to stay fully opaque
-
-### Remaining Visual Issues (pre-Phase 2)
-- **Ground obstacles (crab, beachball, sandcastle) not on player baseline** — they float above the ground
-- **Birds/planes spawn too low** — should be higher in sky area
-- **Boat too high + too large** — floats in sky, oversized for the wider viewport
-- **Sand Monster position** — floating high, should be grounded or repositioned
-- **Background entity sizes need rebalancing** — sprites sized for old narrow viewport are too big at 960x720
-- **Background entity speed too fast** — boats/planes are in the distance, should scroll slower (reduce speedMultiplier)
-- **HUD (score/lives) should integrate into TV bezel** — currently floating inside CRT glass
-- **Pause overlay gone** — P/ESC keyboard pause lost; needs rewiring or integration into TV buttons
-
-### Next Session Should
-1. **Fix obstacle ground alignment** — land obstacles must share cat's baseline (spawnY / render anchor)
-2. **Rebalance background entity sizes and Y ranges** for 960x720 viewport (boats/planes/clouds)
-3. **Move HUD into TV bezel area** (above CRT glass, part of the TV body, not floating on screen)
-4. **Wire P/ESC to PAUSE button** — keyboard pause triggers same handler as TV PAUSE button
-5. **Reduce ENTITY_SCALE or obstacle definition sizes** to fit wider viewport proportions
-6. **Consider regenerating sprites** with better tools or manual art — Gemini quality is functional but not great
-7. After visual polish complete → merge `phase-1.5-beach-polish` into main → begin Phase 2
 
 ---

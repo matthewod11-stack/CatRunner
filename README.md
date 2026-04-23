@@ -25,13 +25,13 @@ A browser game where a custom AI-generated cat plays through nine distinct game 
 
 ## About
 
-Beach Kitty is a nine-level multi-genre Phaser campaign. The same custom cat moves from beach runner to platformer, launcher, shooter, breakout, frogger, whack, snake, and climber scenes while React owns the shell UI and Phaser owns gameplay.
+Beach Kitty is a nine-level multi-genre Phaser campaign. The same beach-cat hero moves from beach runner to platformer, launcher, shooter, breakout, frogger, whack, snake, and climber scenes while React owns the shell UI and Phaser owns gameplay.
 
 The game runs entirely in the browser. Gemini API calls go through same-origin server routes so the key never touches the client.
 
 ## Project Status
 
-- The active roadmap is `ROADMAP_V3.md`.
+- The active roadmap is `ROADMAP_V4.md`.
 - The root session log is `PROGRESS.md`.
 - Supporting documentation lives under `docs/`.
 - `KNOWN_ISSUES.md` is retired; use GitHub Issues for bugs and debt.
@@ -41,7 +41,7 @@ The game runs entirely in the browser. Gemini API calls go through same-origin s
 - Nine playable campaign genres behind one shared cat identity
 - Phaser scene runtime with lazy scene imports and React-owned campaign UI
 - Boss fights, power-ups, custom cat generation, and Hall of Fame persistence
-- Server-side Gemini image generation and sprite matting
+- Optional Gemini-powered cat customization and sprite tooling
 - Procedural music, file-backed SFX, and runtime tuning tools
 - IndexedDB-backed cat wardrobe and asset storage
 
@@ -102,7 +102,7 @@ npx tsc --noEmit
 
 ### Canonical Files
 
-- `ROADMAP_V3.md` — active roadmap
+- `ROADMAP_V4.md` — active roadmap
 - `PROGRESS.md` — root session log
 - `docs/README.md` — docs index
 - GitHub Issues — active bug and debt tracker
@@ -112,6 +112,7 @@ npx tsc --noEmit
 - `docs/architecture/level-development.md`
 - `docs/architecture/behavior-system.md`
 - `docs/architecture/level-runtime.md`
+- `docs/architecture/asset-pipeline.md`
 - `docs/architecture/api-protection.md`
 - `docs/product/qa-checklist.md`
 - `docs/plans/README.md`

@@ -1,7 +1,7 @@
 # CatRunner — Project State
 
 > Cross-surface context document. Shared across Claude Chat, Claude Code, and related sessions.
-> Last updated: 2026-04-21
+> Last updated: 2026-04-23
 
 ---
 
@@ -17,13 +17,13 @@ CatRunner, branded in-product as Beach Kitty, is a nine-level multi-genre browse
 - Gameplay is Phaser-only; there is no supported DOM-runner fallback.
 - React owns shell/UI concerns; Phaser owns gameplay scenes.
 - A Playwright smoke harness now covers campaign boot, Phaser boot/eject, victory/game-over mutation, and Hall of Fame ordering/cap behavior.
-- The current cleanup work is about canonical docs and workflow alignment, not initial Phaser adoption.
+- The active roadmap has shifted from migration cleanup to Level 1 completion and repeatable asset-pipeline work.
 
 ## Current Workstreams
 
-- Canonical roadmap and docs alignment around `ROADMAP_V3.md`, `PROGRESS.md`, `docs/`, and GitHub Issues
-- Cleanup/hardening work to keep active code paths, catalog helpers, and public APIs aligned with the live campaign runtime
-- Asset pipeline/tooling work, with platformer hero-sheet and sprite-matting work as active WIP
+- Level 1 (`BEACH`) completion under `ROADMAP_V4.md`
+- Repeatable asset-pipeline work for world art, hero sheets, and runtime manifests
+- Optional cat-generation work kept off the gameplay critical path unless it satisfies the same sheet contract as the default hero
 - Performance/shipping readiness, including oversized main bundle follow-up work
 
 ## Stack Snapshot
@@ -32,14 +32,14 @@ CatRunner, branded in-product as Beach Kitty, is a nine-level multi-genre browse
 |-------|-----------|-------|
 | Framework | React 19 + TypeScript | Vite app shell |
 | Runtime | Phaser 3 | Genre scenes and bridge architecture |
-| AI | Google Gemini | Custom cat generation and text features |
-| Image processing | sharp + in-app matting helpers | Server-side and client fallback paths |
+| AI | Google Gemini | Optional cat-generation and text features |
+| Image processing | sharp + in-app matting helpers | Fallback path for optional cat identity surfaces |
 | Asset storage | IndexedDB + localStorage | Cat wardrobe, sprite metadata, Hall of Fame data |
 | Testing | Vitest + Playwright smoke + `npx tsc --noEmit` + Vite build | Current verification baseline |
 
 ## Canonical Workflow
 
-- Start from `ROADMAP_V3.md` for active roadmap direction.
+- Start from `ROADMAP_V4.md` for active roadmap direction.
 - Use `PROGRESS.md` for session handoff and continuity.
 - Use `docs/` for active architecture and product docs, plus `docs/plans/README.md` and `docs/specs/README.md` as the current working entrypoints.
 - Use GitHub Issues for bugs and technical debt.

@@ -10,7 +10,7 @@ Beach Kitty is a Phaser-based nine-level campaign built with React 19, TypeScrip
 
 ## Canonical Files
 
-- `ROADMAP_V3.md` — the active roadmap
+- `ROADMAP_V4.md` — the active roadmap
 - `PROGRESS.md` — the root session log
 - `docs/` — supporting architecture, product, plan, and spec material
 - GitHub Issues — active bug and technical-debt tracker
@@ -37,13 +37,14 @@ npx tsc --noEmit
 - `components/PhaserGame.tsx` and `scenes/shared/SceneBridge.ts` are the shared React/Phaser bridge.
 - Gameplay is Phaser-only; there is no supported DOM-runner fallback path.
 - `playwright/smoke.spec.ts` covers campaign boot, Kitty Closet, Phaser boot/eject, victory/game-over mutation, and Hall of Fame ordering/cap behavior.
-- Custom cat assets live in IndexedDB plus localStorage metadata, with server-side Gemini generation and sprite matting support.
+- Custom cat assets live in IndexedDB plus localStorage metadata, with server-side Gemini generation and sprite matting support for optional identity surfaces.
 
 ## Active Docs
 
 - `docs/architecture/level-development.md`
 - `docs/architecture/behavior-system.md`
 - `docs/architecture/level-runtime.md`
+- `docs/architecture/asset-pipeline.md`
 - `docs/architecture/api-protection.md`
 - `docs/product/qa-checklist.md`
 - `docs/plans/README.md`
@@ -60,15 +61,14 @@ Default execution model:
 
 ## Current Focus
 
-- Keep root guidance and docs aligned with the live V3 campaign rather than older V2-era assumptions.
-- Track active bugs and debt in GitHub Issues, not markdown parking lots.
-- Continue repo cleanup/hardening so active docs describe the current Phaser-first runtime truth.
-- Continue the current platformer hero-sheet and sprite-matting work as active WIP inside the asset pipeline/tooling workstream.
-- Keep bundle-size/shipping follow-ups visible while the main application bundle remains oversized.
+- Execute `ROADMAP_V4.md` around Level 1 (`BEACH`) completion rather than more migration-era cleanup.
+- Use Beach as the proving ground for a repeatable world-art and hero-sheet pipeline that later levels can copy.
+- Keep live cat generation off the gameplay critical path unless it can satisfy the same constrained sheet contract as the default hero.
+- Keep smoke coverage green and keep bundle-size follow-ups visible while asset plumbing evolves.
 
 ## Contributor Notes
 
-- Prefer `ROADMAP_V3.md` and live code when secondary docs drift.
+- Prefer `ROADMAP_V4.md` and live code when secondary docs drift.
 - Treat `PROGRESS.md` as the durable handoff log at the repo root.
 - Treat `docs/plans/` and `docs/specs/` as active-only landing zones; move dated superseded artifacts into `docs/archive/`.
 - Keep `CLAUDE.md` and `AGENTS.md` aligned as twins where possible.

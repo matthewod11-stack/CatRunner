@@ -2,6 +2,44 @@
 
 ---
 
+## Session: 2026-03-22 16:00 (Phase 1.5: Beach Polish — Implementation + TV Frame Debugging)
+
+### Completed
+- [x] All 10 Phase 1.5 plan tasks implemented via subagent-driven development (Tasks 1-9 code, Task 10 verification)
+- [x] 15 sprites generated via nanobanana MCP, flood-fill bg removal pipeline established
+- [x] Phaser canvas ↔ CRT TV frame integration solved: `parent: null` + manual `appendChild` + `enforceCanvasFill`
+- [x] Sky gradient replaced with Phaser Graphics (generated asset had black borders baked in)
+- [x] Tile sprites (sand, ocean, foam) restored as fully opaque — tiles should never have bg removal
+- [x] Functional TV transport buttons: PLAY (resume), PAUSE, EJECT (main menu)
+- [x] All ship checks pass: `tsc --noEmit` clean, 76 tests passing, build clean
+
+### Issues Encountered
+- Gemini image gen renders "transparent" as gray/white checkerboard baked into pixels — requires post-processing
+- Phaser Scale manager fights with CSS canvas sizing; 6 approaches tried before finding working solution
+- `sky-gradient.png` had a small sky window baked into a mostly-black image, looked like a viewport bug
+- Tile sprites (sand/ocean/foam) destroyed by threshold bg removal — tiles need to stay fully opaque
+
+### Remaining Visual Issues (pre-Phase 2)
+- **Ground obstacles (crab, beachball, sandcastle) not on player baseline** — they float above the ground
+- **Birds/planes spawn too low** — should be higher in sky area
+- **Boat too high + too large** — floats in sky, oversized for the wider viewport
+- **Sand Monster position** — floating high, should be grounded or repositioned
+- **Background entity sizes need rebalancing** — sprites sized for old narrow viewport are too big at 960x720
+- **Background entity speed too fast** — boats/planes are in the distance, should scroll slower (reduce speedMultiplier)
+- **HUD (score/lives) should integrate into TV bezel** — currently floating inside CRT glass
+- **Pause overlay gone** — P/ESC keyboard pause lost; needs rewiring or integration into TV buttons
+
+### Next Session Should
+1. **Fix obstacle ground alignment** — land obstacles must share cat's baseline (spawnY / render anchor)
+2. **Rebalance background entity sizes and Y ranges** for 960x720 viewport (boats/planes/clouds)
+3. **Move HUD into TV bezel area** (above CRT glass, part of the TV body, not floating on screen)
+4. **Wire P/ESC to PAUSE button** — keyboard pause triggers same handler as TV PAUSE button
+5. **Reduce ENTITY_SCALE or obstacle definition sizes** to fit wider viewport proportions
+6. **Consider regenerating sprites** with better tools or manual art — Gemini quality is functional but not great
+7. After visual polish complete → merge `phase-1.5-beach-polish` into main → begin Phase 2
+
+---
+
 ## Session: 2026-03-22 13:00 (Phase 1.5: Beach Polish — Implementation)
 
 ### Completed

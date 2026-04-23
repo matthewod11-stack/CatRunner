@@ -15,7 +15,7 @@
 
 ## Canonical Root Files
 
-- `ROADMAP_V3.md`
+- `ROADMAP_V4.md`
 - `PROGRESS.md`
 
 ## Runtime Truth

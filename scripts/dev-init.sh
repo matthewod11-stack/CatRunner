@@ -13,7 +13,7 @@ NC='\033[0m'
 
 echo ""
 echo -e "${CYAN}╔═══════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${CYAN}║  ${YELLOW}BEACH KITTY${CYAN} - Roadmap V3 Session Init                     ║${NC}"
+echo -e "${CYAN}║  ${YELLOW}BEACH KITTY${CYAN} - Roadmap Session Init                        ║${NC}"
 echo -e "${CYAN}╚═══════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
@@ -30,13 +30,21 @@ echo -e "${GREEN}✓${NC} Working directory: $PWD"
 echo ""
 echo -e "${BLUE}Checking canonical project files...${NC}"
 
+ACTIVE_ROADMAP=""
+if [ -f "ROADMAP_V4.md" ]; then
+    ACTIVE_ROADMAP="ROADMAP_V4.md"
+fi
+
 REQUIRED_FILES=(
-    "ROADMAP_V3.md"
     "PROGRESS.md"
     "features.json"
     "package.json"
     "types.ts"
 )
+
+if [ -n "$ACTIVE_ROADMAP" ]; then
+    REQUIRED_FILES=("$ACTIVE_ROADMAP" "${REQUIRED_FILES[@]}")
+fi
 
 MISSING=0
 for file in "${REQUIRED_FILES[@]}"; do
@@ -54,10 +62,10 @@ if [ $MISSING -gt 0 ]; then
 fi
 
 echo ""
-if [ -f "ROADMAP_V3.md" ]; then
-    echo -e "${GREEN}✓${NC} Active roadmap: ROADMAP_V3.md"
+if [ -n "$ACTIVE_ROADMAP" ]; then
+    echo -e "${GREEN}✓${NC} Active roadmap: $ACTIVE_ROADMAP"
 else
-    echo -e "${YELLOW}!${NC} ROADMAP_V3.md not found"
+    echo -e "${YELLOW}!${NC} No active roadmap found"
 fi
 
 echo ""
@@ -96,8 +104,8 @@ fi
 
 echo ""
 echo -e "${BLUE}═══ Next Tasks ═══${NC}"
-if [ -f "ROADMAP_V3.md" ]; then
-    grep -n "\[ \]" ROADMAP_V3.md | head -5 | while read -r line; do
+if [ -n "$ACTIVE_ROADMAP" ]; then
+    grep -n "\[ \]" "$ACTIVE_ROADMAP" | head -5 | while read -r line; do
         echo -e "${YELLOW}○${NC} $(echo "$line" | cut -d']' -f2-)"
     done
 fi
@@ -106,10 +114,12 @@ echo ""
 echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
 echo -e "${GREEN}Ready to develop!${NC}"
 echo ""
-echo -e "${YELLOW}▶ ACTIVE ROADMAP:${NC} ROADMAP_V3.md"
+echo -e "${YELLOW}▶ ACTIVE ROADMAP:${NC} ${ACTIVE_ROADMAP:-none found}"
 echo ""
 echo -e "Quick commands:"
-echo -e "  ${YELLOW}sed -n '1,220p' ROADMAP_V3.md${NC} - Read active roadmap"
+if [ -n "$ACTIVE_ROADMAP" ]; then
+    echo -e "  ${YELLOW}sed -n '1,220p' $ACTIVE_ROADMAP${NC} - Read active roadmap"
+fi
 echo -e "  ${YELLOW}npm run dev${NC}          - Start dev server"
 echo -e "  ${YELLOW}npm run test:run${NC}    - Vitest (CI-style)"
 echo -e "  ${YELLOW}npm run build${NC}       - Build check"

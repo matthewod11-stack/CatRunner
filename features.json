@@ -2,13 +2,13 @@
   "$schema": "./features.schema.json",
   "_meta": {
     "description": "Historical feature tracking snapshot for the multi-genre campaign. Status: not-started | in-progress | pass | fail | blocked",
-    "lastUpdated": "2026-04-21",
-    "planFile": "./ROADMAP_V3.md",
+    "lastUpdated": "2026-04-23",
+    "planFile": "./ROADMAP_V4.md",
     "historicalRoadmapsDir": "./docs/archive/roadmaps/",
     "activeSessionLog": "./PROGRESS.md",
     "activeDocsDir": "./docs/",
     "issueTracker": "GitHub Issues",
-    "campaignStatus": "Phaser-only runtime is active, browser smoke coverage now exists for the core campaign/outcome flows, and hero-sheet plus sprite-matting work remain active WIP."
+    "campaignStatus": "Phaser-only runtime is active, browser smoke coverage exists for the core campaign/outcome flows, and ROADMAP_V4 now focuses on Level 1 completion plus a repeatable asset pipeline."
   },
   "phase-1": {
     "description": "Session Protocol Infrastructure",
@@ -16,7 +16,7 @@
     "tasks": {
       "docs-roadmap": {
         "status": "pass",
-        "notes": "Active roadmap is ROADMAP_V3.md; historical roadmaps are archived under docs/archive/roadmaps/"
+        "notes": "Active roadmap is ROADMAP_V4.md; historical roadmaps are archived under docs/archive/roadmaps/"
       },
       "docs-progress": {
         "status": "pass",
@@ -32,7 +32,7 @@
       },
       "dev-init-script": {
         "status": "pass",
-        "notes": "Uses ROADMAP_V3.md and canonical root files"
+        "notes": "Uses the active root roadmap and canonical root files"
       },
       "commit": {
         "status": "pass",
@@ -198,7 +198,7 @@
       },
       "claude-md-update": {
         "status": "pass",
-        "notes": "Root guidance and docs now align with ROADMAP_V3.md and the docs/ taxonomy"
+        "notes": "Root guidance and docs now align with the active roadmap and the docs/ taxonomy"
       }
     }
   },
