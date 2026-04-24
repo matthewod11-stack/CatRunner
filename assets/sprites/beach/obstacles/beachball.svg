@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img">
+<defs><clipPath id="ballClip"><circle cx="512" cy="512" r="310"/></clipPath><radialGradient id="ballShade" cx="36%" cy="28%" r="78%"><stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/><stop offset="0.62" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#273043" stop-opacity="0.22"/></radialGradient></defs>
+
+<ellipse cx="512" cy="840" rx="260" ry="42" fill="rgba(39,48,67,0.16)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="512" cy="512" r="310" fill="#fffaf0" stroke="#273043" stroke-width="26" />
+<g clip-path="url(#ballClip)">
+  <rect x="202" y="202" width="620" height="620" fill="#fffaf0" stroke="none" stroke-width="0" />
+  <path d="M512 202 C396 270 318 390 314 522 C318 652 398 760 512 822 C452 660 448 362 512 202Z" fill="#fde047" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M512 202 C620 252 706 364 724 490 C642 462 560 468 500 512 C468 394 478 282 512 202Z" fill="#ef4444" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M724 490 C750 632 666 764 512 822 C568 662 558 568 500 512 C560 468 642 462 724 490Z" fill="#3b82f6" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M512 822 C394 760 318 652 314 522 C386 492 450 492 500 512 C558 568 568 662 512 822Z" fill="#f97316" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="512" cy="512" r="310" fill="url(#ballShade)" stroke="none" stroke-width="0" />
+</g>
+<path d="M512 202 C452 362 452 660 512 822 M512 202 C620 252 706 364 724 490 C750 632 666 764 512 822 M314 522 C386 492 450 492 500 512 C558 568 568 662 512 822" fill="none" stroke="#273043" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M500 512 C560 468 642 462 724 490" fill="none" stroke="#273043" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="512" cy="512" r="310" fill="none" stroke="#273043" stroke-width="26" />
+<circle cx="548" cy="428" r="34" fill="#fff7d6" stroke="#273043" stroke-width="10" />
+<ellipse cx="414" cy="364" rx="68" ry="44" fill="#ffffff" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.46"/>
+
+</svg>

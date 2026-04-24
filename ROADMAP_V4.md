@@ -65,14 +65,21 @@ Finish Level 1 (`BEACH`) as a genuinely fun, readable, visually complete runner 
 
 ## Phase 0 - Pipeline Decisions
 
-- [ ] Confirm the Level 1 gameplay-cat strategy: curated animated runner sheet first, live generator optional.
-- [ ] Finalize `docs/architecture/asset-pipeline.md` as the operating contract for prompts, exports, cleanup, manifests, and acceptance checks.
-- [ ] Build the Level 1 asset inventory covering environment layers, obstacles, collectibles, background entities, boss states, HUD/support art, and FX needs.
-- [ ] Decide what stays on the Level 1 critical path versus what becomes deferred:
+- [x] Confirm the Level 1 gameplay-cat strategy: curated animated runner sheet first, live generator optional.
+- [x] Finalize `docs/architecture/asset-pipeline.md` as the operating contract for prompts, exports, cleanup, manifests, and acceptance checks.
+- [x] Build the Level 1 asset inventory covering environment layers, obstacles, collectibles, background entities, boss states, HUD/support art, and FX needs.
+- [x] Decide what stays on the Level 1 critical path versus what becomes deferred:
   - live closet generation
   - gameplay cat customization
   - post-Beach multi-level asset generalization
-- [ ] Identify the first runtime integration targets: `scenes/RunnerScene.ts`, Beach asset folders, any new asset manifest module, and related docs.
+- [x] Identify the first runtime integration targets: `scenes/RunnerScene.ts`, Beach asset folders, any new asset manifest module, and related docs.
+
+Phase 0 decision record:
+
+- Level 1 gameplay uses a committed curated animated runner sheet as the baseline.
+- Live cat generation remains optional identity/customization work and is not on the Beach gameplay critical path.
+- The operating contract is `docs/architecture/asset-pipeline.md`.
+- The active Level 1 inventory and integration target list is `docs/plans/level-1-asset-inventory.md`.
 
 Acceptance criteria:
 
@@ -82,15 +89,15 @@ Acceptance criteria:
 
 ## Phase 1 - Beach World Art Pack
 
-- [ ] Produce the Beach visual brief covering palette, line style, contrast, horizon treatment, parallax depth, and UI relationship.
-- [ ] Generate or author the final environment layer set:
+- [x] Produce the Beach visual brief covering palette, line style, contrast, horizon treatment, parallax depth, and UI relationship.
+- [x] Generate or author the final environment layer set:
   - sky treatment
   - sun
   - cloud variants
   - ocean tile
   - foam strip
   - sand tile
-- [ ] Generate or author the final obstacle and collectible pack:
+- [x] Generate or author the final obstacle and collectible pack:
   - crab variants
   - seagull variants
   - beachball
@@ -98,14 +105,24 @@ Acceptance criteria:
   - sandcastle
   - palm tree
   - projectile / power-up visuals
-- [ ] Generate or author the final background entity pack:
+- [x] Generate or author the final background entity pack:
   - boat
   - sinking boat
   - airplane
   - airplane-fire
   - surfer
   - jetski
-- [ ] Generate or author the Sand Monster art pack with enough readable state coverage for idle, attack, hit, and defeat.
+- [x] Generate or author the Sand Monster art pack with enough readable state coverage for idle, attack, hit, and defeat.
+
+Phase 1 decision record:
+
+- Beach world art is authored as a committed SVG baseline under `assets/sprites/beach/`.
+- `scripts/generate-beach-art-pack.mjs` is the reproducible source for the current vector pack.
+- `scenes/runner/beachAssets.ts` is the Beach asset manifest used by `RunnerScene`.
+- The visual brief is `docs/plans/level-1-beach-visual-brief.md`.
+- The prompt/source-generation pack is `docs/plans/level-1-beach-prompt-pack.md`.
+- A player-review polish pass improved sun/cloud clarity, boat readability, beachball shape, sandcastle scale, plane direction, and Sand Monster state fidelity before Phase 2.
+- The boss fight shell economy was fixed during this pass so players cannot enter the boss with too little ammo and get stuck waiting to fail.
 
 Acceptance criteria:
 
@@ -137,11 +154,15 @@ Acceptance criteria:
 
 ## Phase 3 - Runtime Integration Cleanup
 
-- [ ] Replace `RunnerScene`'s loose hard-coded asset loading with a Beach asset manifest or key registry.
-- [ ] Remove placeholder texture reuse for power-ups and projectiles by giving each shipped visual its own deliberate treatment.
+- [x] Replace `RunnerScene`'s loose hard-coded asset loading with a Beach asset manifest or key registry.
+- [x] Remove placeholder texture reuse for power-ups and projectiles by giving each shipped visual its own deliberate treatment.
 - [ ] Audit scale, baseline, hitbox, and parallax tuning against final art rather than placeholder stand-ins.
 - [ ] Keep gameplay art loading deterministic and committed; no runtime calls to image models for world building.
 - [ ] Preserve current smoke, progression, and persistence behavior while refactoring asset plumbing.
+
+Phase 3 note:
+
+- The manifest/key cleanup and placeholder replacement were pulled forward during Phase 1 because they were required to review the Beach art in-game.
 
 Acceptance criteria:
 

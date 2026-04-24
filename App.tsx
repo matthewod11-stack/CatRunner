@@ -467,7 +467,7 @@ const App: React.FC = () => {
     if (data.shellAmmo !== undefined) setShellAmmo(data.shellAmmo);
   }, []);
 
-  const startGame = (bossMode: boolean = false) => {
+  const startGame = useCallback((bossMode: boolean = false) => {
     if (!DEV_UNLOCK_ALL && !isLevelUnlocked(completedLevels, selectedLevel)) return;
     const currentLives = score.lives <= 0 ? MAX_LIVES : score.lives;
     setStartAtBoss(bossMode);
@@ -482,7 +482,7 @@ const App: React.FC = () => {
       lives: currentLives
     }));
     localStorage.setItem('beach-cat-lives', currentLives.toString());
-  };
+  }, [bossCoinTarget, completedLevels, score.lives, selectedLevel]);
 
   const handleStatusChange = (newStatus: GameStatus) => {
     setStatus(newStatus);
@@ -554,6 +554,7 @@ const App: React.FC = () => {
 
     // Dev-only bridge for browser smoke tests to hit the live App completion handlers.
     window.__BEACH_KITTY_TEST_API__ = {
+      startBossPractice: () => startGame(true),
       forceVictory: (options) => {
         const finalScore = options?.finalScore ?? Math.max(score.current, 500);
         const levelId = options?.levelId ?? selectedLevel;
@@ -583,6 +584,7 @@ const App: React.FC = () => {
         completedLevels,
         highScores,
         score,
+        shellAmmo,
       }),
     };
 
@@ -596,6 +598,8 @@ const App: React.FC = () => {
     highScores,
     score,
     selectedLevel,
+    shellAmmo,
+    startGame,
     status,
   ]);
 

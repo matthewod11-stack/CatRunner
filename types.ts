@@ -83,6 +83,7 @@ export interface BackgroundEntity {
   bannerText?: string;
   depth?: 'far' | 'mid' | 'near'; // for parallax
   isChaos?: boolean; // For boss fight chaos variants
+  spawnEdge?: 'left' | 'right';
 }
 
 export interface PlayerState {
@@ -270,7 +271,7 @@ export interface BackgroundEntityDefinition {
   depth: 'far' | 'mid' | 'near';
   /** Random Y = innerHeight * (min + rand * (max − min)). */
   spawnYRange?: { min: number; max: number };
-  /** Default `right` (off-screen east). `left` for westbound spawns (e.g. jetski). */
+  /** Default `right` (off-screen east, moving left). `left` spawns west and moves right. */
   spawnEdge?: 'left' | 'right';
   /** Default banner text for planes when spawned without override. */
   defaultBannerText?: string;

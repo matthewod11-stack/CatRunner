@@ -153,6 +153,47 @@ Integration should verify:
 - If live cat generation returns later for gameplay, it must output a constrained sheet that matches the same contract as the default hero.
 - A static cat still image is not sufficient for a completed action game level.
 
+## Level 1 Operating Decisions
+
+These decisions are locked for the Beach completion pass.
+
+### Gameplay Cat Strategy
+
+- The shipped Level 1 gameplay cat is a curated animated runner sheet.
+- The default runner sheet is committed to the repo and loads deterministically.
+- Live closet generation may continue for identity, preview, and non-critical customization surfaces.
+- Live-generated cat art does not block Beach gameplay completion.
+- Any future custom gameplay cat must conform to the same runner-sheet contract as the default sheet before it can replace the gameplay baseline.
+
+### Critical Path
+
+The Level 1 critical path includes:
+
+- Beach world-art brief and prompt pack
+- cleaned Beach environment layers, obstacles, collectibles, background entities, boss states, and FX/support art
+- default animated Beach runner hero sheet
+- Beach asset manifest or key registry
+- `RunnerScene` integration against the manifest
+- focused Beach manual playtest plus `npm run test:run`, `npm run test:smoke`, `npx tsc --noEmit`, and `npm run build`
+
+Deferred until after Beach is fun and readable:
+
+- dynamic per-user animated gameplay cats
+- gameplay cat customization in active runner play
+- broad multi-level asset generalization beyond templates proven by Beach
+- runtime image generation for world building
+
+### Runtime Integration Targets
+
+The first integration pass should touch:
+
+- `scenes/RunnerScene.ts` for loader keys, animation state, obstacle/projectile visuals, and scale/baseline tuning
+- `assets/sprites/beach/` as the target level-local asset home
+- a Beach asset manifest or key registry module near the runner scene or level config
+- `docs/plans/level-1-asset-inventory.md` for inventory status and acceptance notes
+
+Do not infer the current process from old matting code, abandoned hero-sheet experiments, or chat history. This document plus the active inventory plan are the operating contract.
+
 ## Target Directory Shape
 
 The exact file structure can evolve, but future work should trend toward level-local grouping instead of one flat sprite pile. A target layout looks like this:

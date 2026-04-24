@@ -2,13 +2,13 @@
   "$schema": "./features.schema.json",
   "_meta": {
     "description": "Historical feature tracking snapshot for the multi-genre campaign. Status: not-started | in-progress | pass | fail | blocked",
-    "lastUpdated": "2026-04-23",
+    "lastUpdated": "2026-04-24",
     "planFile": "./ROADMAP_V4.md",
     "historicalRoadmapsDir": "./docs/archive/roadmaps/",
     "activeSessionLog": "./PROGRESS.md",
     "activeDocsDir": "./docs/",
     "issueTracker": "GitHub Issues",
-    "campaignStatus": "Phaser-only runtime is active, browser smoke coverage exists for the core campaign/outcome flows, and ROADMAP_V4 now focuses on Level 1 completion plus a repeatable asset pipeline."
+    "campaignStatus": "Phaser-only runtime is active, browser smoke coverage exists for the core campaign/outcome flows, and ROADMAP_V4 is executing Level 1 completion. V4 Phase 0 and Phase 1 are complete; Phase 2 starts with the Beach animated runner hero sheet."
   },
   "phase-1": {
     "description": "Session Protocol Infrastructure",
@@ -247,6 +247,28 @@
       "verification": {
         "status": "pass",
         "notes": "npm test, npm run test:smoke, npx tsc --noEmit, and npm run build all pass on the 2026-04-21 session snapshot."
+      }
+    }
+  },
+  "phase-11": {
+    "description": "Roadmap V4 Level 1 Beach Completion Pipeline",
+    "status": "wip",
+    "tasks": {
+      "phase-0-pipeline-decisions": {
+        "status": "pass",
+        "notes": "Level 1 gameplay-cat strategy is locked: curated animated runner sheet first; live cat generation is optional and off the gameplay critical path."
+      },
+      "phase-1-world-art-pack": {
+        "status": "pass",
+        "notes": "Committed Beach SVG world-art pack, visual brief, prompt pack, asset manifest, RunnerScene integration, and player-review polish are complete."
+      },
+      "boss-ammo-and-bridge-hardening": {
+        "status": "pass",
+        "notes": "Boss entry now grants sufficient shell ammo, refills a small ammo floor, and Playwright smoke covers boss-practice ammo plus React/Phaser HUD sync."
+      },
+      "phase-2-runner-hero-animation": {
+        "status": "wip",
+        "notes": "Next active target: define and produce the Beach animated runner hero sheet and wire runner animation states."
       }
     }
   }

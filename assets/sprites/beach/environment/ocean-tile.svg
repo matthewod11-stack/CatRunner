@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1536" height="672" viewBox="0 0 1536 672" role="img">
+<defs><linearGradient id="ocean" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#1fb7d7"/><stop offset="1" stop-color="#0e7ea0"/></linearGradient></defs>
+<rect x="0" y="0" width="1536" height="672" fill="url(#ocean)" stroke="none" stroke-width="0" /><path d="M0 155 C180 100 310 210 500 155 C720 90 850 220 1050 160 C1240 105 1370 210 1536 160 L1536 672 L0 672Z" fill="#26c6da" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.72"/><path d="M0 275 C205 220 365 330 560 275 C770 220 930 330 1150 275 C1330 232 1450 300 1536 275" fill="none" stroke="#e8ffff" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" /><path d="M0 430 C200 375 360 485 560 430 C760 375 930 485 1150 430 C1330 386 1450 455 1536 430" fill="none" stroke="#b8f5ff" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

@@ -10,6 +10,7 @@ interface BeachKittySmokeVictoryOptions {
 }
 
 interface BeachKittySmokeTestApi {
+  startBossPractice: () => void;
   forceVictory: (options?: BeachKittySmokeVictoryOptions) => void;
   forceGameOver: (finalScore?: number) => Promise<void>;
   getSnapshot: () => {
@@ -18,6 +19,7 @@ interface BeachKittySmokeTestApi {
     completedLevels: CompletedLevelsState;
     highScores: HighScoreEntry[];
     score: GameScore;
+    shellAmmo?: number;
   };
 }
 

@@ -19,8 +19,9 @@ function def(
 const beachLikeEntities: BackgroundEntityDefinition[] = [
   def('CLOUD', { depth: 'far', speedMultiplier: 0.1, spawnYRange: { min: 0.5, max: 0.6 } }),
   def('BOAT', { spawnYRange: { min: 0.3, max: 0.4 } }),
+  def('AIRPLANE', { spawnYRange: { min: 0.08, max: 0.22 }, spawnEdge: 'left' }),
   def('BOAT_SINKING', { spawnYRange: { min: 0.32, max: 0.4 } }),
-  def('AIRPLANE_FIRE', { spawnYRange: { min: 0.5, max: 0.6 }, defaultBannerText: 'HELP!' }),
+  def('AIRPLANE_FIRE', { spawnYRange: { min: 0.5, max: 0.6 }, spawnEdge: 'left', defaultBannerText: 'HELP!' }),
 ];
 
 function makeGetDef(entities: BackgroundEntityDefinition[]) {
@@ -102,5 +103,28 @@ describe('spawnBackgroundEntities', () => {
       background,
     });
     expect(out).toEqual([]);
+  });
+
+  it('preserves left-edge spawn direction for planes', () => {
+    const background: BackgroundConfig = {
+      entities: beachLikeEntities,
+      spawnInterval: { normal: 1, boss: 1 },
+      cloudSpawnChance: 0,
+      midLayerSpawnTypes: ['AIRPLANE'],
+    };
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const out = spawnBackgroundEntities({
+      isChaosMode: false,
+      gameSpeed: 10,
+      innerWidth: 800,
+      innerHeight: 600,
+      getBgEntityDef: makeGetDef(beachLikeEntities),
+      background,
+    });
+    expect(out).toHaveLength(1);
+    expect(out[0].type).toBe('AIRPLANE');
+    expect(out[0].spawnEdge).toBe('left');
+    expect(out[0].x).toBeLessThan(0);
+    vi.restoreAllMocks();
   });
 });

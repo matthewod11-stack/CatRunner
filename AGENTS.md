@@ -48,6 +48,9 @@ npx tsc --noEmit
 - `docs/architecture/api-protection.md`
 - `docs/product/qa-checklist.md`
 - `docs/plans/README.md`
+- `docs/plans/level-1-asset-inventory.md`
+- `docs/plans/level-1-beach-visual-brief.md`
+- `docs/plans/level-1-beach-prompt-pack.md`
 - `docs/specs/README.md`
 
 ## Game Studio Routing

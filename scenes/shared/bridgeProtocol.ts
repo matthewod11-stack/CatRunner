@@ -3,7 +3,7 @@
  * Separated from SceneBridge.ts so Node-only tests (Vitest) can import
  * without pulling in Phaser's browser globals.
  */
-import type { LevelId, LevelConfig, PlatformerLevelConfig, LauncherLevelConfig, ShooterLevelConfig, BreakoutLevelConfig, FroggerLevelConfig, WhackLevelConfig, SnakeLevelConfig, ClimberLevelConfig, LevelCompletePayload } from '../../types';
+import type { GameScore, GameStatus, LevelId, LevelConfig, PlatformerLevelConfig, LauncherLevelConfig, ShooterLevelConfig, BreakoutLevelConfig, FroggerLevelConfig, WhackLevelConfig, SnakeLevelConfig, ClimberLevelConfig, LevelCompletePayload } from '../../types';
 import type { TuningProfile } from '../../systems/tuning/defaultTuning';
 import type { TelemetryEvent } from '../../systems/telemetry/runTelemetry';
 
@@ -23,6 +23,15 @@ export interface HudUpdatePayload {
 
 export type LevelCompleteDetails = Omit<LevelCompletePayload, 'levelId'>;
 
+export interface BridgeCallbacks {
+  onScoreUpdate?: (score: GameScore) => void;
+  onLivesChanged?: (lives: number) => void;
+  onLevelComplete?: (payload: LevelCompletePayload) => void;
+  onGameOver?: (finalScore: number) => void;
+  onStatusChange?: (status: GameStatus) => void;
+  onHudUpdate?: (data: HudUpdatePayload) => void;
+}
+
 export function withSceneLevelId(
   levelId: LevelId,
   payload: LevelCompleteDetails,
@@ -36,6 +45,7 @@ export function withSceneLevelId(
 export interface SceneInitData {
   levelId: LevelId;
   catSpriteUrl: string | null;
+  bridgeCallbacks?: BridgeCallbacks;
 }
 
 export interface RunnerSceneInitData extends SceneInitData {

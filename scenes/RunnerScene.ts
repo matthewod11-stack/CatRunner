@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { SceneBridge } from './shared/SceneBridge';
-import { BRIDGE_EVENTS, type RunnerSceneInitData, type HudUpdatePayload } from './shared/bridgeProtocol';
+import type { RunnerSceneInitData, HudUpdatePayload } from './shared/bridgeProtocol';
 import { GameStatus } from '../types';
 import type {
   ActivePowerUp,
@@ -40,6 +40,18 @@ import {
 } from '../systems/collisionHandlers';
 import { EffectsManager } from './shared/EffectsManager';
 import { PhaserAudio } from './shared/PhaserAudio';
+import {
+  BEACH_BACKGROUND_TEXTURES,
+  BEACH_BOSS_TEXTURES,
+  BEACH_IMAGE_LOADS,
+  BEACH_OBSTACLE_TEXTURES,
+  BEACH_OBSTACLE_VARIANTS,
+  BEACH_SHELL_PROJECTILE_TEXTURE,
+} from './runner/beachAssets';
+import {
+  getBossStartingShellAmmo,
+  shouldRefillBossShellAmmo,
+} from './runner/bossAmmo';
 
 /**
  * Phaser scene for the endless-runner genre (BEACH level and future runner levels).
@@ -107,6 +119,9 @@ export default class RunnerScene extends SceneBridge {
   private static readonly PLAYER_H_DUCK = 90;
 
   private static readonly ENTITY_SCALE = 0.6;
+  private static readonly SHELL_BULLET_DISPLAY_SIZE = 40;
+  private static readonly SHELL_BULLET_TRAIL_LENGTH = 66;
+  private static readonly SHELL_BULLET_Y_OFFSET = 72;
 
   // ── Input keys ──
   private keySpace!: Phaser.Input.Keyboard.Key;
@@ -116,7 +131,7 @@ export default class RunnerScene extends SceneBridge {
   private keyEsc!: Phaser.Input.Keyboard.Key;
 
   // ── Environment layer refs (for resize) ──
-  private envSky!: Phaser.GameObjects.Graphics;
+  private envSky!: Phaser.GameObjects.Image;
   private envSun!: Phaser.GameObjects.Image;
 
   // ── Obstacle spawning state (Task 1.3) ──
@@ -146,6 +161,7 @@ export default class RunnerScene extends SceneBridge {
   private bossFightStartTime = 0;
   private bossDefeating = false;
   private bossEntryCoins = 50;
+  private startAtBossPending = false;
   private bossProjectileObstacleType: ObstacleType = 'SAND_PROJECTILE';
 
   // Player bullets (shell projectiles at boss)
@@ -177,26 +193,7 @@ export default class RunnerScene extends SceneBridge {
   private runStartTime = 0;
 
   /** Texture key map for obstacle/collectible sprites */
-  private static readonly OBSTACLE_TEXTURE_MAP: Record<string, string> = {
-    CRAB: 'obs-CRAB',
-    COIN: 'obs-COIN',
-    SEAGULL: 'obs-SEAGULL',
-    BEACHBALL: 'obs-BEACHBALL',
-    SHELL: 'obs-SHELL',
-    SANDCASTLE: 'obs-SANDCASTLE',
-    PALM_TREE: 'obs-PALM_TREE',
-    SAND_PROJECTILE: 'obs-COIN',   // reuse coin texture for now
-    SPEED: 'obs-COIN',              // power-ups reuse coin with tinting
-    MAGNET: 'obs-COIN',
-    SUPER_SIZE: 'obs-COIN',
-  };
-
-  /** Tint colors for power-up sprites */
-  private static readonly POWERUP_TINTS: Record<string, number> = {
-    SPEED: 0x3b82f6,
-    MAGNET: 0x8b5cf6,
-    SUPER_SIZE: 0x22c55e,
-  };
+  private static readonly OBSTACLE_TEXTURE_MAP = BEACH_OBSTACLE_TEXTURES;
 
   init(data: RunnerSceneInitData): void {
     super.init(data);
@@ -220,38 +217,13 @@ export default class RunnerScene extends SceneBridge {
       this.load.image('cat', 'assets/sprites/cat-run.png');
     }
 
-    // Load obstacle/collectible sprites
-    this.load.image('obs-CRAB', 'assets/sprites/crab.png');
-    this.load.image('obs-COIN', 'assets/sprites/coin.png');
-    this.load.image('obs-SEAGULL', 'assets/sprites/seagull.png');
-    this.load.image('obs-BEACHBALL', 'assets/sprites/beachball.png');
-    this.load.image('obs-SHELL', 'assets/sprites/shell.png');
-    this.load.image('obs-SANDCASTLE', 'assets/sprites/sandcastle.png');
-    this.load.image('obs-PALM_TREE', 'assets/sprites/palm-tree.png');
-    this.load.image('boss', 'assets/sprites/sand-monster.png');
+    for (const asset of BEACH_IMAGE_LOADS) {
+      this.load.image(asset.key, asset.path);
+    }
 
     // Shared particle texture for EffectsManager
     EffectsManager.createParticleTexture(this);
 
-    // Environment sprites
-    this.load.image('env-sand', 'assets/sprites/sand-tile.png');
-    this.load.image('env-ocean', 'assets/sprites/ocean-tile.png');
-    this.load.image('env-foam', 'assets/sprites/waterline-foam.png');
-    this.load.image('env-sun', 'assets/sprites/sun.png');
-    this.load.image('env-cloud-1', 'assets/sprites/cloud-1.png');
-    this.load.image('env-cloud-2', 'assets/sprites/cloud-2.png');
-
-    // Background entity sprites
-    this.load.image('bg-boat', 'assets/sprites/boat.png');
-    this.load.image('bg-boat-sinking', 'assets/sprites/boat-sinking.png');
-    this.load.image('bg-airplane', 'assets/sprites/airplane.png');
-    this.load.image('bg-airplane-fire', 'assets/sprites/airplane-fire.png');
-    this.load.image('bg-surfer', 'assets/sprites/surfer.png');
-    this.load.image('bg-jetski', 'assets/sprites/jetski.png');
-
-    // Gameplay variant sprites
-    this.load.image('obs-CRAB-2', 'assets/sprites/crab-2.png');
-    this.load.image('obs-SEAGULL-2', 'assets/sprites/seagull-2.png');
   }
 
   create(): void {
@@ -265,18 +237,9 @@ export default class RunnerScene extends SceneBridge {
     this.groundYScreen = height - this.themeGroundY;
 
     // Layer 0: Sky background (full canvas)
-    this.envSky = this.add.graphics().setDepth(0);
-    this.envSky.fillGradientStyle(
-      0x8ed8ff,
-      0x8ed8ff,
-      0xffefc4,
-      0xffefc4,
-      1,
-      1,
-      1,
-      1,
-    );
-    this.envSky.fillRect(0, 0, width, height);
+    this.envSky = this.add.image(width / 2, height / 2, 'env-sky')
+      .setDisplaySize(width, height)
+      .setDepth(0);
 
     // Layer 1: Sun
     this.envSun = this.add.image(width * 0.35, height * 0.12, 'env-sun')
@@ -387,6 +350,17 @@ export default class RunnerScene extends SceneBridge {
     this.bossFightStartTime = 0;
     this.bossDefeating = false;
     this.bossEntryCoins = getBossEntryCoinThreshold(this.levelConfig, this.tuning);
+    this.startAtBossPending = false;
+    if (this.startAtBoss) {
+      this.gameScore.coins = this.bossEntryCoins;
+      this.startAtBossPending = true;
+      this.time.delayedCall(150, () => {
+        this.startAtBossPending = false;
+        if (!this.gameOver && this.status === GameStatus.PLAYING) {
+          this.triggerBossFight(Date.now());
+        }
+      });
+    }
     this.bossProjectileObstacleType = this.levelConfig.boss.projectileObstacleType ?? 'SAND_PROJECTILE';
     this.bullets = [];
     this.bulletGraphics.forEach(g => g.destroy());
@@ -494,7 +468,7 @@ export default class RunnerScene extends SceneBridge {
     this.speed = Math.min(this.speed, this.tuning.maxSpeed);
 
     // ── Boss entry trigger (Task 1.7) ──
-    if (this.status === GameStatus.PLAYING && this.gameScore.coins >= this.bossEntryCoins) {
+    if (this.status === GameStatus.PLAYING && !this.startAtBossPending && this.gameScore.coins >= this.bossEntryCoins) {
       this.triggerBossFight(now);
     }
 
@@ -521,30 +495,7 @@ export default class RunnerScene extends SceneBridge {
       this.updateBossDefeatAnimation(now, frames);
     }
 
-    // ── Boss-phase shell spawning (ammo replenishment) ──
-    if (this.status === GameStatus.BOSS_FIGHT && !this.bossDefeating) {
-      const now2 = Date.now();
-      if (!this.lastBossShellSpawn || now2 - this.lastBossShellSpawn > 3500) {
-        this.lastBossShellSpawn = now2;
-        const scale = RunnerScene.ENTITY_SCALE;
-        const shell: WorldEntity = {
-          id: Date.now() + Math.random(),
-          type: 'SHELL',
-          x: this.canvasWidth + 100,
-          y: 0,
-          width: 40,
-          height: 40,
-          isCollected: false,
-          isPassed: false,
-          speed: this.speed,
-        };
-        this.obstacles.push(shell);
-        const sprite = this.add.image(shell.x, this.groundYScreen, this.getObstacleTextureKey('SHELL'))
-          .setDisplaySize(shell.width * scale, shell.height * scale)
-          .setDepth(10);
-        this.obstacleGraphics.set(shell.id, sprite);
-      }
-    }
+    this.updateBossShellAmmo(now);
 
     // ── Bullet update (Task 1.7) ──
     this.updateBullets();
@@ -1003,7 +954,7 @@ export default class RunnerScene extends SceneBridge {
         this.effects.spawnParticles(obsCenterX, obsScreenY + (obs.height * scale) / 2, 0xfbbf24, 16);
         this.effects.floatingScore(obsCenterX, obsScreenY, `+${5 * this.gameScore.multiplier}`, '#fbbf24');
         // Update HUD with shell count
-        this.events.emit(BRIDGE_EVENTS.HUD_UPDATE, { shellAmmo: this.shellAmmo } satisfies HudUpdatePayload);
+        this.emitHudUpdate({ shellAmmo: this.shellAmmo } satisfies HudUpdatePayload);
         continue;
       }
 
@@ -1138,8 +1089,10 @@ export default class RunnerScene extends SceneBridge {
   }
 
   private getObstacleTextureKeyWithVariant(type: string): string {
-    if (type === 'CRAB' && Math.random() < 0.5) return 'obs-CRAB-2';
-    if (type === 'SEAGULL' && Math.random() < 0.5) return 'obs-SEAGULL-2';
+    const variants = BEACH_OBSTACLE_VARIANTS[type];
+    if (variants) {
+      return variants[Math.floor(Math.random() * variants.length)];
+    }
     return this.getObstacleTextureKey(type);
   }
 
@@ -1159,11 +1112,6 @@ export default class RunnerScene extends SceneBridge {
       .setDisplaySize(entity.width * scale, entity.height * scale)
       .setOrigin(0, 0)
       .setDepth(5);
-
-    const tint = RunnerScene.POWERUP_TINTS[entity.type];
-    if (tint) {
-      sprite.setTint(tint);
-    }
 
     this.obstacleGraphics.set(entity.id, sprite);
   }
@@ -1256,32 +1204,12 @@ export default class RunnerScene extends SceneBridge {
     this.bossHealthBarBg = this.add.graphics();
     this.bossHealthBarBg.setDepth(9);
 
-    // Guarantee starting ammo — spawn emergency shells AFTER the clear
-    const needsEmergencyShells = this.shellAmmo === 0;
-    if (needsEmergencyShells) {
-      const scale = RunnerScene.ENTITY_SCALE;
-      for (let i = 0; i < 3; i++) {
-        const shell: WorldEntity = {
-          id: Date.now() + Math.random() + i,
-          type: 'SHELL',
-          x: this.canvasWidth * 0.3 + i * 120,
-          y: 0,
-          width: 40,
-          height: 40,
-          isCollected: false,
-          isPassed: false,
-          speed: 0,
-        };
-        this.obstacles.push(shell);
-        const sprite = this.add.image(shell.x, this.groundYScreen, this.getObstacleTextureKey('SHELL'))
-          .setDisplaySize(shell.width * scale, shell.height * scale)
-          .setDepth(10);
-        this.obstacleGraphics.set(shell.id, sprite);
-      }
-    }
+    this.shellAmmo = getBossStartingShellAmmo(this.shellAmmo, bossCfg.health, bossCfg.damagePerHit);
+    this.lastBossShellSpawn = Date.now();
+    this.emitHudUpdate({ shellAmmo: this.shellAmmo } satisfies HudUpdatePayload);
 
     // 2-second intro delay before boss attacks
-    this.bossAttackStartTime = Date.now() + (needsEmergencyShells ? 2000 : 0);
+    this.bossAttackStartTime = Date.now() + 1200;
 
     // Discoverability hint
     const hint = this.add.text(this.canvasWidth / 2, this.canvasHeight / 3, 'Press DOWN to throw shells!', {
@@ -1346,6 +1274,7 @@ export default class RunnerScene extends SceneBridge {
 
       this.obstacles.push(projectile);
       this.createObstacleGraphics(projectile);
+      this.showBossState(BEACH_BOSS_TEXTURES.attack, 180);
 
       const bossFaceX = this.boss.x + this.boss.width * 0.5;
       const bossFaceY = (this.boss.y ?? 0) + this.boss.height * 0.85;
@@ -1428,12 +1357,12 @@ export default class RunnerScene extends SceneBridge {
     this.audio.playSfx('shoot');
 
     const scale = RunnerScene.ENTITY_SCALE;
-    const bulletSize = 20 * scale;
+    const bulletSize = RunnerScene.SHELL_BULLET_DISPLAY_SIZE;
 
     const bullet: Bullet = {
       id: now + Math.random(),
       x: this.playerX + (100 * scale),
-      y: this.themeGroundY + this.playerY + (30 * scale),
+      y: this.themeGroundY + this.playerY + RunnerScene.SHELL_BULLET_Y_OFFSET,
       speed: 18,
       size: bulletSize,
     };
@@ -1442,13 +1371,34 @@ export default class RunnerScene extends SceneBridge {
 
     // Render at screen coords (bullet.y is in collision coords: groundY + playerY + offset)
     const screenY = this.groundYScreen - (bullet.y - this.themeGroundY);
-    const img = this.add.image(bullet.x, screenY, 'obs-SHELL')
+    const trail = this.add.graphics().setDepth(12);
+    this.bulletGraphics.set(bullet.id, trail);
+    const img = this.add.image(bullet.x, screenY, BEACH_SHELL_PROJECTILE_TEXTURE)
       .setDisplaySize(bulletSize, bulletSize)
-      .setDepth(12);
+      .setDepth(13);
     this.bulletSprites.set(bullet.id, img);
 
     // Update HUD
-    this.events.emit(BRIDGE_EVENTS.HUD_UPDATE, { shellAmmo: this.shellAmmo } satisfies HudUpdatePayload);
+    this.emitHudUpdate({ shellAmmo: this.shellAmmo } satisfies HudUpdatePayload);
+  }
+
+  private updateBossShellAmmo(now: number): void {
+    if (this.status !== GameStatus.BOSS_FIGHT) return;
+    if (!shouldRefillBossShellAmmo({
+      ammo: this.shellAmmo,
+      bossAttackStartTime: this.bossAttackStartTime,
+      isDefeating: this.bossDefeating,
+      lastRefillAt: this.lastBossShellSpawn,
+      now,
+    })) {
+      return;
+    }
+
+    this.lastBossShellSpawn = now;
+    this.shellAmmo += 1;
+    this.emitHudUpdate({ shellAmmo: this.shellAmmo } satisfies HudUpdatePayload);
+    this.effects.spawnParticles(this.playerX + 70, this.groundYScreen - 70, 0xfff1c9, 10, 220);
+    this.audio.playSfx('coin');
   }
 
   /**
@@ -1491,6 +1441,10 @@ export default class RunnerScene extends SceneBridge {
             this.gameScore.multiplier += 3;
 
             this.bossDefeating = true;
+            this.bossSprite
+              ?.setTexture(BEACH_BOSS_TEXTURES.defeat)
+              .setDepth(6);
+            this.bossHealthBarBg?.clear();
             this.defeatAnimationStart = Date.now();
             this.defeatPoopsSpawned = 0;
             this.defeatPoops = [];
@@ -1505,6 +1459,8 @@ export default class RunnerScene extends SceneBridge {
               }
               return true;
             });
+          } else {
+            this.showBossState(BEACH_BOSS_TEXTURES.hit, 160);
           }
           continue;
         }
@@ -1523,6 +1479,8 @@ export default class RunnerScene extends SceneBridge {
         if (removeSet.has(b.id)) {
           const sprite = this.bulletSprites.get(b.id);
           if (sprite) { sprite.destroy(); this.bulletSprites.delete(b.id); }
+          const trail = this.bulletGraphics.get(b.id);
+          if (trail) { trail.destroy(); this.bulletGraphics.delete(b.id); }
           return false;
         }
         return true;
@@ -1533,7 +1491,17 @@ export default class RunnerScene extends SceneBridge {
     for (const b of this.bullets) {
       const sprite = this.bulletSprites.get(b.id);
       if (sprite) {
-        sprite.setPosition(b.x, this.groundYScreen - (b.y - this.themeGroundY));
+        const screenY = this.groundYScreen - (b.y - this.themeGroundY);
+        sprite.setPosition(b.x, screenY);
+        sprite.setAngle((b.x * 1.8) % 360);
+        const trail = this.bulletGraphics.get(b.id);
+        if (trail) {
+          trail.clear();
+          trail.lineStyle(8, 0xfff1a8, 0.78);
+          trail.lineBetween(b.x - RunnerScene.SHELL_BULLET_TRAIL_LENGTH, screenY + 4, b.x - 10, screenY);
+          trail.lineStyle(3, 0xffffff, 0.92);
+          trail.lineBetween(b.x - RunnerScene.SHELL_BULLET_TRAIL_LENGTH * 0.75, screenY - 2, b.x - 6, screenY - 5);
+        }
       }
     }
   }
@@ -1600,7 +1568,7 @@ export default class RunnerScene extends SceneBridge {
 
       this.defeatPoops.push(newPoop);
       const gfx = this.add.graphics();
-      gfx.setDepth(7);
+      gfx.setDepth(10);
       this.defeatPoopGraphics.set(newPoop.id, gfx);
       this.defeatPoopsSpawned++;
 
@@ -1719,7 +1687,7 @@ export default class RunnerScene extends SceneBridge {
     if (ent.type === 'CLOUD' && Math.random() < 0.5) textureKey = 'env-cloud-2';
 
     const depth = RunnerScene.BG_DEPTH[ent.depth ?? 'mid'] ?? 2;
-    const alpha = ent.isChaos ? 0.8 : 0.5;
+    const alpha = ent.isChaos ? 0.86 : (RunnerScene.BG_ALPHA[ent.type] ?? 0.58);
 
     const sprite = this.add.image(ent.x, ent.y, textureKey)
       .setDisplaySize(ent.width, ent.height)
@@ -1743,7 +1711,7 @@ export default class RunnerScene extends SceneBridge {
     const speedMult = isActive ? 1.0 : 0.1;
 
     for (const bg of this.backgroundEntities) {
-      if (bg.type === 'JETSKI') {
+      if (bg.spawnEdge === 'left') {
         bg.x += bg.speed * speedMult;
         if (bg.x > this.canvasWidth + 200) removeIds.push(bg.id);
       } else {
@@ -1781,15 +1749,31 @@ export default class RunnerScene extends SceneBridge {
     near: 3,
   };
 
-  private static readonly BG_SPRITE_MAP: Record<string, string> = {
-    BOAT: 'bg-boat',
-    BOAT_SINKING: 'bg-boat-sinking',
-    AIRPLANE: 'bg-airplane',
-    AIRPLANE_FIRE: 'bg-airplane-fire',
-    SURFER: 'bg-surfer',
-    JETSKI: 'bg-jetski',
-    CLOUD: 'env-cloud-1',
+  private static readonly BG_ALPHA: Record<string, number> = {
+    AIRPLANE: 0.68,
+    AIRPLANE_FIRE: 0.82,
+    BOAT: 0.92,
+    BOAT_SINKING: 0.95,
+    CLOUD: 0.58,
+    JETSKI: 0.9,
+    SURFER: 0.68,
   };
+
+  private static readonly BG_SPRITE_MAP: Record<string, string> = {
+    ...BEACH_BACKGROUND_TEXTURES,
+  };
+
+  private showBossState(textureKey: string, durationMs: number): void {
+    if (!this.bossSprite) return;
+    this.bossSprite.setTexture(textureKey);
+    if (textureKey === BEACH_BOSS_TEXTURES.defeat) return;
+
+    this.time.delayedCall(durationMs, () => {
+      if (this.bossSprite && !this.bossDefeating) {
+        this.bossSprite.setTexture(BEACH_BOSS_TEXTURES.idle);
+      }
+    });
+  }
 
 
   // ─── Runtime patching (dev balance panel) ───────────────────────────

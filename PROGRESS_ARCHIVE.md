@@ -2,6 +2,146 @@
 
 ---
 
+## Session: 2026-03-30 07:45 (Issue-Driven Maintenance & Overnight Agent Setup)
+
+### Completed
+- [x] **GitHub Issues strategy** — Shifted from retired `KNOWN_ISSUES.md` tracking to GitHub Issues for all tech-debt tracking
+- [x] **Overnight agent trigger** — Created scheduled Claude Code remote trigger (`trig_01WdJuhzamc5XsGBm8MAkP5K`) running nightly at 2am Pacific, targeting issues #3, #4, #10
+- [x] **Autonomous agent prompt** — Drafted Level 2 autonomous prompt that triages `tech-debt` labeled issues, respects `needs-design-decision`/`deferred` labels, and uses issue-body-as-instructions pattern
+- [x] **Enhanced issue template** — Added `Automation Hints` section (scope, do-not-touch, risk, max-files-changed, blocked-by, bail-if) to all 8 tech-debt issues (#2-#5, #7-#10)
+- [x] **Label system** — Created `needs-design-decision` label; applied to design issues #1, #6, #11, #12
+- [x] **`docs/OVERNIGHT_AGENT.md`** — Project-specific agent prompt, issue template, label conventions reference
+- [x] **`~/.claude/rules/issue-driven-maintenance.md`** — Cross-project global rule for issue-driven maintenance pattern
+
+### In Progress
+- [ ] First overnight run scheduled for 2026-03-31 ~2am Pacific — will validate the pipeline
+
+### Issues Encountered
+- None — this was a planning/infrastructure session
+
+### Next Session Should
+1. **Review overnight agent results** — Check GitHub for PRs and/or issue comments from first run
+2. **Swap to autonomous prompt** — If pipeline validates, update trigger prompt from task-list to autonomous version
+3. **Retroactively update remaining issues** — Add `Automation Hints` to any new issues filed
+4. **Keep `KNOWN_ISSUES.md` retired** — All items migrated to GitHub Issues
+
+---
+
+## Session: 2026-03-24 11:45 (All 9 Campaign Levels — Skeleton Build Sprint)
+
+### Completed
+- [x] **Phase 1 audit & roadmap update** — Verified Phase 1 Beach port is COMPLETE (14/16 criteria, 2 minor deferrals). Updated ROADMAP_V3 with audit notes rather than retroactively checking granular sub-steps.
+- [x] **Multi-genre architecture** — `AnyLevelConfig` discriminated union, `getAnyLevelConfig()`, genre-keyed scene factory in App.tsx, Arcade Physics added to Phaser game config.
+- [x] **Dev unlock all levels** — `DEV_UNLOCK_ALL` flag (active in dev mode) bypasses linear unlock progression.
+- [x] **Level 2 — City Heights (Platformer)** — Mario-style L/R/jump, procedural platform generation, parallax city buildings with lit windows, coins, fall death + respawn, distance-based victory (15k px to penthouse).
+- [x] **Level 3 — Countertop Chaos (Launcher)** — Angry Birds slingshot aiming with trajectory preview, 3 material types (glass/wood/metal), 4 structure templates, 5 rounds, score-based victory.
+- [x] **Level 4 — Cardboard Cosmos (Shooter)** — Galaga-style wave formations, auto-fire, 5 waves + boss wave (Mouse King 20HP), deferred destroy pattern to prevent Phaser iterator corruption.
+- [x] **Level 5 — Yarn Ball Bounce (Breakout)** — Paddle + yarn ball, 70 rainbow bricks (7 rows), angle reflection, ball speed escalation, clear-all victory.
+- [x] **Level 6 — Busy Crossing (Frogger)** — 4 road lanes + 4 water lanes, discrete grid movement, ride logs, 60s timer, 3 crossings to win.
+- [x] **Level 7 — Garden Patrol (Whack-a-Mole)** — 3x3 hole grid, click/tap mice, 3 mouse types, combo multiplier, 60s timer, score-based victory.
+- [x] **Level 8 — Garden Snake (Snake)** — Grid movement, grow tail on eat, wall/self collision, speed escalation, survive 2 min to win.
+- [x] **Level 9 — The Cat Tree (Climber)** — Doodle Jump-style auto-bounce, solid/spring/breakable platforms, auto-scroll acceleration, sky gradient shift, 10k px to victory.
+
+### Issues Encountered
+- **Phaser Arcade Physics missing** — PhaserGame.tsx had no `physics` config (RunnerScene uses custom physics). Added `physics: { default: 'arcade' }` to fix blank screen on platformer.
+- **ShooterScene freeze** — Destroying enemies mid-Phaser-Group-iterate corrupted the iterator. Fixed with deferred destroy pattern (mark inactive → flush after all iteration).
+- **Wave transition bug** — `checkWaveComplete()` ran every frame while enemies were 0, incrementing wave index repeatedly. Fixed with `waveTransitioning` guard flag.
+
+### Next Session Should
+1. **User brain dump** — Matt will test all 9 levels and provide high-level feedback/priorities
+2. **Visual polish pass** — All levels use placeholder graphics (colored rectangles). Sprite art, better backgrounds, themed particles needed.
+3. **Audio per genre** — Each level needs its own music mood + genre-appropriate SFX
+4. **Game feel tuning** — Difficulty curves, scoring balance, victory thresholds per level
+5. **Phase 2 (Campaign Screen)** and **Phase 3 (Sprite Pipeline)** still deferred but may become priority depending on feedback
+
+---
+
+### Checkpoint: 2026-03-24 10:35
+
+**Currently Working On:** Level 2 (City Heights) — procedural platformer + multi-genre architecture
+
+**Status:**
+- [x] Audited Phase 1 Beach port — marked COMPLETE in ROADMAP_V3 (14/16 done, telemetry + speed lines deferred)
+- [x] Added `PlatformerLevelConfig` type system (`types.ts`) — generation params, theme, player config
+- [x] Created `levels/rooftops.ts` — night city theme, procedural platform params, double jump, 15k px victory
+- [x] Created `scenes/PlatformerScene.ts` — Arcade Physics, Mario-style L/R/jump, procedural platforms + coins, parallax city buildings, fall death + respawn, distance-based victory
+- [x] Multi-genre scene routing — `getAnyLevelConfig()`, App.tsx branches sceneFactory by genre
+- [x] Added Arcade Physics to Phaser game config (was missing — RunnerScene uses custom physics)
+- [x] Dev unlock all levels via `import.meta.env.DEV` flag
+- [x] Added ROOFTOPS to `LEVEL_ORDER` in catalog
+- [ ] Level 3 (Countertop Chaos) — launcher genre, next up
+
+**If Resuming:**
+1. Start Level 3 (KITCHEN / launcher genre) — follow same pattern: config + scene + register
+2. All 76 tests passing, 0 type errors as of checkpoint
+3. PlatformerScene is playable but bare bones — enemies, moving platforms, boss, art TBD
+
+**Files Modified:**
+- `types.ts` — PlatformerLevelConfig, PlatformGenerationConfig, PlatformerThemeConfig, AnyLevelConfig union
+- `levels/rooftops.ts` — NEW: rooftops level config
+- `scenes/PlatformerScene.ts` — NEW: ~400 line platformer scene
+- `scenes/shared/bridgeProtocol.ts` — PlatformerSceneInitData
+- `scenes/shared/SceneBridge.ts` — re-export PlatformerSceneInitData
+- `levels/index.ts` — ROOFTOPS in registry, getAnyLevelConfig()
+- `levels/catalog.ts` — ROOFTOPS in LEVEL_ORDER
+- `components/PhaserGame.tsx` — Arcade Physics in game config
+- `components/LevelSelection.tsx` — devUnlockAll prop
+- `App.tsx` — genre-based scene routing, DEV_UNLOCK_ALL, null guards for non-runner levels
+- `ROADMAP_V3.md` — Phase 1 marked COMPLETE with audit notes
+
+---
+
+## Session: 2026-03-22 17:00 (Phase 1.5 Polish Complete + Merge to Main)
+
+### Completed
+- [x] **Character Sprite System** — added shared architecture section to ROADMAP_V3, reworked Phase 3 from programmatic transforms to AI sprite generation pipeline, added sprite stubs to all 9 level phases
+- [x] **Phase 0 verified** — confirmed all 49 Phase 0 tasks (Phaser install, V3 types, SceneBridge, PhaserGame, SpriteLoader, persistence migration, levelCompletion) already implemented; checked off in roadmap
+- [x] **Background entity rebalancing** — sizes reduced ~50%, Y ranges corrected (clouds/planes in sky band, boats/surfers on ocean band), speeds reduced to convey distance
+- [x] **Ground obstacle alignment** — fixed rendering formula: `groundYScreen - (entityY - themeGroundY)` so obstacles sit ON the ground, not 100px above
+- [x] **Bidirectional pause** — transport buttons now sync to RunnerScene via `applyRuntimePatch({isPaused})`; keyboard P/ESC already worked via HudUpdatePayload bridge
+- [x] **VFD-style HUD** — moved HUD from CRT glass overlay to dark shelf in TV bezel; green VFD score counter, red LED life dots, amber multiplier, CH03 indicator
+- [x] **Shell throw fix** — bullets and defeat poop animation used old rendering formula; same groundY offset fix applied
+- [x] **Merged `phase-1.5-beach-polish` into `main`** — 24 commits, clean merge
+
+### Issues Encountered
+- Rendering coordinate bug was pervasive: every `groundYScreen - entityY` needed `- themeGroundY` offset. The DOM engine uses y=groundY as "at ground" but the Phaser port was treating it as "groundY pixels above ground zero". Fixed in 8 locations across obstacles, boss, bullets, and defeat poops.
+
+### Next Session Should
+1. **Visual QA** — run `npm run dev` and play through Beach level to verify all fixes look correct
+2. **Begin Phase 1 tasks** from ROADMAP_V3 — RunnerScene skeleton already exists, start porting player physics (Task 1.2)
+3. **Consider sprite regeneration** — current Gemini-generated sprites are functional but not great; explore better prompts or tools
+4. Phase 3 (sprite generation pipeline) can start any time after Phase 1 Beach port parity
+
+---
+
+## Session: 2026-03-22 16:30 (Character Sprite System — Roadmap Architecture)
+
+### Completed
+- [x] Added "Character Sprite System" shared section to ROADMAP_V3 — establishes per-level AI sprite generation architecture, IndexedDB storage model (compound keys: `{catDesignId}:{levelId}:{poseId}`), fallback strategy, and closet evolution
+- [x] Added Task 1.14: Beach Sprite Requirements to Phase 1 — defines 5 runner poses (run, jump, duck, hit, idle) with prompt strategy and validation criteria
+- [x] Reworked Phase 3 entirely — replaced `catPoseTransforms` (programmatic crop/flip) with "Character Sprite Generation Pipeline" (5 tasks: storage, generator service, PhaserGame integration, closet UI, level config)
+- [x] Updated Genre Level Template to include sprite requirements as step 2
+- [x] Added preliminary sprite requirement stubs to all 8 level tasks (Tasks 4–11)
+- [x] Updated File Map: `catPoseTransforms.ts` → `catSpriteGenerator.ts`
+
+### Design Decisions
+- **Per-sprite, not sprite-sheet:** Gemini generates one pose at a time (not a batch sheet) — more reliable for AI generation
+- **Lazy generation:** Sprites generate on first level entry, cached for replay. Optional eager "generate all" from closet
+- **Fallback always works:** Missing sprites use base equipped sprite — game is always playable with single sprite
+- **Movement lists are level-specific:** Can't spec sprites until the level's mechanics are built, so sprite reqs are defined during each level phase, not upfront
+- **Base prompt = closet identity:** The existing cat description + reference image becomes the seed for all per-level sprite generation
+
+### Issues Encountered
+- None — this was a planning/roadmap session
+
+### Next Session Should
+1. **Continue Phase 1.5 visual polish** — obstacle ground alignment, background entity rebalancing, HUD into TV bezel, P/ESC pause wiring (from previous session's list)
+2. After Phase 1.5 visual polish → merge `phase-1.5-beach-polish` into main
+3. Begin Phase 0 tasks from ROADMAP_V3 (Phaser install, V3 types, SceneBridge)
+4. Task 1.14 (Beach sprite validation) can happen any time after sprite generation pipeline exists (Phase 3)
+
+---
+
 ## Session: 2026-03-22 16:00 (Phase 1.5: Beach Polish — Implementation + TV Frame Debugging)
 
 ### Completed
@@ -178,6 +318,8 @@
 3. Clean up progression state naming (`defeatedBosses` → `completedLevels`) and collapse campaign ordering into one authoritative source
 4. Add at least one component/browser test for the campaign screen states (implemented, locked, coming soon, completed)
 
+---
+
 ## Session: 2026-03-20 12:00 (Roadmap V3 hardening + new machine setup)
 
 ### Completed
@@ -349,6 +491,8 @@
 - [x] [systems/bossSystem.ts](systems/bossSystem.ts): spawn rate, `createBossProjectileObstacle`, boss pose / facing helpers
 - [x] [systems/bossComponents.tsx](systems/bossComponents.tsx): `LA
 
+---
+
 ## Session: 2026-03-19 (Phase 5 — Obstacle refactor + LevelContext)
 
 **Phase:** 5 — Obstacle Component Refactor
@@ -496,5 +640,3 @@ App.tsx
 
 ### Next Session Should
 - *(Superseded — Phase 2 types were already in `types.ts`; next technical work is Phase 4 wiring / Phase 5.)*
-
----

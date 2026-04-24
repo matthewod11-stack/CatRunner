@@ -70,6 +70,21 @@ test.describe('browser smoke', () => {
     await page.getByRole('button', { name: /eject/i }).click();
 
     await expect(page.getByRole('heading', { name: /beach kitty/i })).toBeVisible();
+    await expectSmokeApi(page);
+    await page.evaluate(() => {
+      window.__BEACH_KITTY_TEST_API__?.startBossPractice();
+    });
+    await expect(page.getByRole('button', { name: /eject/i })).toBeVisible();
+    await expect
+      .poll(async () => page.evaluate(() => window.__BEACH_KITTY_TEST_API__?.getSnapshot().status))
+      .toBe('BOSS_FIGHT');
+    await expect
+      .poll(async () => page.evaluate(() => window.__BEACH_KITTY_TEST_API__?.getSnapshot().shellAmmo ?? 0))
+      .toBeGreaterThanOrEqual(5);
+    await attachScreenshot(testInfo, page, 'boss-practice-ammo');
+    await page.getByRole('button', { name: /eject/i }).click();
+
+    await expect(page.getByRole('heading', { name: /beach kitty/i })).toBeVisible();
     await page.getByRole('button', { name: /city heights/i }).click();
     await page.getByRole('button', { name: /start run on city heights/i }).click();
     await expect(page.getByRole('button', { name: /eject/i })).toBeVisible();

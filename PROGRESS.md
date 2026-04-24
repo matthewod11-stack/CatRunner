@@ -34,6 +34,121 @@ sed -n '1,160p' ROADMAP_V4.md
 Most recent session should be first.
 -->
 
+---
+
+## Session: 2026-04-24 14:26 (Roadmap V4 Phase 1 handoff)
+
+### Completed
+- Completed Roadmap V4 Phase 0 and Phase 1 for Beach: asset strategy, Beach art brief, prompt pack, generated SVG world-art pack, and Beach asset manifest
+- Wired RunnerScene to deterministic Beach art for environment, obstacles, collectibles, power-ups, background entities, boss states, and shell projectile art
+- Polished Phase 1 assets from live review: cleaner sun/clouds, stronger beachball, larger sandcastle, higher-fidelity Sand Monster, improved boats/jetskis, and left-to-right planes for depth
+- Fixed boss fight shell economy so boss entry grants enough shell ammo, preserves earned ammo, and refills a small floor instead of leaving players stuck
+- Improved boss feedback with readable thrown shell trail, boss hit states, and correct defeat burial layering
+- Fixed React/Phaser bridge startup updates by passing direct bridge callbacks, and expanded Playwright smoke coverage for boss-practice ammo/HUD sync
+- Updated ROADMAP_V4.md, PROGRESS.md, active Beach docs, AGENTS.md, CLAUDE.md, and features.json for the new handoff state
+
+### In Progress
+- Roadmap V4 Phase 2 is next: define and produce the animated Beach runner hero sheet
+- Phase 4 manual playtest remains open for full-run pacing, hitboxes, HUD/readability, and boss feel after the hero sheet lands
+
+### Issues Encountered
+- Boss-practice smoke revealed the boss could be visible while React still reported PLAYING; direct bridge callbacks now make scene status/HUD updates deterministic
+- Existing production build large chunk warning remains visible and should stay tracked as a later bundle-size follow-up
+
+### Next Session Should
+- Start Phase 2 from ROADMAP_V4.md and docs/plans/level-1-asset-inventory.md
+- Use the Game Studio sprite-pipeline workflow for the Beach runner hero-sheet contract before making more world-art changes
+- Keep the boss-practice smoke path as the regression guard for shell ammo and React/Phaser HUD sync
+
+---
+
+## Session: 2026-04-24 14:10 (Beach player-review polish and boss ammo fix)
+
+### Completed
+- Ran a player-review polish pass on the Phase 1 Beach art pack: simplified sun/clouds, improved boat contrast, reshaped the beachball, enlarged the sandcastle, and upgraded Sand Monster idle/attack/hit/defeat fidelity
+- Changed Beach airplane background entities to spawn left-to-right while boats continue right-to-left for better parallax depth
+- Replaced fragile boss emergency shell pickups with a tested boss ammo economy: boss entry now tops up enough shell ammo to win, preserves extra earned ammo, and refills a small ammo floor after the intro
+- Added `scenes/runner/bossAmmo.ts` with focused unit coverage for required shell hits, boss-start top-up, and refill timing
+- Added a dev smoke hook for boss-practice startup and expanded Playwright smoke coverage to assert boss practice reaches `BOSS_FIGHT` with at least enough shell ammo
+- Fixed a bridge gap found by that smoke test: Phaser scene updates now reach React through direct bridge callbacks, and RunnerScene shell ammo HUD updates use `emitHudUpdate`
+- Improved boss shell readability with a larger shell projectile, elevated throw path, spin, and bright trail
+- Moved the defeated Sand Monster behind the falling defeat debris and cleared the boss health bar once burial starts
+- Increased water-entity readability by enlarging boats/jetskis, raising their waterline spawn band, and increasing their runtime opacity
+- Updated `ROADMAP_V4.md`, the Beach visual brief, and prompt pack to record the polish decisions and pulled-forward manifest/runtime cleanup
+
+### In Progress
+- `ROADMAP_V4.md` Phase 2 remains the next active execution target: define and produce the animated Beach runner hero sheet
+- Phase 4 still needs a longer manual playtest for full run pacing, hitbox feel, and boss fairness after the hero sheet lands
+
+### Issues Encountered
+- The new boss-practice smoke check first revealed that the boss was visible while React still reported `PLAYING`; direct bridge callbacks fixed the startup/status/HUD handoff
+- The existing large main bundle warning remains during production build
+
+### Verification
+- `npm run test:run` — 43 files, 201 tests passing
+- `npx tsc --noEmit` — passing
+- `npm run build` — passing with the existing large chunk warning
+- `npm run test:smoke` — 3 browser smoke tests passing, including boss-practice ammo coverage
+- Runtime screenshot checks captured the revised asset sheet, shell-throw trail, boss burial layering, and Beach boss-practice screen
+
+### Next Session Should
+- Start Phase 2 with the Beach runner hero-sheet contract and keep using the Game Studio / sprite-pipeline workflow
+- Use the current Beach art pack as the visual baseline unless a full manual playtest finds scale or hitbox issues
+- Keep the boss-practice smoke path as the regression guard for shell ammo and React/Phaser HUD sync
+
+---
+
+## Session: 2026-04-24 13:30 (Roadmap V4 Phase 1 Beach world art pack)
+
+### Completed
+- Created the Beach visual brief in `docs/plans/level-1-beach-visual-brief.md`
+- Created the Beach prompt/source-generation pack in `docs/plans/level-1-beach-prompt-pack.md`
+- Added `scripts/generate-beach-art-pack.mjs` and generated a committed SVG world-art baseline under `assets/sprites/beach/`
+- Added `scenes/runner/beachAssets.ts` as the Beach asset manifest and `scenes/runner/beachAssets.test.ts` to lock manifest coverage
+- Wired `RunnerScene` to the Beach manifest for environment, obstacles, collectibles, power-ups, background entities, boss states, and shell projectile art
+- Removed the runtime coin-texture stand-ins for `SAND_PROJECTILE`, `SPEED`, `MAGNET`, and `SUPER_SIZE`
+- Marked `ROADMAP_V4.md` Phase 1 complete and updated the active inventory plan with Phase 1 sources/status
+- Verified `npm run test:run`, `npm run test:smoke`, `npx tsc --noEmit`, and `npm run build`
+
+### In Progress
+- `ROADMAP_V4.md` Phase 2 is the next active execution target: define and produce the animated Beach runner hero sheet
+- Phase 4 still needs a focused in-game readability/playtest pass against the new SVG pack for scale, baseline, parallax, hitboxes, and HUD clarity
+
+### Issues Encountered
+- Build remains green but `RunnerScene` grew from the imported SVG manifest; the existing large main bundle warning remains visible
+
+### Next Session Should
+- Start `ROADMAP_V4.md` Phase 2 with the Beach runner hero-sheet contract
+- Decide whether the Phase 2 hero sheet should be SVG-authored, generated as a raster sheet, or produced through the documented sprite-pipeline workflow
+- Run a focused Beach playtest before treating the Phase 1 SVG art as fully polished
+
+---
+
+## Session: 2026-04-24 13:10 (Roadmap V4 Phase 0 complete)
+
+### Completed
+- Locked the Level 1 gameplay-cat strategy: Beach ships with a curated animated runner hero sheet first; live cat generation remains optional and off the gameplay critical path
+- Expanded `docs/architecture/asset-pipeline.md` with the Level 1 operating decisions, critical path, deferred work, and first runtime integration targets
+- Added `docs/plans/level-1-asset-inventory.md` with the Beach asset inventory, current sources, missing final art, and manifest/runtime targets
+- Marked `ROADMAP_V4.md` Phase 0 complete and linked it to the asset-pipeline contract plus the active inventory plan
+- Kept `AGENTS.md` and `CLAUDE.md` aligned with the new active plan document
+- Removed stale local WIP by restoring `vite.config.ts` to the tracked baseline and deleting `.cursor/mcp.json`
+- Verified `npm run test:run`, `npm run test:smoke`, `npx tsc --noEmit`, and `npm run build`
+
+### In Progress
+- `ROADMAP_V4.md` Phase 1 is the next active execution target: produce the Beach visual brief and world-art pack
+- `RunnerScene` still hard-codes Beach texture loading and still reuses the coin texture for `SAND_PROJECTILE`, `SPEED`, `MAGNET`, and `SUPER_SIZE`; this is now explicitly tracked for the manifest/runtime cleanup path
+
+### Issues Encountered
+- None for Phase 0; this was a planning/docs pass with green verification
+
+### Next Session Should
+- Start `ROADMAP_V4.md` Phase 1 with the Beach visual brief: palette, line style, contrast, horizon treatment, parallax depth, and UI relationship
+- Use `docs/plans/level-1-asset-inventory.md` as the source list for the Beach prompt pack and final art selection
+- Keep live cat generation deferred unless it can satisfy the documented runner-sheet contract without slowing Beach completion
+
+---
+
 ## Session: 2026-04-23 13:20 (Roadmap V4 reset and WIP cleanup)
 
 ### Completed
@@ -53,6 +168,8 @@ Most recent session should be first.
 - Kick off `ROADMAP_V4.md` Phase 0: lock the Beach gameplay-cat strategy and finalize the Beach asset inventory
 - Start the Beach art brief / prompt pack using `docs/architecture/asset-pipeline.md`
 - Keep unrelated local WIP isolated unless it becomes part of the V4 execution plan
+
+---
 
 ## Session: 2026-04-21 21:34
 
@@ -74,6 +191,8 @@ Most recent session should be first.
 - Decide whether to wire a real `CAMPAIGN_COMPLETE` surface or keep campaign-complete state implicit through progression and Hall of Fame flows
 - Keep bundle-size follow-up visible while `dist/assets/index-*.js` remains oversized
 
+---
+
 ## Session: 2026-04-21 (V4 Phaser-only reset)
 
 ### Completed
@@ -90,6 +209,8 @@ Most recent session should be first.
 1. Run a deeper browser playtest across victory/game-over flows once richer browser control is available
 2. Continue from the next highest-priority roadmap workstream in `ROADMAP_V3.md`
 
+---
+
 ## Session: 2026-04-19 (repo cleanup and roadmap consolidation)
 
 ### Completed
@@ -104,6 +225,8 @@ Most recent session should be first.
 1. Start from `ROADMAP_V3.md`
 2. Use GitHub Issues for bugs and technical debt
 3. Continue from the highest-priority open roadmap workstream
+
+---
 
 ## Session: 2026-04-05 09:00 (City Heights Full Level Build)
 
@@ -154,143 +277,3 @@ Most recent session should be first.
 2. **Run once and approve permissions** — Click "Run now", approve gh/npm/git/file write permissions
 3. **Review first run results** — Check `state/overnight-agent-log.json` and GitHub PRs
 4. **Consider disabling remote trigger** — `trig_01WdJuhzamc5XsGBm8MAkP5K` now redundant with local task
-
----
-
-## Session: 2026-03-30 07:45 (Issue-Driven Maintenance & Overnight Agent Setup)
-
-### Completed
-- [x] **GitHub Issues strategy** — Shifted from retired `KNOWN_ISSUES.md` tracking to GitHub Issues for all tech-debt tracking
-- [x] **Overnight agent trigger** — Created scheduled Claude Code remote trigger (`trig_01WdJuhzamc5XsGBm8MAkP5K`) running nightly at 2am Pacific, targeting issues #3, #4, #10
-- [x] **Autonomous agent prompt** — Drafted Level 2 autonomous prompt that triages `tech-debt` labeled issues, respects `needs-design-decision`/`deferred` labels, and uses issue-body-as-instructions pattern
-- [x] **Enhanced issue template** — Added `Automation Hints` section (scope, do-not-touch, risk, max-files-changed, blocked-by, bail-if) to all 8 tech-debt issues (#2-#5, #7-#10)
-- [x] **Label system** — Created `needs-design-decision` label; applied to design issues #1, #6, #11, #12
-- [x] **`docs/OVERNIGHT_AGENT.md`** — Project-specific agent prompt, issue template, label conventions reference
-- [x] **`~/.claude/rules/issue-driven-maintenance.md`** — Cross-project global rule for issue-driven maintenance pattern
-
-### In Progress
-- [ ] First overnight run scheduled for 2026-03-31 ~2am Pacific — will validate the pipeline
-
-### Issues Encountered
-- None — this was a planning/infrastructure session
-
-### Next Session Should
-1. **Review overnight agent results** — Check GitHub for PRs and/or issue comments from first run
-2. **Swap to autonomous prompt** — If pipeline validates, update trigger prompt from task-list to autonomous version
-3. **Retroactively update remaining issues** — Add `Automation Hints` to any new issues filed
-4. **Keep `KNOWN_ISSUES.md` retired** — All items migrated to GitHub Issues
-
----
-
-## Session: 2026-03-24 11:45 (All 9 Campaign Levels — Skeleton Build Sprint)
-
-### Completed
-- [x] **Phase 1 audit & roadmap update** — Verified Phase 1 Beach port is COMPLETE (14/16 criteria, 2 minor deferrals). Updated ROADMAP_V3 with audit notes rather than retroactively checking granular sub-steps.
-- [x] **Multi-genre architecture** — `AnyLevelConfig` discriminated union, `getAnyLevelConfig()`, genre-keyed scene factory in App.tsx, Arcade Physics added to Phaser game config.
-- [x] **Dev unlock all levels** — `DEV_UNLOCK_ALL` flag (active in dev mode) bypasses linear unlock progression.
-- [x] **Level 2 — City Heights (Platformer)** — Mario-style L/R/jump, procedural platform generation, parallax city buildings with lit windows, coins, fall death + respawn, distance-based victory (15k px to penthouse).
-- [x] **Level 3 — Countertop Chaos (Launcher)** — Angry Birds slingshot aiming with trajectory preview, 3 material types (glass/wood/metal), 4 structure templates, 5 rounds, score-based victory.
-- [x] **Level 4 — Cardboard Cosmos (Shooter)** — Galaga-style wave formations, auto-fire, 5 waves + boss wave (Mouse King 20HP), deferred destroy pattern to prevent Phaser iterator corruption.
-- [x] **Level 5 — Yarn Ball Bounce (Breakout)** — Paddle + yarn ball, 70 rainbow bricks (7 rows), angle reflection, ball speed escalation, clear-all victory.
-- [x] **Level 6 — Busy Crossing (Frogger)** — 4 road lanes + 4 water lanes, discrete grid movement, ride logs, 60s timer, 3 crossings to win.
-- [x] **Level 7 — Garden Patrol (Whack-a-Mole)** — 3x3 hole grid, click/tap mice, 3 mouse types, combo multiplier, 60s timer, score-based victory.
-- [x] **Level 8 — Garden Snake (Snake)** — Grid movement, grow tail on eat, wall/self collision, speed escalation, survive 2 min to win.
-- [x] **Level 9 — The Cat Tree (Climber)** — Doodle Jump-style auto-bounce, solid/spring/breakable platforms, auto-scroll acceleration, sky gradient shift, 10k px to victory.
-
-### Issues Encountered
-- **Phaser Arcade Physics missing** — PhaserGame.tsx had no `physics` config (RunnerScene uses custom physics). Added `physics: { default: 'arcade' }` to fix blank screen on platformer.
-- **ShooterScene freeze** — Destroying enemies mid-Phaser-Group-iterate corrupted the iterator. Fixed with deferred destroy pattern (mark inactive → flush after all iteration).
-- **Wave transition bug** — `checkWaveComplete()` ran every frame while enemies were 0, incrementing wave index repeatedly. Fixed with `waveTransitioning` guard flag.
-
-### Next Session Should
-1. **User brain dump** — Matt will test all 9 levels and provide high-level feedback/priorities
-2. **Visual polish pass** — All levels use placeholder graphics (colored rectangles). Sprite art, better backgrounds, themed particles needed.
-3. **Audio per genre** — Each level needs its own music mood + genre-appropriate SFX
-4. **Game feel tuning** — Difficulty curves, scoring balance, victory thresholds per level
-5. **Phase 2 (Campaign Screen)** and **Phase 3 (Sprite Pipeline)** still deferred but may become priority depending on feedback
-
----
-
-### Checkpoint: 2026-03-24 10:35
-
-**Currently Working On:** Level 2 (City Heights) — procedural platformer + multi-genre architecture
-
-**Status:**
-- [x] Audited Phase 1 Beach port — marked COMPLETE in ROADMAP_V3 (14/16 done, telemetry + speed lines deferred)
-- [x] Added `PlatformerLevelConfig` type system (`types.ts`) — generation params, theme, player config
-- [x] Created `levels/rooftops.ts` — night city theme, procedural platform params, double jump, 15k px victory
-- [x] Created `scenes/PlatformerScene.ts` — Arcade Physics, Mario-style L/R/jump, procedural platforms + coins, parallax city buildings, fall death + respawn, distance-based victory
-- [x] Multi-genre scene routing — `getAnyLevelConfig()`, App.tsx branches sceneFactory by genre
-- [x] Added Arcade Physics to Phaser game config (was missing — RunnerScene uses custom physics)
-- [x] Dev unlock all levels via `import.meta.env.DEV` flag
-- [x] Added ROOFTOPS to `LEVEL_ORDER` in catalog
-- [ ] Level 3 (Countertop Chaos) — launcher genre, next up
-
-**If Resuming:**
-1. Start Level 3 (KITCHEN / launcher genre) — follow same pattern: config + scene + register
-2. All 76 tests passing, 0 type errors as of checkpoint
-3. PlatformerScene is playable but bare bones — enemies, moving platforms, boss, art TBD
-
-**Files Modified:**
-- `types.ts` — PlatformerLevelConfig, PlatformGenerationConfig, PlatformerThemeConfig, AnyLevelConfig union
-- `levels/rooftops.ts` — NEW: rooftops level config
-- `scenes/PlatformerScene.ts` — NEW: ~400 line platformer scene
-- `scenes/shared/bridgeProtocol.ts` — PlatformerSceneInitData
-- `scenes/shared/SceneBridge.ts` — re-export PlatformerSceneInitData
-- `levels/index.ts` — ROOFTOPS in registry, getAnyLevelConfig()
-- `levels/catalog.ts` — ROOFTOPS in LEVEL_ORDER
-- `components/PhaserGame.tsx` — Arcade Physics in game config
-- `components/LevelSelection.tsx` — devUnlockAll prop
-- `App.tsx` — genre-based scene routing, DEV_UNLOCK_ALL, null guards for non-runner levels
-- `ROADMAP_V3.md` — Phase 1 marked COMPLETE with audit notes
-
-## Session: 2026-03-22 17:00 (Phase 1.5 Polish Complete + Merge to Main)
-
-### Completed
-- [x] **Character Sprite System** — added shared architecture section to ROADMAP_V3, reworked Phase 3 from programmatic transforms to AI sprite generation pipeline, added sprite stubs to all 9 level phases
-- [x] **Phase 0 verified** — confirmed all 49 Phase 0 tasks (Phaser install, V3 types, SceneBridge, PhaserGame, SpriteLoader, persistence migration, levelCompletion) already implemented; checked off in roadmap
-- [x] **Background entity rebalancing** — sizes reduced ~50%, Y ranges corrected (clouds/planes in sky band, boats/surfers on ocean band), speeds reduced to convey distance
-- [x] **Ground obstacle alignment** — fixed rendering formula: `groundYScreen - (entityY - themeGroundY)` so obstacles sit ON the ground, not 100px above
-- [x] **Bidirectional pause** — transport buttons now sync to RunnerScene via `applyRuntimePatch({isPaused})`; keyboard P/ESC already worked via HudUpdatePayload bridge
-- [x] **VFD-style HUD** — moved HUD from CRT glass overlay to dark shelf in TV bezel; green VFD score counter, red LED life dots, amber multiplier, CH03 indicator
-- [x] **Shell throw fix** — bullets and defeat poop animation used old rendering formula; same groundY offset fix applied
-- [x] **Merged `phase-1.5-beach-polish` into `main`** — 24 commits, clean merge
-
-### Issues Encountered
-- Rendering coordinate bug was pervasive: every `groundYScreen - entityY` needed `- themeGroundY` offset. The DOM engine uses y=groundY as "at ground" but the Phaser port was treating it as "groundY pixels above ground zero". Fixed in 8 locations across obstacles, boss, bullets, and defeat poops.
-
-### Next Session Should
-1. **Visual QA** — run `npm run dev` and play through Beach level to verify all fixes look correct
-2. **Begin Phase 1 tasks** from ROADMAP_V3 — RunnerScene skeleton already exists, start porting player physics (Task 1.2)
-3. **Consider sprite regeneration** — current Gemini-generated sprites are functional but not great; explore better prompts or tools
-4. Phase 3 (sprite generation pipeline) can start any time after Phase 1 Beach port parity
-
----
-
-## Session: 2026-03-22 16:30 (Character Sprite System — Roadmap Architecture)
-
-### Completed
-- [x] Added "Character Sprite System" shared section to ROADMAP_V3 — establishes per-level AI sprite generation architecture, IndexedDB storage model (compound keys: `{catDesignId}:{levelId}:{poseId}`), fallback strategy, and closet evolution
-- [x] Added Task 1.14: Beach Sprite Requirements to Phase 1 — defines 5 runner poses (run, jump, duck, hit, idle) with prompt strategy and validation criteria
-- [x] Reworked Phase 3 entirely — replaced `catPoseTransforms` (programmatic crop/flip) with "Character Sprite Generation Pipeline" (5 tasks: storage, generator service, PhaserGame integration, closet UI, level config)
-- [x] Updated Genre Level Template to include sprite requirements as step 2
-- [x] Added preliminary sprite requirement stubs to all 8 level tasks (Tasks 4–11)
-- [x] Updated File Map: `catPoseTransforms.ts` → `catSpriteGenerator.ts`
-
-### Design Decisions
-- **Per-sprite, not sprite-sheet:** Gemini generates one pose at a time (not a batch sheet) — more reliable for AI generation
-- **Lazy generation:** Sprites generate on first level entry, cached for replay. Optional eager "generate all" from closet
-- **Fallback always works:** Missing sprites use base equipped sprite — game is always playable with single sprite
-- **Movement lists are level-specific:** Can't spec sprites until the level's mechanics are built, so sprite reqs are defined during each level phase, not upfront
-- **Base prompt = closet identity:** The existing cat description + reference image becomes the seed for all per-level sprite generation
-
-### Issues Encountered
-- None — this was a planning/roadmap session
-
-### Next Session Should
-1. **Continue Phase 1.5 visual polish** — obstacle ground alignment, background entity rebalancing, HUD into TV bezel, P/ESC pause wiring (from previous session's list)
-2. After Phase 1.5 visual polish → merge `phase-1.5-beach-polish` into main
-3. Begin Phase 0 tasks from ROADMAP_V3 (Phaser install, V3 types, SceneBridge)
-4. Task 1.14 (Beach sprite validation) can happen any time after sprite generation pipeline exists (Phase 3)
-
----

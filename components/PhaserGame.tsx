@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
-import { BRIDGE_EVENTS } from '../scenes/shared/SceneBridge';
 import type { SceneBridge } from '../scenes/shared/SceneBridge';
 import type { HudUpdatePayload } from '../scenes/shared/bridgeProtocol';
 import type { GameScore, GameStatus, LevelCompletePayload, LevelId } from '../types';
@@ -101,19 +100,22 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
       gameRef.current = game;
 
       game.scene.add(SCENE_KEY, SceneClass, true, {
-        levelId, catSpriteUrl, ...sceneInitData,
+        levelId,
+        catSpriteUrl,
+        ...sceneInitData,
+        bridgeCallbacks: {
+          onScoreUpdate: (s: GameScore) => propsRef.current.onScoreUpdate?.(s),
+          onLivesChanged: (l: number) => propsRef.current.onLivesChanged?.(l),
+          onLevelComplete: (p: LevelCompletePayload) => propsRef.current.onLevelComplete?.(p),
+          onGameOver: (s: number) => propsRef.current.onGameOver?.(s),
+          onStatusChange: (st: GameStatus) => propsRef.current.onStatusChange?.(st),
+          onHudUpdate: (d: HudUpdatePayload) => propsRef.current.onHudUpdate?.(d),
+        },
       });
 
       const scene = game.scene.getScene(SCENE_KEY) as SceneBridge | null;
       if (!scene || destroyed) return;
       sceneRef.current = scene;
-
-      scene.events.on(BRIDGE_EVENTS.SCORE_UPDATE, (s: GameScore) => propsRef.current.onScoreUpdate?.(s));
-      scene.events.on(BRIDGE_EVENTS.LIVES_CHANGED, (l: number) => propsRef.current.onLivesChanged?.(l));
-      scene.events.on(BRIDGE_EVENTS.LEVEL_COMPLETE, (p: LevelCompletePayload) => propsRef.current.onLevelComplete?.(p));
-      scene.events.on(BRIDGE_EVENTS.GAME_OVER, (s: number) => propsRef.current.onGameOver?.(s));
-      scene.events.on(BRIDGE_EVENTS.STATUS_CHANGE, (st: GameStatus) => propsRef.current.onStatusChange?.(st));
-      scene.events.on(BRIDGE_EVENTS.HUD_UPDATE, (d: HudUpdatePayload) => propsRef.current.onHudUpdate?.(d));
     })();
 
     return () => {

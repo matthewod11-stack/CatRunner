@@ -55,7 +55,7 @@ export function spawnBackgroundEntities(ctx: BackgroundSpawnContext): Background
     out.push({
       id: nextId(),
       type,
-      x: W + 300,
+      x: def.spawnEdge === 'left' ? -200 - Math.random() * 300 : W + 300,
       y,
       speed: gameSpeed * def.speedMultiplier,
       width: def.width,
@@ -63,6 +63,7 @@ export function spawnBackgroundEntities(ctx: BackgroundSpawnContext): Background
       bannerText,
       depth: def.depth,
       isChaos: true,
+      spawnEdge: def.spawnEdge,
     });
     return out;
   }
@@ -86,6 +87,7 @@ export function spawnBackgroundEntities(ctx: BackgroundSpawnContext): Background
         width: cloudSize,
         height: cloudDef.height * (cloudSize / baseW),
         depth: 'far',
+        spawnEdge: cloudDef.spawnEdge,
       });
     }
   }
@@ -117,6 +119,7 @@ export function spawnBackgroundEntities(ctx: BackgroundSpawnContext): Background
     height: def.height,
     bannerText,
     depth: def.depth,
+    spawnEdge: def.spawnEdge,
   });
 
   return out;
