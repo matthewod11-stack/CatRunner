@@ -39,4 +39,13 @@ describe('Beach asset manifest', () => {
     expect(BEACH_OBSTACLE_TEXTURES.MAGNET).not.toBe(BEACH_OBSTACLE_TEXTURES.COIN);
     expect(BEACH_OBSTACLE_TEXTURES.SUPER_SIZE).not.toBe(BEACH_OBSTACLE_TEXTURES.COIN);
   });
+
+  it('loads Beach gameplay art from committed bundled assets only', () => {
+    for (const asset of BEACH_IMAGE_LOADS) {
+      expect(asset.path).not.toMatch(/^(https?:|blob:)/);
+      expect(
+        asset.path.startsWith('data:image/svg+xml') || asset.path.includes('/assets/'),
+      ).toBe(true);
+    }
+  });
 });

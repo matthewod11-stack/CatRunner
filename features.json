@@ -252,7 +252,7 @@
   },
   "phase-11": {
     "description": "Roadmap V4 Level 1 Beach Completion Pipeline",
-    "status": "wip",
+    "status": "pass",
     "tasks": {
       "phase-0-pipeline-decisions": {
         "status": "pass",
@@ -269,6 +269,14 @@
       "phase-2-runner-hero-animation": {
         "status": "pass",
         "notes": "Default Beach runner hero sheet, contract doc, manifest/state resolver, RunnerScene animation wiring, and focused unit coverage are complete."
+      },
+      "phase-3-runtime-integration-cleanup": {
+        "status": "pass",
+        "notes": "RunnerScene now uses the hero-sheet contract for render scale, ground-contact anchoring, and collision boxes; Beach tile layers scroll with parallax; committed asset-loading guards and browser capture verified no runtime image-model dependency."
+      },
+      "phase-4-polish-and-playtest": {
+        "status": "pass",
+        "notes": "Keyboard pause/focus, terminal score authority, HUD/readability capture artifacts, boss shell clarity, victory/game-over, replay, and Hall of Fame smoke coverage are complete for Level 1."
       }
     }
   }

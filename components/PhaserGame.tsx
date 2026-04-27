@@ -22,11 +22,18 @@ const GAME_W = 960;
 const GAME_H = 720;
 
 function enforceCanvasFill(canvas: HTMLCanvasElement): void {
+  canvas.tabIndex = 0;
+  canvas.setAttribute('aria-label', 'Beach Kitty gameplay canvas');
   canvas.style.setProperty('display', 'block', 'important');
   canvas.style.setProperty('width', '100%', 'important');
   canvas.style.setProperty('height', '100%', 'important');
   canvas.style.setProperty('max-width', '100%', 'important');
   canvas.style.setProperty('max-height', '100%', 'important');
+  canvas.style.setProperty('outline', 'none', 'important');
+}
+
+function focusCanvas(canvas: HTMLCanvasElement | null): void {
+  canvas?.focus({ preventScroll: true });
 }
 
 const PhaserGame: React.FC<PhaserGameProps> = ({
@@ -88,6 +95,7 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
         requestAnimationFrame(() => {
           if (!destroyed) {
             enforceCanvasFill(canvas);
+            focusCanvas(canvas);
           }
         });
         resizeObserver = new ResizeObserver(() => {
@@ -128,6 +136,9 @@ const PhaserGame: React.FC<PhaserGameProps> = ({
 
   useEffect(() => {
     sceneRef.current?.applyRuntimePatch(sceneInitData);
+    if (sceneInitData.isPaused === false) {
+      focusCanvas(gameRef.current?.canvas as HTMLCanvasElement | null);
+    }
   }, [sceneInitData]);
 
   return (

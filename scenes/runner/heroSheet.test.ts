@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { GameStatus } from '../../types';
 import {
+  BEACH_HERO_RENDER_SCALE,
   BEACH_HERO_ANIMATIONS,
   BEACH_HERO_ANIMATION_KEYS,
   BEACH_HERO_SHEET,
+  getBeachHeroCollisionBox,
+  getBeachHeroDisplaySize,
+  getBeachHeroGroundContactOffset,
+  getBeachHeroSpritePosition,
   resolveBeachHeroAnimation,
   type BeachHeroRuntimeState,
 } from './heroSheet';
@@ -70,6 +75,56 @@ describe('Beach hero sheet contract', () => {
     expect(BEACH_HERO_SHEET.collisionBoxes.duck.height).toBeLessThan(
       BEACH_HERO_SHEET.collisionBoxes.normal.height,
     );
+  });
+
+  it('scales display and baseline from the sheet contract', () => {
+    expect(BEACH_HERO_RENDER_SCALE).toBe(0.6);
+    expect(getBeachHeroDisplaySize()).toEqual({ width: 96, height: 120 });
+    expect(getBeachHeroGroundContactOffset()).toBe(0);
+    expect(getBeachHeroSpritePosition({
+      playerX: 100,
+      groundYScreen: 620,
+      playerY: 0,
+    })).toEqual({
+      x: 148,
+      y: 620,
+    });
+  });
+
+  it('resolves normal, duck, and super-size collision boxes in DOM runner coordinates', () => {
+    const normal = getBeachHeroCollisionBox({
+      playerX: 100,
+      groundY: 100,
+      playerY: 0,
+      isDucking: false,
+      isSuperSized: false,
+    });
+    expect(normal.left).toBeCloseTo(114.4);
+    expect(normal.right).toBeCloseTo(210.4);
+    expect(normal.bottom).toBe(100);
+    expect(normal.top).toBe(220);
+    expect(normal.width).toBe(96);
+    expect(normal.height).toBe(120);
+
+    expect(getBeachHeroCollisionBox({
+      playerX: 100,
+      groundY: 100,
+      playerY: 0,
+      isDucking: true,
+      isSuperSized: false,
+    }).height).toBe(54);
+
+    const superSized = getBeachHeroCollisionBox({
+      playerX: 100,
+      groundY: 100,
+      playerY: 20,
+      isDucking: false,
+      isSuperSized: true,
+    });
+    expect(superSized.left).toBeCloseTo(18.4);
+    expect(superSized.bottom).toBe(120);
+    expect(superSized.width).toBe(288);
+    expect(superSized.height).toBe(360);
   });
 });
 

@@ -2,6 +2,67 @@
 
 ---
 
+## Archived From PROGRESS.md On 2026-04-27
+
+### Session: 2026-04-21 (V4 Phaser-only reset)
+
+#### Completed
+- [x] Removed the `?dom_runner` gate from `App.tsx`; gameplay now boots only through `PhaserGame`
+- [x] Deleted `components/GameEngine.tsx` and the retired DOM-runner support subtree, including legacy React renderers and audio helpers
+- [x] Rewrote active architecture/root guidance to describe the Phaser-only runtime and archived the executed reset spec
+- [x] Verified `npm run test:run` (42 files, 196 tests), `npx tsc --noEmit`, and `npm run build`
+- [x] Ran a headless Chrome smoke pass covering campaign boot, gameplay boot, pause overlay, EJECT back to menu, and Kitty Closet route boot
+
+#### Remaining Verification Gap
+- [ ] Full interactive browser coverage for victory/game-over/Hall of Fame mutation still needs a deeper playtest pass
+
+#### Next Session Should
+1. Run a deeper browser playtest across victory/game-over flows once richer browser control is available
+2. Continue from the next highest-priority roadmap workstream in `ROADMAP_V3.md`
+
+### Session: 2026-04-19 (repo cleanup and roadmap consolidation)
+
+#### Completed
+- [x] Rewrote `ROADMAP_V3.md` as the only active roadmap
+- [x] Archived `KNOWN_ISSUES.md` and retired it from the workflow
+- [x] Reorganized active docs under `docs/`
+- [x] Created GitHub issues for surviving actionable repo/product concerns
+- [x] Verified `npm run test:run`, `npx tsc --noEmit`, and `npm run build`
+- [x] Confirmed the repo now has one active roadmap and one active root progress log
+
+#### Next Session Should
+1. Start from `ROADMAP_V3.md`
+2. Use GitHub Issues for bugs and technical debt
+3. Continue from the highest-priority open roadmap workstream
+
+### Session: 2026-04-05 09:00 (City Heights Full Level Build)
+
+#### Completed
+- [x] **City Heights (ROOFTOPS) full level design** — Brainstormed and specced a 3-zone Mario-style platformer with golden hour cityscape, building-based rooftop platforms, 3 enemy types (pigeon, rat, raccoon), 4 hazards (AC unit, clothesline, satellite dish, neon sign), 3 platformer-specific powerups (triple jump, glide, shield), and Pigeon King boss fight
+- [x] **10-task modular implementation** — Built 6 manager modules (BuildingGenerator, CityBackground, EnemyManager, HazardManager, PowerupManager, PigeonKingBoss) + rewrote PlatformerScene as thin orchestrator + SFX integration
+- [x] **Testable pure logic** — Extracted `generation.ts` (zone resolution) and `bossPhases.ts` (boss state machine) with full Vitest coverage (12 new tests, 97 total)
+- [x] **`/levelbuilder` command** — Created project-level slash command that codifies the repeatable build pipeline for remaining 7 campaign levels
+- [x] **Cat sprite sizing fix** — Fixed cat rendering at native texture resolution by computing scale from source image dimensions
+- [x] **Visual companion brainstorm** — Used browser-based visual companion for enemy/hazard selection, visual style (golden hour), and building generation model mockups
+
+#### In Progress
+- [ ] **Visual polish** — Building facades, enemy sprites, hazard art are all placeholder rectangles. Need proper sprite art pass.
+- [ ] **Gameplay tuning** — Gap sizes, enemy density, boss timing, powerup durations need playtesting adjustment
+- [ ] **Cat sprite size** — Fixed scaling logic but may need size constant adjustment (40x48 might be too small relative to buildings)
+
+#### Issues Encountered
+- Phaser `setDisplaySize` didn't reliably scale loaded cat sprite textures — switched to computing scale from source image dimensions
+- Git worktrees errored on branch conflicts — user prefers working directly on main
+- Subagent batching (Tasks 3-6) returned before committing — needed manual commit of created files
+
+#### Next Session Should
+1. **Playtest City Heights end-to-end** — Verify all 3 zones, enemy behaviors, hazard interactions, boss fight, and victory flow work correctly
+2. **Tune difficulty** — Adjust gap sizes, enemy density, boss land durations based on playthrough feel
+3. **Use `/levelbuilder` on next level** — Pick Kitchen (launcher), Space (shooter), or another skeleton to validate the repeatable pipeline
+4. **Sprite art pass** — Replace placeholder rectangles with proper enemy/hazard art (consider Nanobanana MCP for sprite generation)
+
+---
+
 ## Session: 2026-03-30 09:15 (Local Overnight Agent — Desktop Task Setup)
 
 ### Completed

@@ -53,6 +53,7 @@ npx tsc --noEmit
 - `docs/plans/level-1-beach-visual-brief.md`
 - `docs/plans/level-1-beach-prompt-pack.md`
 - `docs/plans/level-1-runner-hero-sheet-contract.md`
+- `docs/plans/level-1-phase-4-playtest.md`
 - `docs/specs/README.md`
 
 ## Game Studio Routing
@@ -66,8 +67,8 @@ Default execution model:
 
 ## Current Focus
 
-- Execute `ROADMAP_V4.md` around Level 1 (`BEACH`) completion rather than more migration-era cleanup.
-- Phase 3/4 work should tune Beach scale, baseline, hitboxes, readability, HUD/effects, and manual play feel against the final world art and runner hero sheet.
+- Roadmap V4 Level 1 (`BEACH`) completion is closed through Phase 4 polish/playtest; use `docs/plans/level-1-phase-4-playtest.md` for the latest Beach visual evidence.
+- Next roadmap work is Phase 5: turn the Beach art, hero-sheet, manifest, and QA process into reusable templates for later levels.
 - Keep live cat generation off the gameplay critical path unless it can satisfy the same constrained sheet contract as the default hero.
 - Keep smoke coverage green and keep bundle-size follow-ups visible while asset plumbing evolves.
 

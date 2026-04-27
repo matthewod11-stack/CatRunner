@@ -1,0 +1,72 @@
+{
+  "capturedAt": "2026-04-27T22:18:35.942Z",
+  "url": "http://127.0.0.1:3000/?unlock_all=1",
+  "artifacts": [
+    "01-run-start.png",
+    "02-jump-readability.png",
+    "03-obstacle-readability.png",
+    "04-pause.png",
+    "05-boss-start.png",
+    "06-boss-shells.png",
+    "07-victory.png",
+    "08-game-over.png"
+  ],
+  "victorySnapshot": {
+    "status": "VICTORY",
+    "selectedLevel": "BEACH",
+    "completedLevels": {
+      "BEACH": true
+    },
+    "highScores": [
+      {
+        "name": "Beach Kitty",
+        "score": 654,
+        "date": 1777328314881,
+        "levelId": "BEACH",
+        "isVictory": true
+      }
+    ],
+    "score": {
+      "current": 654,
+      "high": 654,
+      "coins": 0,
+      "multiplier": 4,
+      "streak": 0,
+      "lives": 9
+    },
+    "shellAmmo": 0
+  },
+  "gameOverSnapshot": {
+    "status": "GAMEOVER",
+    "selectedLevel": "BEACH",
+    "completedLevels": {
+      "BEACH": true
+    },
+    "highScores": [
+      {
+        "name": "Beach Kitty",
+        "score": 654,
+        "date": 1777328314881,
+        "levelId": "BEACH",
+        "isVictory": true
+      },
+      {
+        "name": "Beach Kitty",
+        "score": 123,
+        "date": 1777328315873,
+        "levelId": "BEACH",
+        "isVictory": false
+      }
+    ],
+    "score": {
+      "current": 123,
+      "high": 654,
+      "coins": 0,
+      "multiplier": 4,
+      "streak": 0,
+      "lives": 0
+    },
+    "shellAmmo": 0
+  },
+  "errors": []
+}

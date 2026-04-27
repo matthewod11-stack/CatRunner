@@ -74,7 +74,7 @@ The current flat `assets/sprites/*.png` files can remain while Phase 1 art is pr
 2. Move final Beach art into `assets/sprites/beach/` or manifest-addressed equivalents. `DONE: Phase 1 SVG pack`.
 3. Replace `RunnerScene` placeholder texture reuse for `SAND_PROJECTILE`, `SPEED`, `MAGNET`, and `SUPER_SIZE`. `DONE`.
 4. Wire the default runner hero sheet and animation state handling in `RunnerScene`. `DONE: Phase 2`.
-5. Tune scale, origin, baseline, and collision boxes against the final art. `PHASE 4`.
+5. Tune scale, origin, baseline, and collision boxes against the final art. `DONE: Phase 3 runtime audit`.
 
 ## Phase 0 Acceptance Check
 

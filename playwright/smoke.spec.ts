@@ -67,6 +67,14 @@ test.describe('browser smoke', () => {
     await expect(page.getByRole('button', { name: /pause/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /eject/i })).toBeVisible();
     await attachScreenshot(testInfo, page, 'runner-shell');
+    const gameCanvas = page.locator('canvas').first();
+    await expect(gameCanvas).toBeVisible();
+    await gameCanvas.focus();
+    await expect(gameCanvas).toBeFocused();
+    await page.keyboard.press('p');
+    await expect(page.getByRole('heading', { name: /paused/i })).toBeVisible();
+    await page.keyboard.press('p');
+    await expect(page.getByRole('heading', { name: /paused/i })).toBeHidden();
     await page.getByRole('button', { name: /eject/i }).click();
 
     await expect(page.getByRole('heading', { name: /beach kitty/i })).toBeVisible();

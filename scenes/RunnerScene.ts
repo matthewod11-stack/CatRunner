@@ -55,7 +55,11 @@ import {
 import {
   BEACH_HERO_ANIMATIONS,
   BEACH_HERO_ANIMATION_KEYS,
+  BEACH_HERO_RENDER_SCALE,
   BEACH_HERO_SHEET,
+  getBeachHeroCollisionBox,
+  getBeachHeroDisplaySize,
+  getBeachHeroSpritePosition,
   resolveBeachHeroAnimation,
   type BeachHeroAnimationId,
 } from './runner/heroSheet';
@@ -81,6 +85,7 @@ export default class RunnerScene extends SceneBridge {
   private playerVy = 0;
   private jumpCount = 0;
   private isDucking = false;
+  private isKeyboardDucking = false;
   private invincibleUntil = 0;
 
   // ── Game state ──
@@ -123,25 +128,20 @@ export default class RunnerScene extends SceneBridge {
   private themeGroundY = 0; // DOM engine groundY (distance from bottom)
 
   // ── Player dimensions ──
-  private static readonly PLAYER_W = 160;
-  private static readonly PLAYER_H_NORMAL = 200;
-  private static readonly PLAYER_H_DUCK = 90;
-
-  private static readonly ENTITY_SCALE = 0.6;
+  private static readonly ENTITY_SCALE = BEACH_HERO_RENDER_SCALE;
   private static readonly SHELL_BULLET_DISPLAY_SIZE = 40;
   private static readonly SHELL_BULLET_TRAIL_LENGTH = 66;
   private static readonly SHELL_BULLET_Y_OFFSET = 72;
 
-  // ── Input keys ──
-  private keySpace!: Phaser.Input.Keyboard.Key;
-  private keyUp!: Phaser.Input.Keyboard.Key;
-  private keyDown!: Phaser.Input.Keyboard.Key;
-  private keyP!: Phaser.Input.Keyboard.Key;
-  private keyEsc!: Phaser.Input.Keyboard.Key;
+  // ── Input cleanup ──
+  private keyboardCleanup: (() => void) | null = null;
 
   // ── Environment layer refs (for resize) ──
   private envSky!: Phaser.GameObjects.Image;
   private envSun!: Phaser.GameObjects.Image;
+  private envOcean!: Phaser.GameObjects.TileSprite;
+  private envFoam!: Phaser.GameObjects.TileSprite;
+  private envSand!: Phaser.GameObjects.TileSprite;
 
   // ── Obstacle spawning state (Task 1.3) ──
   private obstacles: WorldEntity[] = [];
@@ -258,48 +258,44 @@ export default class RunnerScene extends SceneBridge {
 
     // Layer 4: Ocean (below sky, above sand)
     const oceanY = this.groundYScreen - 80;
-    this.add.tileSprite(width / 2, oceanY, width, 100, 'env-ocean')
+    this.envOcean = this.add.tileSprite(width / 2, oceanY, width, 100, 'env-ocean')
       .setDepth(4);
 
     // Layer 5: Waterline foam
-    this.add.tileSprite(width / 2, this.groundYScreen - 4, width, 16, 'env-foam')
+    this.envFoam = this.add.tileSprite(width / 2, this.groundYScreen - 4, width, 16, 'env-foam')
       .setDepth(5);
 
     // Layer 6: Sand ground
-    this.add.tileSprite(width / 2, this.groundYScreen + this.themeGroundY / 2, width, this.themeGroundY, 'env-sand')
+    this.envSand = this.add.tileSprite(width / 2, this.groundYScreen + this.themeGroundY / 2, width, this.themeGroundY, 'env-sand')
       .setDepth(6);
 
     // Canvas is fixed-size — no resize handling needed
 
     // ── Player visual (sprite) ──
     const scale = RunnerScene.ENTITY_SCALE;
+    const displaySize = getBeachHeroDisplaySize(scale);
+    const initialHeroPosition = getBeachHeroSpritePosition({
+      playerX: this.playerX,
+      groundYScreen: this.groundYScreen,
+      playerY: this.playerY,
+      scale,
+    });
     this.registerPlayerAnimations();
     this.playerSprite = this.add.sprite(
-      this.playerX + (RunnerScene.PLAYER_W * scale) / 2,
-      this.groundYScreen,
+      initialHeroPosition.x,
+      initialHeroPosition.y,
       BEACH_HERO_SHEET.key,
       0,
     )
       .setOrigin(BEACH_HERO_SHEET.origin.x, BEACH_HERO_SHEET.origin.y)
       .setDisplaySize(
-        BEACH_HERO_SHEET.renderSize.width * scale,
-        BEACH_HERO_SHEET.renderSize.height * scale,
+        displaySize.width,
+        displaySize.height,
       )
       .setDepth(10);
     this.playPlayerAnimation('run');
 
-    // ── Input: keyboard ──
-    const kb = this.input.keyboard!;
-    this.keySpace = kb.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-    this.keyUp = kb.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
-    this.keyDown = kb.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
-    this.keyP = kb.addKey(Phaser.Input.Keyboard.KeyCodes.P);
-    this.keyEsc = kb.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
-
-    // Prevent space from scrolling the page
-    this.keySpace.on('down', (event: KeyboardEvent) => {
-      event.preventDefault();
-    });
+    this.bindKeyboardControls();
 
     // ── Input: touch ──
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
@@ -340,6 +336,7 @@ export default class RunnerScene extends SceneBridge {
     this.playerVy = 0;
     this.jumpCount = 0;
     this.isDucking = false;
+    this.isKeyboardDucking = false;
     this.playerAnimationOverride = null;
     this.currentPlayerAnimationKey = '';
     this.invincibleUntil = 0;
@@ -429,29 +426,63 @@ export default class RunnerScene extends SceneBridge {
     this.runStartTime = Date.now();
   }
 
+  private bindKeyboardControls(): void {
+    this.keyboardCleanup?.();
+
+    const handledKeys = new Set([' ', 'Spacebar', 'ArrowUp', 'ArrowDown', 'p', 'P', 'Escape']);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!handledKeys.has(event.key)) return;
+      event.preventDefault();
+
+      if (event.key === 'p' || event.key === 'P' || event.key === 'Escape') {
+        if (!event.repeat) this.togglePause();
+        return;
+      }
+
+      if (this.isPaused || this.gameOver) return;
+
+      if ((event.key === ' ' || event.key === 'Spacebar' || event.key === 'ArrowUp') && !event.repeat) {
+        this.performJump();
+        return;
+      }
+
+      if (event.key === 'ArrowDown') {
+        this.isKeyboardDucking = true;
+        this.performDuck(true);
+      }
+    };
+
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (event.key !== 'ArrowDown') return;
+      event.preventDefault();
+      this.isKeyboardDucking = false;
+      this.performDuck(false);
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    this.keyboardCleanup = () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+      this.keyboardCleanup = null;
+    };
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.keyboardCleanup?.());
+    this.events.once(Phaser.Scenes.Events.DESTROY, () => this.keyboardCleanup?.());
+  }
+
   update(_time: number, delta: number): void {
     if (this.gameOver) return;
 
-    // ── Pause toggle (edge-triggered) ──
-    if (Phaser.Input.Keyboard.JustDown(this.keyP) || Phaser.Input.Keyboard.JustDown(this.keyEsc)) {
-      this.togglePause();
-    }
-
     if (this.isPaused) return;
 
-    const now = Date.now();
-
-    // ── Input: jump (edge-triggered) ──
-    if (Phaser.Input.Keyboard.JustDown(this.keySpace) || Phaser.Input.Keyboard.JustDown(this.keyUp)) {
-      this.performJump();
-    }
-
     // ── Input: duck (level-triggered) ──
-    if (this.keyDown.isDown) {
+    if (this.isKeyboardDucking) {
       this.performDuck(true);
-    } else if (!this.keyDown.isDown && this.isDucking) {
+    } else if (this.isDucking) {
       this.performDuck(false);
     }
+
+    const now = Date.now();
 
     // ── Physics: delta-time normalized to 60fps ──
     const frames = delta / 16.667;
@@ -518,6 +549,7 @@ export default class RunnerScene extends SceneBridge {
     this.updateBullets();
 
     // ── Background parallax (Task 1.9) ──
+    this.updateEnvironmentParallax(frames);
     this.updateBackgroundSpawning(now);
     this.updateBackgroundMovement();
 
@@ -526,7 +558,8 @@ export default class RunnerScene extends SceneBridge {
 
     // ── Dust trail particles when running on ground ──
     if (this.playerY <= 1 && !this.isDucking) {
-      const feetX = this.playerX + RunnerScene.PLAYER_W * 0.3;
+      const display = getBeachHeroDisplaySize(RunnerScene.ENTITY_SCALE);
+      const feetX = this.playerX + display.width * 0.34;
       const feetY = this.groundYScreen;
       this.effects.spawnDust(feetX, feetY, this.speed);
     }
@@ -793,7 +826,14 @@ export default class RunnerScene extends SceneBridge {
     const now = Date.now();
     const step = this.speed * this.speedMultiplier * frames;
     const removeIds: number[] = [];
-    const hitboxLeft = this.playerX + 24; // matches resolvePlayerAnchor
+    const playerHitbox = getBeachHeroCollisionBox({
+      playerX: this.playerX,
+      groundY: this.themeGroundY,
+      playerY: this.playerY,
+      isDucking: this.isDucking,
+      isSuperSized: this.activePowerUp?.type === 'SUPER_SIZE',
+      scale: RunnerScene.ENTITY_SCALE,
+    });
 
     // ── Seagull poop drops (Task 1.6) — iterate before movement to check timing ──
     const lowLivesMode = this.gameScore.lives <= this.tuning.lowLivesThreshold;
@@ -844,7 +884,7 @@ export default class RunnerScene extends SceneBridge {
         !obs.isCollected &&
         this.harmfulTypes.includes(obs.type) &&
         obs.type !== 'SANDCASTLE' &&
-        obs.x + obs.width < hitboxLeft
+        obs.x + obs.width * RunnerScene.ENTITY_SCALE < playerHitbox.left
       ) {
         obs.isPassed = true;
         this.gameScore.streak++;
@@ -853,9 +893,9 @@ export default class RunnerScene extends SceneBridge {
           this.gameScore.streak = 0;
           this.audio.playSfx('mult');
           // Floating "MULTIPLIER UP!" text at player position
-          const playerScreenY = this.groundYScreen - this.playerY - RunnerScene.PLAYER_H_NORMAL;
+          const playerScreenY = this.groundYScreen - (playerHitbox.top - this.themeGroundY);
           this.effects.floatingScore(
-            this.playerX + RunnerScene.PLAYER_W / 2,
+            playerHitbox.left + playerHitbox.width / 2,
             playerScreenY - 30,
             'MULT UP!',
             '#f59e0b',
@@ -929,17 +969,14 @@ export default class RunnerScene extends SceneBridge {
   private updateCollisions(now: number): void {
     const scale = RunnerScene.ENTITY_SCALE;
     const isSuperSized = this.activePowerUp?.type === 'SUPER_SIZE';
-    const baseW = RunnerScene.PLAYER_W * scale;
-    const baseH = (this.isDucking ? RunnerScene.PLAYER_H_DUCK : RunnerScene.PLAYER_H_NORMAL) * scale;
-    const kittyW = isSuperSized ? baseW * 3 : baseW;
-    const kittyH = isSuperSized ? baseH * 3 : baseH;
-
-    // Player hitbox in DOM engine coords (y=0 ground, +y up)
-    const hitboxLeft = this.playerX + (24 * scale) - (isSuperSized ? baseW : 0);
-    const kittyL = hitboxLeft;
-    const kittyR = hitboxLeft + kittyW;
-    const kittyB = this.themeGroundY + this.playerY;
-    const kittyT = this.themeGroundY + this.playerY + kittyH;
+    const playerHitbox = getBeachHeroCollisionBox({
+      playerX: this.playerX,
+      groundY: this.themeGroundY,
+      playerY: this.playerY,
+      isDucking: this.isDucking,
+      isSuperSized,
+      scale,
+    });
 
     const isCurrentlyHurt = now < this.invincibleUntil;
 
@@ -954,7 +991,11 @@ export default class RunnerScene extends SceneBridge {
       const oB = oY + vPadding;
       const oT = oY + obs.height * scale - vPadding;
 
-      const overlaps = kittyR > oL && kittyL < oR && kittyT > oB && kittyB < oT;
+      const overlaps =
+        playerHitbox.right > oL &&
+        playerHitbox.left < oR &&
+        playerHitbox.top > oB &&
+        playerHitbox.bottom < oT;
       if (!overlaps) continue;
 
       // ── Screen-space positions for effects (scaled to match visual size) ──
@@ -998,7 +1039,7 @@ export default class RunnerScene extends SceneBridge {
       }
 
       // ── Stomp / bounce detection ──
-      const isLanding = this.playerVy < 0 && (kittyB >= oT - 30);
+      const isLanding = this.playerVy < 0 && (playerHitbox.bottom >= oT - 30);
       const stompDef = this.getObstacleDef(obs.type as ObstacleType);
       const canStompBounce =
         obs.type === 'SEAGULL'
@@ -1066,7 +1107,13 @@ export default class RunnerScene extends SceneBridge {
     // Particle burst
     if (result.particleColor) {
       const hexColor = Phaser.Display.Color.HexStringToColor(result.particleColor).color;
-      this.effects.spawnParticles(obs.x + obs.width / 2, obsScreenY + obs.height / 2, hexColor, 10);
+      const scale = RunnerScene.ENTITY_SCALE;
+      this.effects.spawnParticles(
+        obs.x + (obs.width * scale) / 2,
+        obsScreenY + (obs.height * scale) / 2,
+        hexColor,
+        10,
+      );
     }
 
     // Bounce force
@@ -1081,9 +1128,10 @@ export default class RunnerScene extends SceneBridge {
 
     // Score points
     if (result.points) {
+      const scale = RunnerScene.ENTITY_SCALE;
       this.score += result.points * 10;
       this.effects.floatingScore(
-        obs.x + obs.width / 2,
+        obs.x + (obs.width * scale) / 2,
         obsScreenY,
         `+${result.points}`,
       );
@@ -1209,21 +1257,19 @@ export default class RunnerScene extends SceneBridge {
   private updatePlayerSprite(): void {
     const scale = RunnerScene.ENTITY_SCALE;
     const now = Date.now();
+    const position = getBeachHeroSpritePosition({
+      playerX: this.playerX,
+      groundYScreen: this.groundYScreen,
+      playerY: this.playerY,
+      scale,
+    });
+    const displaySize = getBeachHeroDisplaySize(scale);
 
-    // Convert DOM engine coords (y=0 ground, +y up) to Phaser coords (y=0 top, +y down)
-    // Player sprite origin is (0.5, 1) — bottom center
-    const renderY = this.groundYScreen - this.playerY;
     const animation = this.resolvePlayerAnimation(now);
     this.playPlayerAnimation(animation);
 
-    this.playerSprite.setPosition(
-      this.playerX + (RunnerScene.PLAYER_W * scale) / 2,
-      renderY,
-    );
-    this.playerSprite.setDisplaySize(
-      BEACH_HERO_SHEET.renderSize.width * scale,
-      BEACH_HERO_SHEET.renderSize.height * scale,
-    );
+    this.playerSprite.setPosition(position.x, position.y);
+    this.playerSprite.setDisplaySize(displaySize.width, displaySize.height);
     this.playerSprite.setAlpha(
       now < this.invincibleUntil && this.status !== GameStatus.GAMEOVER && Math.floor(now / 90) % 2 === 0
         ? 0.58
@@ -1432,11 +1478,12 @@ export default class RunnerScene extends SceneBridge {
     this.audio.playSfx('shoot');
 
     const scale = RunnerScene.ENTITY_SCALE;
+    const display = getBeachHeroDisplaySize(scale);
     const bulletSize = RunnerScene.SHELL_BULLET_DISPLAY_SIZE;
 
     const bullet: Bullet = {
       id: now + Math.random(),
-      x: this.playerX + (100 * scale),
+      x: this.playerX + display.width * 0.62,
       y: this.themeGroundY + this.playerY + RunnerScene.SHELL_BULLET_Y_OFFSET,
       speed: 18,
       size: bulletSize,
@@ -1725,6 +1772,13 @@ export default class RunnerScene extends SceneBridge {
   }
 
   // ─── Background parallax (Task 1.9) ───────────────────────────────
+
+  private updateEnvironmentParallax(frames: number): void {
+    const step = this.speed * this.speedMultiplier * frames;
+    this.envSand.tilePositionX += step * 0.85;
+    this.envFoam.tilePositionX += step * 0.45;
+    this.envOcean.tilePositionX += step * 0.16;
+  }
 
   /**
    * Spawn background entities at timed intervals.

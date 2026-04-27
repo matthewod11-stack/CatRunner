@@ -69,6 +69,7 @@ const App: React.FC = () => {
   const [shellAmmo, setShellAmmo] = useState<number | undefined>(undefined);
   const [completedLevels, setCompletedLevels] = useState(() => loadCompletedLevels());
   const [selectedLevel, setSelectedLevel] = useState<LevelId>(() => LEVEL_ORDER[0]);
+  const acceptSceneScoreRef = useRef(false);
 
   const { tuning } = useTuningStore();
   const anyLevelConfig = useMemo(() => getAnyLevelConfig(selectedLevel), [selectedLevel]);
@@ -382,6 +383,7 @@ const App: React.FC = () => {
 
   const handleGameOver = useCallback(
     async (finalScore: number) => {
+      acceptSceneScoreRef.current = false;
       setStatus(GameStatus.GAMEOVER);
 
       setHighScores((prev) => {
@@ -423,6 +425,7 @@ const App: React.FC = () => {
   const handleLevelComplete = useCallback(
     (payload: LevelCompletePayload) => {
       const { finalScore, levelId: levelBeat, gameScore } = payload;
+      acceptSceneScoreRef.current = false;
 
       // Update completed levels (useEffect persists via saveCompletedLevels)
       setCompletedLevels(prev => nextCompletedLevelsAfterWin(prev, levelBeat));
@@ -470,6 +473,7 @@ const App: React.FC = () => {
   const startGame = useCallback((bossMode: boolean = false) => {
     if (!DEV_UNLOCK_ALL && !isLevelUnlocked(completedLevels, selectedLevel)) return;
     const currentLives = score.lives <= 0 ? MAX_LIVES : score.lives;
+    acceptSceneScoreRef.current = true;
     setStartAtBoss(bossMode);
     setStatus(GameStatus.PLAYING);
     setShellAmmo(undefined);
@@ -485,10 +489,12 @@ const App: React.FC = () => {
   }, [bossCoinTarget, completedLevels, score.lives, selectedLevel]);
 
   const handleStatusChange = (newStatus: GameStatus) => {
+    acceptSceneScoreRef.current = newStatus === GameStatus.PLAYING || newStatus === GameStatus.BOSS_FIGHT;
     setStatus(newStatus);
   };
 
   const handleScoreUpdate = (updatedScore: GameScore) => {
+    if (!acceptSceneScoreRef.current) return;
     setScore(updatedScore);
     localStorage.setItem('beach-cat-lives', updatedScore.lives.toString());
   };

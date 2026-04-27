@@ -164,13 +164,15 @@ Acceptance criteria:
 
 - [x] Replace `RunnerScene`'s loose hard-coded asset loading with a Beach asset manifest or key registry.
 - [x] Remove placeholder texture reuse for power-ups and projectiles by giving each shipped visual its own deliberate treatment.
-- [ ] Audit scale, baseline, hitbox, and parallax tuning against final art rather than placeholder stand-ins.
-- [ ] Keep gameplay art loading deterministic and committed; no runtime calls to image models for world building.
-- [ ] Preserve current smoke, progression, and persistence behavior while refactoring asset plumbing.
+- [x] Audit scale, baseline, hitbox, and parallax tuning against final art rather than placeholder stand-ins.
+- [x] Keep gameplay art loading deterministic and committed; no runtime calls to image models for world building.
+- [x] Preserve current smoke, progression, and persistence behavior while refactoring asset plumbing.
 
 Phase 3 note:
 
 - The manifest/key cleanup and placeholder replacement were pulled forward during Phase 1 because they were required to review the Beach art in-game.
+- The Phase 3 audit centralized hero scale, collision, and ground-contact geometry in `scenes/runner/heroSheet.ts`, wired `RunnerScene` to that contract, added foreground tile parallax, and fixed the Phaser space-key handler surfaced by browser gameplay capture.
+- The current committed hero sheet contains foot/shadow pixels down to the frame bottom, so runtime ground contact uses `runtimeGroundOffset: 0` instead of applying the documented transparent bottom padding as a visual offset.
 
 Acceptance criteria:
 
@@ -180,10 +182,12 @@ Acceptance criteria:
 
 ## Phase 4 - Level 1 Polish And Playtest
 
-- [ ] Run targeted Beach manual playtests for jump readability, obstacle recognition, boss clarity, and progression pacing.
-- [ ] Polish HUD placement, pause/readability surfaces, hit flashes, particles, and scene transitions against the final art layer.
-- [ ] Capture screenshots or short video for docs and future art consistency checks.
-- [ ] Confirm victory, game over, Hall of Fame, and replay flows still feel coherent once the final art is in place.
+- [x] Run targeted Beach manual playtests for jump readability, obstacle recognition, boss clarity, and progression pacing.
+- [x] Polish HUD placement, pause/readability surfaces, hit flashes, particles, and scene transitions against the final art layer.
+- [x] Capture screenshots or short video for docs and future art consistency checks.
+- [x] Confirm victory, game over, Hall of Fame, and replay flows still feel coherent once the final art is in place.
+
+Phase 4 notes and screenshots live in `docs/plans/level-1-phase-4-playtest.md` and `docs/artifacts/level-1-phase-4/`.
 
 Acceptance criteria:
 

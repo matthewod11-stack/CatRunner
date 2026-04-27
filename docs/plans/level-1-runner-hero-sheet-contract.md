@@ -23,11 +23,14 @@ Level 1 gameplay uses a committed curated animated runner sheet. Static custom c
 | Runtime origin | bottom-center, `{ x: 0.5, y: 1 }` |
 | Feet baseline | `y = 220` inside every frame |
 | Bottom padding | `36px` below the feet baseline |
+| Runtime ground-contact offset | `0px` for the current committed sheet |
 | Runtime render box | `160x200`, scaled by `RunnerScene.ENTITY_SCALE` |
 | Normal collision box | `{ x: 24, y: 0, width: 160, height: 200 }` |
 | Duck collision box | `{ x: 24, y: 0, width: 160, height: 90 }` |
 
-Frame art must stay inside the slot with transparent padding. Feet should land on the same baseline in every grounded frame so jump, duck, hurt, throw, victory, and defeat states do not require per-state anchoring code.
+Frame art should stay inside the slot with predictable padding. Feet should land on the same baseline in every grounded frame so jump, duck, hurt, throw, victory, and defeat states do not require per-state anchoring code.
+
+Phase 3 runtime audit note: the current committed sheet includes foot/shadow pixels down to the frame bottom. `scenes/runner/heroSheet.ts` therefore exposes `runtimeGroundOffset: 0` and anchors the current sheet by bottom-center contact. If a future regenerated sheet restores true transparent bottom padding, update `runtimeGroundOffset`, the helper tests, and browser screenshots together.
 
 ## Animation States
 
@@ -63,6 +66,7 @@ The one-shot feedback states are time-boxed in `RunnerScene`; ordinary movement 
 ## Future Swap Rules
 
 - Keep the same frame size, ordering, feet baseline, and transparent padding.
+- Keep `runtimeGroundOffset` aligned with the actual committed sheet, not the intended padding alone.
 - Keep the gameplay-facing animation names stable.
 - Do not wire a generated custom cat into active gameplay unless it outputs every required state in this contract.
 - Re-run `npm run test:run`, `npm run test:smoke`, `npx tsc --noEmit`, and `npm run build` after replacing the sheet.

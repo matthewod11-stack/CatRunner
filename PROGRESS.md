@@ -36,6 +36,97 @@ Most recent session should be first.
 
 ---
 
+## Session: 2026-04-27 15:50 (session end checkpoint)
+
+### Completed
+- Re-ran the session-end verification suite after the Phase 4 docs and smoke-test updates
+- Confirmed Roadmap V4 Phase 4 is a clean stopping point before Phase 5
+- Compared the session-start baseline against the final Vitest run: 66 passing tests at baseline, 210 passing tests now, with no failures
+- Updated the handoff target to Roadmap V4 Phase 5: make the Beach art and hero-sheet process repeatable for later levels
+- Archived the oldest root progress entries into `PROGRESS_ARCHIVE.md` so the active log stays focused on recent sessions
+
+### In Progress
+- Roadmap V4 Phase 5 has not started yet
+
+### Issues Encountered
+- No new blockers during session closeout
+- Existing production build large chunk warning remains visible and should stay tracked as a later bundle-size follow-up
+
+### Next Session Should
+- Start Roadmap V4 Phase 5: turn the Beach process into reusable templates for future levels
+- Create or consolidate templates for the art brief, prompt pack, asset manifest, and QA checklist
+- Decide which next genre should receive the Beach-style hero-sheet contract approach first
+
+---
+
+## Session: 2026-04-27 15:22 (Roadmap V4 Phase 4 polish and playtest)
+
+### Completed
+- Completed Roadmap V4 Phase 4 for Level 1 Beach polish and playtest
+- Added keyboard-focus hardening for Phaser canvas boot/resume so `P`/`Escape` pause controls work reliably from browser playtests and smoke automation
+- Replaced Phaser keyboard-key ownership in `RunnerScene` with native window keyboard handlers for jump, duck/shell fire, and pause, avoiding the earlier space-key lifecycle issue
+- Made React terminal run states authoritative for score display so late Phaser score packets cannot overwrite victory/game-over final scores
+- Added Playwright smoke coverage for focused-canvas keyboard pause/resume
+- Captured Phase 4 screenshot artifacts under `docs/artifacts/level-1-phase-4/` and documented findings in `docs/plans/level-1-phase-4-playtest.md`
+- Marked Roadmap V4 Phase 4 and `features.json` phase 11 complete, and updated AGENTS/CLAUDE handoff focus
+
+### In Progress
+- No Phase 4 blockers remain for Level 1 Beach completion
+
+### Issues Encountered
+- In-app browser screenshot capture timed out on the WebGL canvas, so Phase 4 visual evidence was captured with full-page Playwright screenshots against the same localhost target
+- The first smoke assertion pressed `P` before explicitly focusing the canvas; the test now focuses and asserts the canvas before checking keyboard pause
+- Existing production build large chunk warning remains visible and should stay tracked as a later bundle-size follow-up
+
+### Verification
+- `npm run test:run` - 44 files, 210 tests passing
+- `npx tsc --noEmit` - passing
+- `npm run test:smoke` - 3 browser smoke tests passing
+- `npm run build` - passing with the existing large chunk warning
+- Phase 4 capture metadata reports no console/page errors in `docs/artifacts/level-1-phase-4/phase4-capture.json`
+- Local dev server remains available at `http://127.0.0.1:3000/?unlock_all=1`
+
+### Next Session Should
+- Start Roadmap V4 Phase 5 now that Level 1 Beach completion is closed through Phase 4
+- Keep the Phase 4 screenshot set updated if the Beach hero sheet, world-art pack, or HUD frame changes
+- Consider a bundle-size pass for the remaining production chunk warning
+
+---
+
+## Session: 2026-04-27 14:56 (Roadmap V4 Phase 3 runtime integration cleanup)
+
+### Completed
+- Completed Roadmap V4 Phase 3 for Beach runtime integration cleanup
+- Centralized Beach hero render scale, ground-contact anchoring, display size, and collision-box helpers in `scenes/runner/heroSheet.ts`
+- Rewired `RunnerScene` to use the hero-sheet runtime helpers for sprite placement, collision, pass/streak checks, shell throw origin, and scaled feedback effects
+- Added scrolling tile parallax for the Beach sand, foam, and ocean layers so final world art moves against gameplay instead of remaining static
+- Added tests that guard deterministic committed Beach asset loading and the hero geometry contract
+- Fixed the Phaser space-key handler surfaced by browser gameplay capture so automated keyboard input no longer throws
+- Marked Phase 3 complete in `ROADMAP_V4.md`, `features.json`, and active Beach plan docs
+
+### In Progress
+- Roadmap V4 Phase 4 is next: targeted Beach manual playtests for jump readability, obstacle recognition, boss clarity, HUD/effects polish, screenshots/video, and victory/game-over/replay coherence
+
+### Issues Encountered
+- The current committed hero sheet contains foot/shadow pixels down to the frame bottom despite the intended transparent bottom-padding contract; runtime now records `runtimeGroundOffset: 0` for the shipped sheet, and the contract doc notes that future regenerated sheets must update this together with screenshots/tests
+- The `develop-web-game` canvas-only screenshots render black in this headless WebGL setup, but the same run completed with no console errors; full-page Playwright screenshots verified the actual canvas visuals
+- Existing production build large chunk warning remains visible and should stay tracked as a later bundle-size follow-up
+
+### Verification
+- `npm run test:run` - 44 files, 210 tests passing
+- `npx tsc --noEmit` - passing
+- `npm run build` - passing with the existing large chunk warning
+- `npm run test:smoke` - 3 browser smoke tests passing
+- Browser gameplay capture against `http://127.0.0.1:3000/?unlock_all=1` completed without console/page errors after the space-key fix
+- Inspected `/tmp/catrunner-phase3-grounded.png` and `/tmp/catrunner-phase3-obstacles-late.png` for hero ground contact, HUD/canvas readability, and final-art layering
+
+### Next Session Should
+- Start Phase 4 with manual Beach playtesting against the live dev server, focusing on jump readability, obstacle recognition, boss clarity, and progression pacing
+- Capture Phase 4 screenshots or short video for docs/future art consistency checks
+- Keep `runtimeGroundOffset` aligned with the actual committed hero sheet if the sheet is regenerated
+
+---
+
 ## Session: 2026-04-26 18:08 (Roadmap V4 Phase 2 runner hero animation)
 
 ### Completed
@@ -221,66 +312,3 @@ Most recent session should be first.
 - Resume the platformer hero-sheet and sprite-matting workstream on top of the now-stable Phaser-only runtime
 - Decide whether to wire a real `CAMPAIGN_COMPLETE` surface or keep campaign-complete state implicit through progression and Hall of Fame flows
 - Keep bundle-size follow-up visible while `dist/assets/index-*.js` remains oversized
-
----
-
-## Session: 2026-04-21 (V4 Phaser-only reset)
-
-### Completed
-- [x] Removed the `?dom_runner` gate from `App.tsx`; gameplay now boots only through `PhaserGame`
-- [x] Deleted `components/GameEngine.tsx` and the retired DOM-runner support subtree, including legacy React renderers and audio helpers
-- [x] Rewrote active architecture/root guidance to describe the Phaser-only runtime and archived the executed reset spec
-- [x] Verified `npm run test:run` (42 files, 196 tests), `npx tsc --noEmit`, and `npm run build`
-- [x] Ran a headless Chrome smoke pass covering campaign boot, gameplay boot, pause overlay, EJECT back to menu, and Kitty Closet route boot
-
-### Remaining Verification Gap
-- [ ] Full interactive browser coverage for victory/game-over/Hall of Fame mutation still needs a deeper playtest pass
-
-### Next Session Should
-1. Run a deeper browser playtest across victory/game-over flows once richer browser control is available
-2. Continue from the next highest-priority roadmap workstream in `ROADMAP_V3.md`
-
----
-
-## Session: 2026-04-19 (repo cleanup and roadmap consolidation)
-
-### Completed
-- [x] Rewrote `ROADMAP_V3.md` as the only active roadmap
-- [x] Archived `KNOWN_ISSUES.md` and retired it from the workflow
-- [x] Reorganized active docs under `docs/`
-- [x] Created GitHub issues for surviving actionable repo/product concerns
-- [x] Verified `npm run test:run`, `npx tsc --noEmit`, and `npm run build`
-- [x] Confirmed the repo now has one active roadmap and one active root progress log
-
-### Next Session Should
-1. Start from `ROADMAP_V3.md`
-2. Use GitHub Issues for bugs and technical debt
-3. Continue from the highest-priority open roadmap workstream
-
----
-
-## Session: 2026-04-05 09:00 (City Heights Full Level Build)
-
-### Completed
-- [x] **City Heights (ROOFTOPS) full level design** — Brainstormed and specced a 3-zone Mario-style platformer with golden hour cityscape, building-based rooftop platforms, 3 enemy types (pigeon, rat, raccoon), 4 hazards (AC unit, clothesline, satellite dish, neon sign), 3 platformer-specific powerups (triple jump, glide, shield), and Pigeon King boss fight
-- [x] **10-task modular implementation** — Built 6 manager modules (BuildingGenerator, CityBackground, EnemyManager, HazardManager, PowerupManager, PigeonKingBoss) + rewrote PlatformerScene as thin orchestrator + SFX integration
-- [x] **Testable pure logic** — Extracted `generation.ts` (zone resolution) and `bossPhases.ts` (boss state machine) with full Vitest coverage (12 new tests, 97 total)
-- [x] **`/levelbuilder` command** — Created project-level slash command that codifies the repeatable build pipeline for remaining 7 campaign levels
-- [x] **Cat sprite sizing fix** — Fixed cat rendering at native texture resolution by computing scale from source image dimensions
-- [x] **Visual companion brainstorm** — Used browser-based visual companion for enemy/hazard selection, visual style (golden hour), and building generation model mockups
-
-### In Progress
-- [ ] **Visual polish** — Building facades, enemy sprites, hazard art are all placeholder rectangles. Need proper sprite art pass.
-- [ ] **Gameplay tuning** — Gap sizes, enemy density, boss timing, powerup durations need playtesting adjustment
-- [ ] **Cat sprite size** — Fixed scaling logic but may need size constant adjustment (40x48 might be too small relative to buildings)
-
-### Issues Encountered
-- Phaser `setDisplaySize` didn't reliably scale loaded cat sprite textures — switched to computing scale from source image dimensions
-- Git worktrees errored on branch conflicts — user prefers working directly on main
-- Subagent batching (Tasks 3-6) returned before committing — needed manual commit of created files
-
-### Next Session Should
-1. **Playtest City Heights end-to-end** — Verify all 3 zones, enemy behaviors, hazard interactions, boss fight, and victory flow work correctly
-2. **Tune difficulty** — Adjust gap sizes, enemy density, boss land durations based on playthrough feel
-3. **Use `/levelbuilder` on next level** — Pick Kitchen (launcher), Space (shooter), or another skeleton to validate the repeatable pipeline
-4. **Sprite art pass** — Replace placeholder rectangles with proper enemy/hazard art (consider Nanobanana MCP for sprite generation)

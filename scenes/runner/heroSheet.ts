@@ -11,6 +11,7 @@ export const BEACH_HERO_SHEET = {
   origin: { x: 0.5, y: 1 },
   feetBaselineY: 220,
   bottomPadding: 36,
+  runtimeGroundOffset: 0,
   renderSize: {
     width: 160,
     height: 200,
@@ -20,6 +21,79 @@ export const BEACH_HERO_SHEET = {
     duck: { x: 24, y: 0, width: 160, height: 90 },
   },
 } as const;
+
+export const BEACH_HERO_RENDER_SCALE = 0.6;
+
+export interface BeachHeroCollisionBox {
+  left: number;
+  right: number;
+  bottom: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+export function getBeachHeroDisplaySize(scale = BEACH_HERO_RENDER_SCALE): { width: number; height: number } {
+  return {
+    width: BEACH_HERO_SHEET.renderSize.width * scale,
+    height: BEACH_HERO_SHEET.renderSize.height * scale,
+  };
+}
+
+export function getBeachHeroGroundContactOffset(scale = BEACH_HERO_RENDER_SCALE): number {
+  return BEACH_HERO_SHEET.runtimeGroundOffset * scale;
+}
+
+export function getBeachHeroSpritePosition({
+  playerX,
+  groundYScreen,
+  playerY,
+  scale = BEACH_HERO_RENDER_SCALE,
+}: {
+  playerX: number;
+  groundYScreen: number;
+  playerY: number;
+  scale?: number;
+}): { x: number; y: number } {
+  const display = getBeachHeroDisplaySize(scale);
+  return {
+    x: playerX + display.width / 2,
+    y: groundYScreen - playerY + getBeachHeroGroundContactOffset(scale),
+  };
+}
+
+export function getBeachHeroCollisionBox({
+  playerX,
+  groundY,
+  playerY,
+  isDucking,
+  isSuperSized,
+  scale = BEACH_HERO_RENDER_SCALE,
+}: {
+  playerX: number;
+  groundY: number;
+  playerY: number;
+  isDucking: boolean;
+  isSuperSized: boolean;
+  scale?: number;
+}): BeachHeroCollisionBox {
+  const box = isDucking ? BEACH_HERO_SHEET.collisionBoxes.duck : BEACH_HERO_SHEET.collisionBoxes.normal;
+  const baseWidth = box.width * scale;
+  const baseHeight = box.height * scale;
+  const width = isSuperSized ? baseWidth * 3 : baseWidth;
+  const height = isSuperSized ? baseHeight * 3 : baseHeight;
+  const left = playerX + (box.x * scale) - (isSuperSized ? baseWidth : 0);
+  const bottom = groundY + playerY + (box.y * scale);
+
+  return {
+    left,
+    right: left + width,
+    bottom,
+    top: bottom + height,
+    width,
+    height,
+  };
+}
 
 export const BEACH_HERO_ANIMATION_KEYS = {
   idle: 'hero-beach-idle',
