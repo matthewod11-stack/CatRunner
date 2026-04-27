@@ -1,0 +1,784 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="1024" viewBox="0 0 2048 1024" role="img">
+<g transform="translate(0 0)">
+<ellipse cx="128" cy="226" rx="54" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M78 153 C42 128 44 80 78 60" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M78 153 C42 128 44 80 78 60" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(0 116 159)">
+<path d="M96 191 L88 220" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M128 191 L126 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M148 189 L162 218" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="159" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="172" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 144 C110 123 136 123 157 149" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M143 149 L174 167" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 149 L82 167" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(0 146 91)">
+<polygon points="114,67 126,25 147,60" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="153,57 184,31 180,72" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="123,62 126,40 138,58" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="162,56 178,41 177,66" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="150" cy="91" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="175" cy="100" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="159" cy="84" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="179" cy="96" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M171 107 C180 114 189 109 194 103" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 100 L198 95" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 106 L199 108" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+
+</g>
+<g transform="translate(256 0)">
+<ellipse cx="128" cy="226" rx="54" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M77 157 C42 150 35 112 60 91" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M77 157 C42 150 35 112 60 91" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(0 116 156)">
+<path d="M96 188 L88 220" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M128 188 L126 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M148 186 L162 218" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="156" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="169" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 141 C110 120 136 120 157 146" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M144 146 L160 175" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 146 L78 135" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(0 146 86)">
+<polygon points="114,62 126,20 147,55" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="153,52 184,26 180,67" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="123,57 126,35 138,53" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="162,51 178,36 177,61" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="150" cy="86" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="175" cy="95" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="159" cy="79" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="179" cy="91" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M171 102 C180 109 189 104 194 98" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 95 L198 90" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 101 L199 103" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+
+</g>
+<g transform="translate(512 0)">
+<ellipse cx="128" cy="226" rx="54" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M78 153 C42 128 44 80 78 60" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M78 153 C42 128 44 80 78 60" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(0 116 158)">
+<path d="M96 190 L88 220" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M128 190 L126 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M148 188 L162 218" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="158" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="171" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 143 C110 122 136 122 157 148" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M143 148 L174 166" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 148 L82 166" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(0 146 90)">
+<polygon points="114,66 126,24 147,59" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="153,56 184,30 180,71" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="123,61 126,39 138,57" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="162,55 178,40 177,65" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="150" cy="90" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="175" cy="99" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="159" cy="83" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="179" cy="95" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M171 106 C180 113 189 108 194 102" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 99 L198 94" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 105 L199 107" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+
+</g>
+<g transform="translate(768 0)">
+<ellipse cx="128" cy="226" rx="54" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 154 C42 134 38 97 66 75" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 154 C42 134 38 97 66 75" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(-5 116 158)">
+<path d="M92 186 L62 218" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M126 190 L134 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M148 188 L180 212" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="158" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="171" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 143 C110 122 136 122 157 148" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M143 148 L174 166" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 148 L82 166" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(0 146 88)">
+<polygon points="114,64 126,22 147,57" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="153,54 184,28 180,69" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="123,59 126,37 138,55" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="162,53 178,38 177,63" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="150" cy="88" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="175" cy="97" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="159" cy="81" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="179" cy="93" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M173 105 C182 103 188 103 195 105" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 97 L198 92" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 103 L199 105" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+
+</g>
+<g transform="translate(1024 0)">
+<ellipse cx="128" cy="226" rx="54" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M78 153 C42 128 44 80 78 60" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M78 153 C42 128 44 80 78 60" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(2 116 154)">
+<path d="M92 186 L104 220" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M126 184 L158 216" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M148 186 L132 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="154" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="167" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 139 C110 118 136 118 157 144" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M144 144 L160 173" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 144 L78 133" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(0 146 82)">
+<polygon points="114,58 126,16 147,51" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="153,48 184,22 180,63" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="123,53 126,31 138,49" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="162,47 178,32 177,57" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="150" cy="82" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="175" cy="91" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="159" cy="75" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="179" cy="87" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M173 99 C182 97 188 97 195 99" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 91 L198 86" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 97 L199 99" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+
+</g>
+<g transform="translate(1280 0)">
+<ellipse cx="128" cy="226" rx="54" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 165 C50 181 46 210 75 221" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 165 C50 181 46 210 75 221" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(5 116 158)">
+<path d="M92 190 L82 220" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M126 188 L150 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M148 188 L172 218" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="158" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="171" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 143 C110 122 136 122 157 148" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M143 148 L174 166" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 148 L82 166" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(0 146 89)">
+<polygon points="114,65 126,23 147,58" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="153,55 184,29 180,70" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="123,60 126,38 138,56" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="162,54 178,39 177,64" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="150" cy="89" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="175" cy="98" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="159" cy="82" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="179" cy="94" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M173 106 C182 104 188 104 195 106" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 98 L198 93" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 104 L199 106" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+
+</g>
+<g transform="translate(1536 0)">
+<ellipse cx="128" cy="226" rx="54" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M77 157 C42 150 35 112 60 91" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M77 157 C42 150 35 112 60 91" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(-3 116 160)">
+<path d="M92 188 L62 218" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M126 192 L134 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M148 190 L180 212" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="160" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="173" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 145 C110 124 136 124 157 150" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M144 150 L160 179" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 150 L78 139" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(0 146 92)">
+<polygon points="114,68 126,26 147,61" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="153,58 184,32 180,73" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="123,63 126,41 138,59" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="162,57 178,42 177,67" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="150" cy="92" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="175" cy="101" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="159" cy="85" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="179" cy="97" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M173 109 C182 107 188 107 195 109" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 101 L198 96" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 107 L199 109" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+
+</g>
+<g transform="translate(1792 0)">
+<ellipse cx="128" cy="226" rx="54" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M78 153 C42 128 44 80 78 60" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M78 153 C42 128 44 80 78 60" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(2 116 155)">
+<path d="M92 187 L104 220" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M126 185 L158 216" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M148 187 L132 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="155" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="168" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 140 C110 119 136 119 157 145" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M143 145 L174 163" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 145 L82 163" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(0 146 83)">
+<polygon points="114,59 126,17 147,52" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="153,49 184,23 180,64" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="123,54 126,32 138,50" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="162,48 178,33 177,58" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="150" cy="83" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="175" cy="92" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="159" cy="76" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="179" cy="88" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M173 100 C182 98 188 98 195 100" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 92 L198 87" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 98 L199 100" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+
+</g>
+<g transform="translate(0 256)">
+<ellipse cx="128" cy="226" rx="54" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 165 C50 181 46 210 75 221" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 165 C50 181 46 210 75 221" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(4 116 158)">
+<path d="M92 190 L82 220" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M126 188 L150 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M148 188 L172 218" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="158" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="171" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 143 C110 122 136 122 157 148" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M144 148 L160 177" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 148 L78 137" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(0 146 89)">
+<polygon points="114,65 126,23 147,58" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="153,55 184,29 180,70" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="123,60 126,38 138,56" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="162,54 178,39 177,64" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="150" cy="89" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="175" cy="98" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="159" cy="82" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="179" cy="94" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M173 106 C182 104 188 104 195 106" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 98 L198 93" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 104 L199 106" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+
+</g>
+<g transform="translate(256 256)">
+<ellipse cx="128" cy="226" rx="36" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 151 C39 112 56 60 100 55" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 151 C39 112 56 60 100 55" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(-12 116 138)">
+<path d="M96 164 L78 200" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M128 164 L118 202" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M150 164 L176 198" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="138" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="151" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 123 C110 102 136 102 157 128" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M142 130 L163 131" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 130 L86 136" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(0 150 58)">
+<polygon points="118,34 130,-8 151,27" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="157,24 188,-2 184,39" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="127,29 130,7 142,25" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="166,23 182,8 181,33" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="154" cy="58" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="179" cy="67" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="163" cy="51" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="183" cy="63" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M177 75 C186 73 192 73 199 75" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M181 67 L202 62" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M181 73 L203 75" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+
+</g>
+<g transform="translate(512 256)">
+<ellipse cx="128" cy="226" rx="30" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M78 153 C42 128 44 80 78 60" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M78 153 C42 128 44 80 78 60" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(-8 116 126)">
+<path d="M96 152 L78 200" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M128 152 L118 202" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M150 152 L176 198" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="126" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="139" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 111 C110 90 136 90 157 116" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M142 118 L163 119" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 118 L86 124" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(0 150 42)">
+<polygon points="118,18 130,-24 151,11" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="157,8 188,-18 184,23" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="127,13 130,-9 142,9" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="166,7 182,-8 181,17" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="154" cy="42" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="179" cy="51" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="163" cy="35" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="183" cy="47" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M177 59 C186 57 192 57 199 59" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M181 51 L202 46" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M181 57 L203 59" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+
+</g>
+<g transform="translate(768 256)">
+<ellipse cx="128" cy="226" rx="30" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 154 C42 134 38 97 66 75" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 154 C42 134 38 97 66 75" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(10 116 128)">
+<path d="M94 158 L82 214" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M128 158 L132 218" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M150 158 L166 214" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="128" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="141" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 113 C110 92 136 92 157 118" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M142 120 L166 143" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 120 L79 144" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(0 150 52)">
+<polygon points="118,28 130,-14 151,21" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="157,18 188,-8 184,33" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="127,23 130,1 142,19" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="166,17 182,2 181,27" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="154" cy="52" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="179" cy="61" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="163" cy="45" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="183" cy="57" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M177 69 C186 67 192 67 199 69" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M181 61 L202 56" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M181 67 L203 69" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+
+</g>
+<g transform="translate(1024 256)">
+<ellipse cx="128" cy="226" rx="38" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 165 C50 181 46 210 75 221" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 165 C50 181 46 210 75 221" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(8 116 142)">
+<path d="M94 172 L82 214" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M128 172 L132 218" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M150 172 L166 214" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="142" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="155" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 127 C110 106 136 106 157 132" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M142 134 L166 157" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 134 L79 158" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(0 150 72)">
+<polygon points="118,48 130,6 151,41" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="157,38 188,12 184,53" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="127,43 130,21 142,39" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="166,37 182,22 181,47" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="154" cy="72" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="179" cy="81" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="163" cy="65" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="183" cy="77" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M177 89 C186 87 192 87 199 89" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M181 81 L202 76" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M181 87 L203 89" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+
+</g>
+<g transform="translate(1280 256)">
+<ellipse cx="128" cy="226" rx="70" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M80 174 C58 176 52 194 67 204" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M80 174 C58 176 52 194 67 204" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(0 116 176)">
+<path d="M88 210 L64 220" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M122 212 L130 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M158 210 L190 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="176" rx="61.36" ry="34.1" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="189" rx="28.32" ry="21.08" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 161 C110 140 136 140 157 166" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M139 194 L180 209" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 196 L74 214" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(4 165 144)">
+<polygon points="133,120 145,78 166,113" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="172,110 203,84 199,125" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="142,115 145,93 157,111" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="181,109 197,94 196,119" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="169" cy="144" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="194" cy="153" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="178" cy="137" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="198" cy="149" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M192 161 C201 159 207 159 214 161" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M196 153 L217 148" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M196 159 L218 161" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+
+</g>
+<g transform="translate(1536 256)">
+<ellipse cx="128" cy="226" rx="75" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M80 174 C58 176 52 194 67 204" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M80 174 C58 176 52 194 67 204" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(0 116 178)">
+<path d="M88 212 L64 220" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M122 214 L130 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M158 212 L190 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="178" rx="64.48" ry="31.9" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="191" rx="29.759999999999998" ry="19.72" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 163 C110 142 136 142 157 168" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M139 196 L180 211" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 198 L74 216" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(4 174 148)">
+<polygon points="142,124 154,82 175,117" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="181,114 212,88 208,129" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="151,119 154,97 166,115" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="190,113 206,98 205,123" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="178" cy="148" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="203" cy="157" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="187" cy="141" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="207" cy="153" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M201 165 C210 163 216 163 223 165" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M205 157 L226 152" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M205 163 L227 165" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+
+</g>
+<g transform="translate(1792 256)">
+<ellipse cx="128" cy="226" rx="70" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M80 174 C58 176 52 194 67 204" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M80 174 C58 176 52 194 67 204" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(0 116 176)">
+<path d="M88 210 L64 220" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M122 212 L130 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M158 210 L190 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="176" rx="61.36" ry="34.1" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="189" rx="28.32" ry="21.08" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 161 C110 140 136 140 157 166" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M139 194 L180 209" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 196 L74 214" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(4 165 144)">
+<polygon points="133,120 145,78 166,113" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="172,110 203,84 199,125" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="142,115 145,93 157,111" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="181,109 197,94 196,119" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="169" cy="144" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="194" cy="153" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="178" cy="137" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="198" cy="149" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M192 161 C201 159 207 159 214 161" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M196 153 L217 148" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M196 159 L218 161" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+
+</g>
+<g transform="translate(0 512)">
+<ellipse cx="128" cy="226" rx="54" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 165 C50 181 46 210 75 221" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 165 C50 181 46 210 75 221" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(-8 116 153)">
+<path d="M96 185 L88 220" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M128 185 L126 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M148 183 L162 218" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="153" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="166" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 138 C110 117 136 117 157 143" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M142 145 L166 168" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 145 L79 169" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(-8 146 85)">
+<polygon points="114,71 126,29 147,54" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="153,51 184,35 180,76" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="123,66 126,44 138,52" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="162,50 178,45 177,70" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="150" cy="85" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="175" cy="94" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="159" cy="78" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="179" cy="90" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M173 105 C182 97 191 105 197 99" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 94 L198 89" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 100 L199 102" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="translate(78 74) scale(0.75)">
+<path d="M0 -20 L7 -6 L23 -4 L10 6 L14 22 L0 13 L-14 22 L-10 6 L-23 -4 L-7 -6Z" fill="#facc15" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+</g>
+<g transform="translate(256 512)">
+<ellipse cx="128" cy="226" rx="54" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M80 174 C58 176 52 194 67 204" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M80 174 C58 176 52 194 67 204" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(7 116 156)">
+<path d="M96 188 L88 220" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M128 188 L126 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M148 186 L162 218" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="156" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="169" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 141 C110 120 136 120 157 146" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M142 148 L166 171" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 148 L79 172" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(7 146 88)">
+<polygon points="114,74 126,32 147,57" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="153,54 184,38 180,79" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="123,69 126,47 138,55" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="162,53 178,48 177,73" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="150" cy="88" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="175" cy="97" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="159" cy="81" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="179" cy="93" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M173 108 C182 100 191 108 197 102" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 97 L198 92" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 103 L199 105" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="translate(203 65) scale(0.62)">
+<path d="M0 -20 L7 -6 L23 -4 L10 6 L14 22 L0 13 L-14 22 L-10 6 L-23 -4 L-7 -6Z" fill="#facc15" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+</g>
+<g transform="translate(512 512)">
+<ellipse cx="128" cy="226" rx="54" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 165 C50 181 46 210 75 221" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 165 C50 181 46 210 75 221" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(-5 116 158)">
+<path d="M96 190 L88 220" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M128 190 L126 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M148 188 L162 218" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="158" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="171" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 143 C110 122 136 122 157 148" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M142 150 L166 173" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 150 L79 174" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(0 146 90)">
+<polygon points="114,76 126,34 147,59" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="153,56 184,40 180,81" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="123,71 126,49 138,57" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="162,55 178,50 177,75" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="150" cy="90" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="175" cy="99" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="159" cy="83" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="179" cy="95" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M173 110 C182 102 191 110 197 104" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 99 L198 94" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 105 L199 107" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="translate(70 85) scale(0.55)">
+<path d="M0 -20 L7 -6 L23 -4 L10 6 L14 22 L0 13 L-14 22 L-10 6 L-23 -4 L-7 -6Z" fill="#facc15" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+</g>
+<g transform="translate(768 512)">
+<ellipse cx="128" cy="226" rx="54" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 154 C42 134 38 97 66 75" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 154 C42 134 38 97 66 75" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(-4 116 158)">
+<path d="M96 190 L88 220" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M128 190 L126 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M148 188 L162 218" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="158" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="171" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 143 C110 122 136 122 157 148" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M146 144 L190 129" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 148 L85 166" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(0 146 90)">
+<polygon points="114,66 126,24 147,59" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="153,56 184,30 180,71" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="123,61 126,39 138,57" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="162,55 178,40 177,65" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="150" cy="90" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="175" cy="99" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="159" cy="83" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="179" cy="95" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M173 107 C182 105 188 105 195 107" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 99 L198 94" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 105 L199 107" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="translate(196 126) scale(0.68)">
+<path d="M-24 16 C-18 -18 -5 -34 0 -36 C5 -34 18 -18 24 16 C10 28 -10 28 -24 16Z" fill="#fff1c9" stroke="#273043" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M0 -34 L0 24" fill="none" stroke="#d97706" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M-15 -22 C-4 -4 -4 12 -8 24 M15 -22 C4 -4 4 12 8 24 M-20 12 C-8 5 8 5 20 12" fill="none" stroke="#d97706" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+</g>
+<g transform="translate(1024 512)">
+<ellipse cx="128" cy="226" rx="54" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M78 153 C42 128 44 80 78 60" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M78 153 C42 128 44 80 78 60" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(-8 116 156)">
+<path d="M96 188 L88 220" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M128 188 L126 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M148 186 L162 218" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="156" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="169" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 141 C110 120 136 120 157 146" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M148 139 L201 115" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 146 L89 164" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(0 150 88)">
+<polygon points="118,64 130,22 151,57" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="157,54 188,28 184,69" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="127,59 130,37 142,55" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="166,53 182,38 181,63" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="154" cy="88" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="179" cy="97" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="163" cy="81" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="183" cy="93" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M177 105 C186 103 192 103 199 105" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M181 97 L202 92" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M181 103 L203 105" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="translate(211 114) scale(0.72)">
+<path d="M-24 16 C-18 -18 -5 -34 0 -36 C5 -34 18 -18 24 16 C10 28 -10 28 -24 16Z" fill="#fff1c9" stroke="#273043" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M0 -34 L0 24" fill="none" stroke="#d97706" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M-15 -22 C-4 -4 -4 12 -8 24 M15 -22 C4 -4 4 12 8 24 M-20 12 C-8 5 8 5 20 12" fill="none" stroke="#d97706" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+</g>
+<g transform="translate(1280 512)">
+<ellipse cx="128" cy="226" rx="54" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M77 157 C42 150 35 112 60 91" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M77 157 C42 150 35 112 60 91" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(-2 116 159)">
+<path d="M96 191 L88 220" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M128 191 L126 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M148 189 L162 218" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="159" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="172" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 144 C110 123 136 123 157 149" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M148 142 L201 118" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 149 L89 167" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(0 146 91)">
+<polygon points="114,67 126,25 147,60" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="153,57 184,31 180,72" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="123,62 126,40 138,58" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="162,56 178,41 177,66" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="150" cy="91" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="175" cy="100" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="159" cy="84" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="179" cy="96" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M171 107 C180 114 189 109 194 103" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 100 L198 95" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 106 L199 108" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="translate(225 108) scale(0.62)">
+<path d="M-24 16 C-18 -18 -5 -34 0 -36 C5 -34 18 -18 24 16 C10 28 -10 28 -24 16Z" fill="#fff1c9" stroke="#273043" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M0 -34 L0 24" fill="none" stroke="#d97706" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M-15 -22 C-4 -4 -4 12 -8 24 M15 -22 C4 -4 4 12 8 24 M-20 12 C-8 5 8 5 20 12" fill="none" stroke="#d97706" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+</g>
+<g transform="translate(1536 512)">
+<ellipse cx="128" cy="226" rx="54" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 151 C39 112 56 60 100 55" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 151 C39 112 56 60 100 55" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(0 116 156)">
+<path d="M96 188 L88 220" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M128 188 L126 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M148 186 L162 218" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="156" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="169" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 141 C110 120 136 120 157 146" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M143 143 L166 82" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 146 L82 120" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(0 146 84)">
+<polygon points="114,60 126,18 147,53" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="153,50 184,24 180,65" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="123,55 126,33 138,51" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="162,49 178,34 177,59" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="150" cy="84" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="175" cy="93" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="159" cy="77" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="179" cy="89" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M171 100 C180 107 189 102 194 96" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 93 L198 88" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 99 L199 101" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="translate(170 66) scale(0.5)">
+<path d="M0 -20 L7 -6 L23 -4 L10 6 L14 22 L0 13 L-14 22 L-10 6 L-23 -4 L-7 -6Z" fill="#facc15" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+</g>
+<g transform="translate(1792 512)">
+<ellipse cx="128" cy="226" rx="54" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 151 C39 112 56 60 100 55" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 151 C39 112 56 60 100 55" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(-6 116 150)">
+<path d="M96 182 L88 220" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M128 182 L126 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M148 180 L162 218" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="150" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="163" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 135 C110 114 136 114 157 140" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M143 137 L166 76" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 140 L82 114" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(0 146 74)">
+<polygon points="114,50 126,8 147,43" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="153,40 184,14 180,55" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="123,45 126,23 138,41" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="162,39 178,24 177,49" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="150" cy="74" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="175" cy="83" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="159" cy="67" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="179" cy="79" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M171 90 C180 97 189 92 194 86" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 83 L198 78" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 89 L199 91" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="translate(84 72) scale(0.42)">
+<path d="M0 -20 L7 -6 L23 -4 L10 6 L14 22 L0 13 L-14 22 L-10 6 L-23 -4 L-7 -6Z" fill="#facc15" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+</g><g transform="translate(193 48) scale(0.45)">
+<path d="M0 -20 L7 -6 L23 -4 L10 6 L14 22 L0 13 L-14 22 L-10 6 L-23 -4 L-7 -6Z" fill="#facc15" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+</g>
+<g transform="translate(0 768)">
+<ellipse cx="128" cy="226" rx="54" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M78 153 C42 128 44 80 78 60" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M78 153 C42 128 44 80 78 60" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(4 116 155)">
+<path d="M96 187 L88 220" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M128 187 L126 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M148 185 L162 218" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="155" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="168" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 140 C110 119 136 119 157 145" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M143 142 L166 81" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 145 L82 119" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(0 146 83)">
+<polygon points="114,59 126,17 147,52" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="153,49 184,23 180,64" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="123,54 126,32 138,50" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="162,48 178,33 177,58" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="150" cy="83" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="175" cy="92" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="159" cy="76" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="179" cy="88" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M171 99 C180 106 189 101 194 95" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 92 L198 87" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 98 L199 100" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="translate(190 62) scale(0.5)">
+<path d="M0 -20 L7 -6 L23 -4 L10 6 L14 22 L0 13 L-14 22 L-10 6 L-23 -4 L-7 -6Z" fill="#facc15" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+</g>
+<g transform="translate(256 768)">
+<ellipse cx="128" cy="226" rx="54" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 151 C39 112 56 60 100 55" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 151 C39 112 56 60 100 55" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(0 116 158)">
+<path d="M96 190 L88 220" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M128 190 L126 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M148 188 L162 218" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="158" rx="52" ry="55" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="171" rx="24" ry="34" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 143 C110 122 136 122 157 148" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M143 145 L166 84" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 148 L82 122" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(0 146 88)">
+<polygon points="114,64 126,22 147,57" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="153,54 184,28 180,69" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="123,59 126,37 138,55" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="162,53 178,38 177,63" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="150" cy="88" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="175" cy="97" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="159" cy="81" r="5" fill="#273043" stroke="#273043" stroke-width="1" />
+<circle cx="179" cy="93" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M171 104 C180 111 189 106 194 100" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 97 L198 92" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M177 103 L199 105" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="translate(76 82) scale(0.4)">
+<path d="M0 -20 L7 -6 L23 -4 L10 6 L14 22 L0 13 L-14 22 L-10 6 L-23 -4 L-7 -6Z" fill="#facc15" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+</g>
+<g transform="translate(512 768)">
+<ellipse cx="128" cy="226" rx="76" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 165 C50 181 46 210 75 221" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M79 165 C50 181 46 210 75 221" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(0 116 176)">
+<path d="M86 216 L56 216" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M124 217 L112 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M158 216 L190 214" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="176" rx="63.44" ry="30.250000000000004" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="189" rx="29.28" ry="18.700000000000003" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 161 C110 140 136 140 157 166" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M139 194 L180 209" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 196 L74 214" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(9 160 165)">
+<polygon points="128,151 140,109 161,134" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="167,131 198,115 194,156" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="137,146 140,124 152,132" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="176,130 192,125 191,150" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="164" cy="165" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="189" cy="174" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M168 158 L181 171" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" /><path d="M181 158 L168 171" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="193" cy="170" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M186 186 C194 179 205 179 212 186" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M191 174 L212 169" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M191 180 L213 182" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+
+</g>
+<g transform="translate(768 768)">
+<ellipse cx="128" cy="226" rx="80" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M80 174 C58 176 52 194 67 204" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M80 174 C58 176 52 194 67 204" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(0 116 178)">
+<path d="M86 218 L56 216" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M124 219 L112 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M158 218 L190 214" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="178" rx="66.56" ry="27.5" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="191" rx="30.72" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 163 C110 142 136 142 157 168" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M139 196 L180 211" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 198 L74 216" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(5 166 170)">
+<polygon points="134,156 146,114 167,139" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="173,136 204,120 200,161" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="143,151 146,129 158,137" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="182,135 198,130 197,155" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="170" cy="170" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="195" cy="179" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M174 163 L187 176" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" /><path d="M187 163 L174 176" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="199" cy="175" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M192 191 C200 184 211 184 218 191" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M197 179 L218 174" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M197 185 L219 187" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+
+</g>
+<g transform="translate(1024 768)">
+<ellipse cx="128" cy="226" rx="82" ry="8" fill="rgba(39,48,67,0.18)" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M80 174 C58 176 52 194 67 204" fill="none" stroke="#1f2937" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M80 174 C58 176 52 194 67 204" fill="none" stroke="#f6a64a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+<g transform="rotate(0 116 180)">
+<path d="M86 220 L56 216" fill="none" stroke="#df7c25" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M124 221 L112 220" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" /><path d="M158 220 L190 214" fill="none" stroke="#f6a64a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="116" cy="180" rx="68.64" ry="26.4" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="134" cy="193" rx="31.68" ry="16.32" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" opacity="0.98"/>
+<path d="M86 165 C110 144 136 144 157 170" fill="none" stroke="#ffd59b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M139 198 L180 213" fill="none" stroke="#f6a64a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" /><path d="M101 200 L74 218" fill="none" stroke="#df7c25" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<g transform="rotate(3 168 174)">
+<polygon points="136,160 148,118 169,143" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="175,140 206,124 202,165" fill="#f6a64a" stroke="#1f2937" stroke-width="7" stroke-linejoin="round" />
+<polygon points="145,155 148,133 160,141" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<polygon points="184,139 200,134 199,159" fill="#ff9bb3" stroke="none" stroke-width="0" stroke-linejoin="round" />
+<ellipse cx="172" cy="174" rx="48" ry="42" fill="#f6a64a" stroke="#1f2937" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<ellipse cx="197" cy="183" rx="24" ry="17" fill="#fff2d5" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M176 167 L189 180" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" /><path d="M189 167 L176 180" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="201" cy="179" r="4" fill="#ff9bb3" stroke="#273043" stroke-width="2" />
+<path d="M194 195 C202 188 213 188 220 195" fill="none" stroke="#273043" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M199 183 L220 178" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M199 189 L221 191" fill="none" stroke="#273043" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+
+</g>
+</svg>

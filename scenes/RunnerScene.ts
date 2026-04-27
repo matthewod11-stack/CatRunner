@@ -52,6 +52,13 @@ import {
   getBossStartingShellAmmo,
   shouldRefillBossShellAmmo,
 } from './runner/bossAmmo';
+import {
+  BEACH_HERO_ANIMATIONS,
+  BEACH_HERO_ANIMATION_KEYS,
+  BEACH_HERO_SHEET,
+  resolveBeachHeroAnimation,
+  type BeachHeroAnimationId,
+} from './runner/heroSheet';
 
 /**
  * Phaser scene for the endless-runner genre (BEACH level and future runner levels).
@@ -104,7 +111,9 @@ export default class RunnerScene extends SceneBridge {
   private audio!: PhaserAudio;
 
   // ── Player visual ──
-  private playerSprite!: Phaser.GameObjects.Image;
+  private playerSprite!: Phaser.GameObjects.Sprite;
+  private playerAnimationOverride: { id: BeachHeroAnimationId; until: number } | null = null;
+  private currentPlayerAnimationKey = '';
 
   // ── Cached layout values ──
   private playerX = 100; // playerAnchorLeftPx from theme, default 100
@@ -210,12 +219,12 @@ export default class RunnerScene extends SceneBridge {
   }
 
   preload(): void {
-    // Load cat sprite (or custom cat URL)
-    if (this.catSpriteUrl) {
-      this.load.image('cat', this.catSpriteUrl);
-    } else {
-      this.load.image('cat', 'assets/sprites/cat-run.png');
-    }
+    // Custom still-image cats stay in closet/identity surfaces until they can satisfy the same sheet contract.
+    this.load.spritesheet(BEACH_HERO_SHEET.key, BEACH_HERO_SHEET.path, {
+      frameWidth: BEACH_HERO_SHEET.frameWidth,
+      frameHeight: BEACH_HERO_SHEET.frameHeight,
+      endFrame: BEACH_HERO_SHEET.frameMax - 1,
+    });
 
     for (const asset of BEACH_IMAGE_LOADS) {
       this.load.image(asset.key, asset.path);
@@ -264,14 +273,20 @@ export default class RunnerScene extends SceneBridge {
 
     // ── Player visual (sprite) ──
     const scale = RunnerScene.ENTITY_SCALE;
-    this.playerSprite = this.add.image(
+    this.registerPlayerAnimations();
+    this.playerSprite = this.add.sprite(
       this.playerX + (RunnerScene.PLAYER_W * scale) / 2,
       this.groundYScreen,
-      'cat',
+      BEACH_HERO_SHEET.key,
+      0,
     )
-      .setOrigin(0.5, 1) // anchor at bottom center
-      .setDisplaySize(RunnerScene.PLAYER_W * scale, RunnerScene.PLAYER_H_NORMAL * scale)
+      .setOrigin(BEACH_HERO_SHEET.origin.x, BEACH_HERO_SHEET.origin.y)
+      .setDisplaySize(
+        BEACH_HERO_SHEET.renderSize.width * scale,
+        BEACH_HERO_SHEET.renderSize.height * scale,
+      )
       .setDepth(10);
+    this.playPlayerAnimation('run');
 
     // ── Input: keyboard ──
     const kb = this.input.keyboard!;
@@ -325,6 +340,8 @@ export default class RunnerScene extends SceneBridge {
     this.playerVy = 0;
     this.jumpCount = 0;
     this.isDucking = false;
+    this.playerAnimationOverride = null;
+    this.currentPlayerAnimationKey = '';
     this.invincibleUntil = 0;
     this.isPaused = false;
 
@@ -1012,6 +1029,7 @@ export default class RunnerScene extends SceneBridge {
         this.invincibleUntil = now + this.tuning.invincibilityDurationMs;
         this.safeSpawnUntil = now + this.tuning.hitSpawnGraceMs;
         this.gameScore.streak = 0;
+        this.queuePlayerAnimation('hurt', 360);
 
         // Damage effects
         this.effects.freezeFrame(80);
@@ -1027,6 +1045,8 @@ export default class RunnerScene extends SceneBridge {
 
         if (this.gameScore.lives <= 0) {
           this.gameOver = true;
+          this.status = GameStatus.GAMEOVER;
+          this.queuePlayerAnimation('defeat', 900);
           this.emitGameOver(Math.floor(this.score / 10));
           this.emitStatusChange(GameStatus.GAMEOVER);
           return; // Stop processing further collisions
@@ -1139,22 +1159,76 @@ export default class RunnerScene extends SceneBridge {
 
   // ─── Rendering ──────────────────────────────────────────────────────
 
+  private registerPlayerAnimations(): void {
+    for (const animation of BEACH_HERO_ANIMATIONS) {
+      if (this.anims.exists(animation.key)) continue;
+      this.anims.create({
+        key: animation.key,
+        frames: animation.frames.map(frame => ({ key: BEACH_HERO_SHEET.key, frame })),
+        frameRate: animation.frameRate,
+        repeat: animation.repeat,
+      });
+    }
+  }
+
+  private queuePlayerAnimation(id: BeachHeroAnimationId, durationMs: number): void {
+    this.playerAnimationOverride = { id, until: Date.now() + durationMs };
+    this.playPlayerAnimation(id, true);
+  }
+
+  private playPlayerAnimation(id: BeachHeroAnimationId, restart = false): void {
+    const key = BEACH_HERO_ANIMATION_KEYS[id];
+    if (!restart && this.currentPlayerAnimationKey === key) return;
+    this.playerSprite.play(key, !restart);
+    this.currentPlayerAnimationKey = key;
+  }
+
+  private resolvePlayerAnimation(now: number): BeachHeroAnimationId {
+    if (this.playerAnimationOverride) {
+      if (now < this.playerAnimationOverride.until) {
+        return this.playerAnimationOverride.id;
+      }
+      this.playerAnimationOverride = null;
+    }
+
+    return resolveBeachHeroAnimation({
+      status: this.status,
+      isDucking: this.isDucking,
+      isAirborne: this.playerY > 1,
+      verticalVelocity: this.playerVy,
+      isHurt: false,
+      isThrowingShell: false,
+      isBossDefeating: this.bossDefeating,
+      isMoving: this.speed > 0 && !this.gameOver,
+    });
+  }
+
   /**
    * Update player sprite position and size based on current state.
    */
   private updatePlayerSprite(): void {
     const scale = RunnerScene.ENTITY_SCALE;
-    const h = this.isDucking ? RunnerScene.PLAYER_H_DUCK : RunnerScene.PLAYER_H_NORMAL;
+    const now = Date.now();
 
     // Convert DOM engine coords (y=0 ground, +y up) to Phaser coords (y=0 top, +y down)
     // Player sprite origin is (0.5, 1) — bottom center
     const renderY = this.groundYScreen - this.playerY;
+    const animation = this.resolvePlayerAnimation(now);
+    this.playPlayerAnimation(animation);
 
     this.playerSprite.setPosition(
       this.playerX + (RunnerScene.PLAYER_W * scale) / 2,
       renderY,
     );
-    this.playerSprite.setDisplaySize(RunnerScene.PLAYER_W * scale, h * scale);
+    this.playerSprite.setDisplaySize(
+      BEACH_HERO_SHEET.renderSize.width * scale,
+      BEACH_HERO_SHEET.renderSize.height * scale,
+    );
+    this.playerSprite.setAlpha(
+      now < this.invincibleUntil && this.status !== GameStatus.GAMEOVER && Math.floor(now / 90) % 2 === 0
+        ? 0.58
+        : 1,
+    );
   }
 
   // ─── Boss fight (Task 1.7) ──────────────────────────────────────────
@@ -1353,6 +1427,7 @@ export default class RunnerScene extends SceneBridge {
     if (now - this.lastShotTime < 150) return;
     this.lastShotTime = now;
     this.shellAmmo -= 1;
+    this.queuePlayerAnimation('shellThrow', 260);
 
     this.audio.playSfx('shoot');
 
@@ -1441,6 +1516,7 @@ export default class RunnerScene extends SceneBridge {
             this.gameScore.multiplier += 3;
 
             this.bossDefeating = true;
+            this.queuePlayerAnimation('victory', 1200);
             this.bossSprite
               ?.setTexture(BEACH_BOSS_TEXTURES.defeat)
               .setDepth(6);

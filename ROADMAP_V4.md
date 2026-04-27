@@ -132,7 +132,7 @@ Acceptance criteria:
 
 ## Phase 2 - Runner Hero Animation
 
-- [ ] Define the Beach runner hero-sheet contract:
+- [x] Define the Beach runner hero-sheet contract:
   - idle
   - run loop
   - jump rise
@@ -141,10 +141,18 @@ Acceptance criteria:
   - hurt
   - shell throw
   - victory / defeat
-- [ ] Produce the default Beach hero sheet and wire it as the Level 1 gameplay baseline.
-- [ ] Add animation-state handling to `RunnerScene` for movement, ducking, damage, boss attack, and end-state transitions.
-- [ ] Document collision-box alignment, feet placement, and sheet padding so future swaps do not require code archaeology.
-- [ ] Defer dynamic per-user animated cat generation unless it can fit the same contract without slowing Beach completion.
+- [x] Produce the default Beach hero sheet and wire it as the Level 1 gameplay baseline.
+- [x] Add animation-state handling to `RunnerScene` for movement, ducking, damage, boss attack, and end-state transitions.
+- [x] Document collision-box alignment, feet placement, and sheet padding so future swaps do not require code archaeology.
+- [x] Defer dynamic per-user animated cat generation unless it can fit the same contract without slowing Beach completion.
+
+Phase 2 decision record:
+
+- `docs/plans/level-1-runner-hero-sheet-contract.md` defines the 256x256 fixed-frame sheet, animation states, feet baseline, padding, collision boxes, and swap rules.
+- `scripts/generate-beach-hero-sheet.mjs` generates the committed default sheet at `assets/sprites/beach/hero/runner-hero-sheet.png`.
+- `scenes/runner/heroSheet.ts` owns the runtime manifest, animation keys, frame indexes, and gameplay-state resolver.
+- `RunnerScene` now loads the default Beach hero as a Phaser spritesheet and maps movement, ducking, damage, shell throw, boss defeat, victory, and game-over states to animations.
+- Static custom-cat renders remain deferred from active gameplay until they can provide a complete sheet that conforms to the same contract.
 
 Acceptance criteria:
 

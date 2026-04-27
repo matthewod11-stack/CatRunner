@@ -36,6 +36,7 @@ npx tsc --noEmit
 - `App.tsx` routes 9 lazy Phaser scene imports through `PhaserGame`.
 - `components/PhaserGame.tsx` and `scenes/shared/SceneBridge.ts` are the shared React/Phaser bridge.
 - Gameplay is Phaser-only; there is no supported DOM-runner fallback path.
+- Level 1 gameplay uses the committed Beach runner hero sheet from `assets/sprites/beach/hero/`, with animation contract/state mapping in `scenes/runner/heroSheet.ts`.
 - `playwright/smoke.spec.ts` covers campaign boot, Kitty Closet, Phaser boot/eject, victory/game-over mutation, and Hall of Fame ordering/cap behavior.
 - Custom cat assets live in IndexedDB plus localStorage metadata, with server-side Gemini generation and sprite matting support for optional identity surfaces.
 
@@ -51,6 +52,7 @@ npx tsc --noEmit
 - `docs/plans/level-1-asset-inventory.md`
 - `docs/plans/level-1-beach-visual-brief.md`
 - `docs/plans/level-1-beach-prompt-pack.md`
+- `docs/plans/level-1-runner-hero-sheet-contract.md`
 - `docs/specs/README.md`
 
 ## Game Studio Routing
@@ -65,7 +67,7 @@ Default execution model:
 ## Current Focus
 
 - Execute `ROADMAP_V4.md` around Level 1 (`BEACH`) completion rather than more migration-era cleanup.
-- Use Beach as the proving ground for a repeatable world-art and hero-sheet pipeline that later levels can copy.
+- Phase 3/4 work should tune Beach scale, baseline, hitboxes, readability, HUD/effects, and manual play feel against the final world art and runner hero sheet.
 - Keep live cat generation off the gameplay critical path unless it can satisfy the same constrained sheet contract as the default hero.
 - Keep smoke coverage green and keep bundle-size follow-ups visible while asset plumbing evolves.
 

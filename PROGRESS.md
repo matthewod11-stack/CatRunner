@@ -36,6 +36,37 @@ Most recent session should be first.
 
 ---
 
+## Session: 2026-04-26 18:08 (Roadmap V4 Phase 2 runner hero animation)
+
+### Completed
+- Completed Roadmap V4 Phase 2 for the Beach runner hero: fixed-frame contract, generated default sheet, runtime manifest, animation-state resolver, and RunnerScene wiring
+- Added `docs/plans/level-1-runner-hero-sheet-contract.md` covering frame geometry, feet baseline, padding, collision boxes, animation states, resolver priority, and future swap rules
+- Added `scripts/generate-beach-hero-sheet.mjs` and committed the generated Beach hero sheet under `assets/sprites/beach/hero/`
+- Replaced the first messy character pass with a cleaner side-facing runner sprite sheet after live review feedback
+- Changed RunnerScene from static image rendering to Phaser spritesheet animations for run, jump rise/fall, duck, hurt, shell throw, victory, and defeat states
+- Updated ROADMAP_V4.md, active Beach docs, AGENTS.md, CLAUDE.md, and features.json for the Phase 2 handoff
+
+### In Progress
+- Roadmap V4 Phase 3/4 are next: tune scale, baseline, hitboxes, HUD/effects readability, and manual Beach play feel against the final world art plus runner hero sheet
+
+### Issues Encountered
+- The first generated hero sheet looked too busy and character design was weak; the replacement pass simplified the silhouette and side-facing read
+- Existing production build large chunk warning remains visible and should stay tracked as a later bundle-size follow-up
+
+### Verification
+- `npm run test:run` / `CI=1 npm test` - 44 files, 207 tests passing
+- `npx tsc --noEmit` - passing
+- `npm run build` - passing with the existing large chunk warning
+- `npm run test:smoke` - 3 browser smoke tests passing
+- Captured `/tmp/catrunner-runner-hero.png` from the live runner to verify the new hero renders in-game
+
+### Next Session Should
+- Start with Roadmap V4 Phase 3/4 scale, baseline, hitbox, and readability tuning
+- Use the new hero contract doc as the source of truth for any further hero-sheet polish or replacement
+- Keep boss-practice smoke coverage as the guardrail for shell ammo and React/Phaser HUD sync
+
+---
+
 ## Session: 2026-04-24 14:26 (Roadmap V4 Phase 1 handoff)
 
 ### Completed
@@ -253,27 +284,3 @@ Most recent session should be first.
 2. **Tune difficulty** — Adjust gap sizes, enemy density, boss land durations based on playthrough feel
 3. **Use `/levelbuilder` on next level** — Pick Kitchen (launcher), Space (shooter), or another skeleton to validate the repeatable pipeline
 4. **Sprite art pass** — Replace placeholder rectangles with proper enemy/hazard art (consider Nanobanana MCP for sprite generation)
-
----
-
-## Session: 2026-03-30 09:15 (Local Overnight Agent — Desktop Task Setup)
-
-### Completed
-- [x] **Local overnight agent** — Adapted morty-v2 pattern for CatRunner as a Claude Desktop local scheduled task
-- [x] **`docs/OVERNIGHT_AGENT.md`** — Rewritten from remote trigger to Desktop task version with CatRunner-specific verification gates (build + tsc + Vitest) and safety rails (scenes, .env.local, game logic)
-- [x] **`prompts/overnight-agent.md`** — Thin task entry point, writes run log to `state/overnight-agent-log.json`
-- [x] **`state/` directory** — Created and gitignored for agent runtime artifacts
-- [x] **CLAUDE.md** — Added prompts + state file references to project tracking
-- [x] **GitHub labels verified** — All 4 labels confirmed present (tech-debt, needs-design-decision, deferred, in-progress)
-
-### In Progress
-- [ ] Desktop task needs to be created manually in Claude Desktop settings
-
-### Issues Encountered
-- None
-
-### Next Session Should
-1. **Create Desktop task** — Name: `overnight-agent`, Prompt: `Read prompts/overnight-agent.md and execute all instructions in it.`, Daily 2:00 AM, Sonnet, Folder: `/Users/homebase/Desktop/CatRunner`
-2. **Run once and approve permissions** — Click "Run now", approve gh/npm/git/file write permissions
-3. **Review first run results** — Check `state/overnight-agent-log.json` and GitHub PRs
-4. **Consider disabling remote trigger** — `trig_01WdJuhzamc5XsGBm8MAkP5K` now redundant with local task
