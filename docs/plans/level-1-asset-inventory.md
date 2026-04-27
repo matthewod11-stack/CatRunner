@@ -1,6 +1,6 @@
 # Level 1 Asset Inventory
 
-Active inventory for the Beach completion pass in `ROADMAP_V4.md`.
+Final inventory for the Beach completion pass from archived `ROADMAP_V4.md`.
 
 Related Phase 1 docs:
 

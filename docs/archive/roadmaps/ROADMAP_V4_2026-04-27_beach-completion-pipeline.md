@@ -1,8 +1,10 @@
 # Beach Kitty Roadmap V4
 
+> Archived 2026-04-27 after completing Level 1 Beach and the repeatable level-art pipeline. This is no longer the active root roadmap. The next root roadmap should be `ROADMAP_CITYHEIGHTS.md`.
+
 ## Canonical Status
 
-- `ROADMAP_V4.md` is the only active roadmap.
+- This file is historical and lives under `docs/archive/roadmaps/`.
 - `docs/archive/roadmaps/ROADMAP_V3_2026-04-23_phaser-runtime-cleanup.md` archives the Phaser migration / cleanup roadmap that V4 replaces.
 - `PROGRESS.md` remains the active root session log.
 - `docs/` remains the home for supporting architecture, product, plan, and spec material.
@@ -197,14 +199,21 @@ Acceptance criteria:
 
 ## Phase 5 - Make It Repeatable
 
-- [ ] Turn the Beach process into the default level-art pipeline for future levels.
-- [ ] Create reusable templates for:
+- [x] Turn the Beach process into the default level-art pipeline for future levels.
+- [x] Create reusable templates for:
   - level art brief
   - prompt pack
   - asset manifest
   - QA checklist
-- [ ] Apply the same hero-sheet contract approach to the next genre once Beach is stable.
-- [ ] Record which steps are model-assisted, which are manual cleanup, and which are runtime integration so later levels do not rediscover the workflow.
+- [x] Apply the same hero-sheet contract approach to the next genre once Beach is stable.
+- [x] Record which steps are model-assisted, which are manual cleanup, and which are runtime integration so later levels do not rediscover the workflow.
+
+Phase 5 outputs:
+
+- `docs/architecture/level-art-pipeline.md` is the repeatable workflow.
+- `docs/templates/` contains reusable brief, prompt pack, asset inventory, manifest, hero-sheet contract, and QA checklist templates.
+- `scripts/scaffold-level-art-pipeline.mjs` and `npm run scaffold:level-art` generate per-level docs and asset folders from genre-aware profiles.
+- Level 2 (`ROOFTOPS` / City Heights) is bootstrapped as the first non-runner application with a platformer visual brief, prompt pack, asset inventory, QA checklist, and hero-sheet contract.
 
 Acceptance criteria:
 

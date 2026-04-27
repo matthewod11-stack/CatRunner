@@ -1,6 +1,6 @@
 # Level 1 Beach Visual Brief
 
-Active Phase 1 art direction for `BEACH` in `ROADMAP_V4.md`.
+Final Phase 1 art direction for `BEACH` from archived `ROADMAP_V4.md`.
 
 ## Direction
 

@@ -2,13 +2,13 @@
   "$schema": "./features.schema.json",
   "_meta": {
     "description": "Historical feature tracking snapshot for the multi-genre campaign. Status: not-started | in-progress | pass | fail | blocked",
-    "lastUpdated": "2026-04-26",
-    "planFile": "./ROADMAP_V4.md",
+    "lastUpdated": "2026-04-27",
+    "planFile": "pending ./ROADMAP_CITYHEIGHTS.md",
     "historicalRoadmapsDir": "./docs/archive/roadmaps/",
     "activeSessionLog": "./PROGRESS.md",
     "activeDocsDir": "./docs/",
     "issueTracker": "GitHub Issues",
-    "campaignStatus": "Phaser-only runtime is active, browser smoke coverage exists for the core campaign/outcome flows, and ROADMAP_V4 is executing Level 1 completion. V4 Phase 0, Phase 1, and Phase 2 are complete; Phase 3/4 now cover runtime tuning and manual Beach playtest polish."
+    "campaignStatus": "Roadmap V4 is complete and archived after Level 1 Beach completion plus the repeatable level-art pipeline. The next active roadmap should be ROADMAP_CITYHEIGHTS.md for Level 2 City Heights."
   },
   "phase-1": {
     "description": "Session Protocol Infrastructure",
@@ -16,7 +16,7 @@
     "tasks": {
       "docs-roadmap": {
         "status": "pass",
-        "notes": "Active roadmap is ROADMAP_V4.md; historical roadmaps are archived under docs/archive/roadmaps/"
+        "notes": "Completed roadmaps are archived under docs/archive/roadmaps/; the next active root roadmap should be ROADMAP_CITYHEIGHTS.md."
       },
       "docs-progress": {
         "status": "pass",
@@ -277,6 +277,10 @@
       "phase-4-polish-and-playtest": {
         "status": "pass",
         "notes": "Keyboard pause/focus, terminal score authority, HUD/readability capture artifacts, boss shell clarity, victory/game-over, replay, and Hall of Fame smoke coverage are complete for Level 1."
+      },
+      "phase-5-repeatable-level-pipeline": {
+        "status": "pass",
+        "notes": "Repeatable level-art pipeline doc, genre-aware scaffold script, reusable templates, and City Heights platformer pipeline seed docs are in place for the remaining levels."
       }
     }
   }

@@ -7,6 +7,7 @@ How to add or evolve a playable level in Beach Kitty. The only supported gamepla
 ## Prerequisites
 
 - Read [`types.ts`](../types.ts) for `LevelId`, genre config types, `ObstacleDefinition`, `PatternStep`, `ThemeConfig`, `BossConfig`, and `BackgroundConfig`.
+- Before starting an art pass, scaffold the level pipeline docs and asset folders with `npm run scaffold:level-art -- --level LEVEL_ID`; see [`level-art-pipeline.md`](./level-art-pipeline.md).
 - Reference implementations:
   - Runner: [`levels/beach.ts`](../levels/beach.ts) + [`scenes/RunnerScene.ts`](../scenes/RunnerScene.ts)
   - Non-runner: [`levels/rooftops.ts`](../levels/rooftops.ts) + [`scenes/PlatformerScene.ts`](../scenes/PlatformerScene.ts)
@@ -112,5 +113,6 @@ Global unions in [`types.ts`](../types.ts) (`ObstacleType`, `BackgroundEntityTyp
 
 ## Related
 
+- [`level-art-pipeline.md`](./level-art-pipeline.md) — repeatable art, manifest, hero-sheet, and QA pipeline
 - [`behavior-system.md`](./behavior-system.md) — runner helper stack
 - [`CLAUDE.md`](../CLAUDE.md) / [`AGENTS.md`](../AGENTS.md) — repo map for agents

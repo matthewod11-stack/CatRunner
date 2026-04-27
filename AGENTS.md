@@ -10,12 +10,12 @@ Beach Kitty is a Phaser-based nine-level campaign built with React 19, TypeScrip
 
 ## Canonical Files
 
-- `ROADMAP_V4.md` — the active roadmap
+- Active root roadmap — no root roadmap is active right now; next session should create `ROADMAP_CITYHEIGHTS.md`
 - `PROGRESS.md` — the root session log
 - `docs/` — supporting architecture, product, plan, and spec material
 - GitHub Issues — active bug and technical-debt tracker
 
-Historical planning material lives under `docs/archive/`. The retired `KNOWN_ISSUES` workflow is not part of the active loop.
+Historical planning material, including completed `ROADMAP_V4.md`, lives under `docs/archive/`. The retired `KNOWN_ISSUES` workflow is not part of the active loop.
 
 ## Development Commands
 
@@ -24,6 +24,7 @@ npm install
 npm run dev
 npm run build
 npm run preview
+npm run scaffold:level-art -- --level ROOFTOPS
 npm run test:run
 npm run test:smoke
 npx tsc --noEmit
@@ -46,14 +47,21 @@ npx tsc --noEmit
 - `docs/architecture/behavior-system.md`
 - `docs/architecture/level-runtime.md`
 - `docs/architecture/asset-pipeline.md`
+- `docs/architecture/level-art-pipeline.md`
 - `docs/architecture/api-protection.md`
 - `docs/product/qa-checklist.md`
 - `docs/plans/README.md`
+- `docs/templates/README.md`
 - `docs/plans/level-1-asset-inventory.md`
 - `docs/plans/level-1-beach-visual-brief.md`
 - `docs/plans/level-1-beach-prompt-pack.md`
 - `docs/plans/level-1-runner-hero-sheet-contract.md`
 - `docs/plans/level-1-phase-4-playtest.md`
+- `docs/plans/level-2-city-heights-visual-brief.md`
+- `docs/plans/level-2-city-heights-prompt-pack.md`
+- `docs/plans/level-2-city-heights-asset-inventory.md`
+- `docs/plans/level-2-platformer-hero-sheet-contract.md`
+- `docs/plans/level-2-city-heights-qa-checklist.md`
 - `docs/specs/README.md`
 
 ## Game Studio Routing
@@ -68,13 +76,15 @@ Default execution model:
 ## Current Focus
 
 - Roadmap V4 Level 1 (`BEACH`) completion is closed through Phase 4 polish/playtest; use `docs/plans/level-1-phase-4-playtest.md` for the latest Beach visual evidence.
-- Next roadmap work is Phase 5: turn the Beach art, hero-sheet, manifest, and QA process into reusable templates for later levels.
+- Roadmap V4 Phase 5 is in place: use `npm run scaffold:level-art -- --level LEVEL_ID` and `docs/architecture/level-art-pipeline.md` before starting a remaining level's art pass.
+- City Heights (`ROOFTOPS`) is the first non-runner seed, with platformer-specific docs under `docs/plans/level-2-*`.
+- Next session should create `ROADMAP_CITYHEIGHTS.md` at the repo root; session tooling now discovers root `ROADMAP_*.md` files automatically.
 - Keep live cat generation off the gameplay critical path unless it can satisfy the same constrained sheet contract as the default hero.
 - Keep smoke coverage green and keep bundle-size follow-ups visible while asset plumbing evolves.
 
 ## Contributor Notes
 
-- Prefer `ROADMAP_V4.md` and live code when secondary docs drift.
+- Prefer the active root roadmap and live code when secondary docs drift.
 - Treat `PROGRESS.md` as the durable handoff log at the repo root.
 - Treat `docs/plans/` and `docs/specs/` as active-only landing zones; move dated superseded artifacts into `docs/archive/`.
 - Keep `AGENTS.md` and `CLAUDE.md` aligned as twins where possible.

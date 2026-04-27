@@ -30,10 +30,25 @@ echo -e "${GREEN}✓${NC} Working directory: $PWD"
 echo ""
 echo -e "${BLUE}Checking canonical project files...${NC}"
 
-ACTIVE_ROADMAP=""
-if [ -f "ROADMAP_V4.md" ]; then
-    ACTIVE_ROADMAP="ROADMAP_V4.md"
-fi
+find_active_roadmap() {
+    local candidate
+
+    for candidate in ROADMAP_*.md ROADMAP.md; do
+        if [ -f "$candidate" ] && grep -q "\[ \]" "$candidate"; then
+            echo "$candidate"
+            return
+        fi
+    done
+
+    for candidate in ROADMAP_*.md ROADMAP.md; do
+        if [ -f "$candidate" ]; then
+            echo "$candidate"
+            return
+        fi
+    done
+}
+
+ACTIVE_ROADMAP="$(find_active_roadmap)"
 
 REQUIRED_FILES=(
     "PROGRESS.md"
@@ -65,7 +80,7 @@ echo ""
 if [ -n "$ACTIVE_ROADMAP" ]; then
     echo -e "${GREEN}✓${NC} Active roadmap: $ACTIVE_ROADMAP"
 else
-    echo -e "${YELLOW}!${NC} No active roadmap found"
+    echo -e "${YELLOW}!${NC} No active root roadmap found"
 fi
 
 echo ""
@@ -108,13 +123,15 @@ if [ -n "$ACTIVE_ROADMAP" ]; then
     grep -n "\[ \]" "$ACTIVE_ROADMAP" | head -5 | while read -r line; do
         echo -e "${YELLOW}○${NC} $(echo "$line" | cut -d']' -f2-)"
     done
+else
+    echo -e "${YELLOW}○${NC} Create the next root roadmap, expected: ROADMAP_CITYHEIGHTS.md"
 fi
 
 echo ""
 echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
 echo -e "${GREEN}Ready to develop!${NC}"
 echo ""
-echo -e "${YELLOW}▶ ACTIVE ROADMAP:${NC} ${ACTIVE_ROADMAP:-none found}"
+echo -e "${YELLOW}▶ ACTIVE ROADMAP:${NC} ${ACTIVE_ROADMAP:-none found - create ROADMAP_CITYHEIGHTS.md next}"
 echo ""
 echo -e "Quick commands:"
 if [ -n "$ACTIVE_ROADMAP" ]; then

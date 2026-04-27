@@ -6,7 +6,7 @@ Nothing in `docs/archive/` is an active source of truth.
 
 Active project truth lives in:
 
-- `ROADMAP_V4.md`
+- active root roadmap when present (`ROADMAP_*.md` or `ROADMAP.md`)
 - `PROGRESS.md`
 - active documents under `docs/`
 - GitHub Issues for bugs and technical debt

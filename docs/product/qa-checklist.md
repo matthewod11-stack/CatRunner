@@ -2,6 +2,8 @@
 
 Use before a release or after high-risk gameplay, UX, or AI changes. Complements `npm run test:run`, `npm run build`, and optional `npx tsc --noEmit`.
 
+For level-specific art and gameplay passes, scaffold a focused checklist with `npm run scaffold:level-art -- --level LEVEL_ID` and keep screenshots under `docs/artifacts/level-N-name/`.
+
 ## Browser playthrough (required for release candidates)
 
 Run `npm run dev`, use a **clean profile** or private window once per release to catch migration and storage edge cases.

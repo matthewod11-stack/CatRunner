@@ -1,0 +1,28 @@
+// Template only. Copy near the owning scene when final assets exist.
+// Example output path: scenes/<genre>/{{ASSET_SLUG}}Assets.ts
+
+import backgroundUrl from '../../assets/sprites/{{ASSET_SLUG}}/environment/TODO-background.svg?url';
+
+export interface {{ASSET_CONST_PREFIX}}ImageAsset {
+  key: string;
+  path: string;
+}
+
+export const {{ASSET_CONST_PREFIX}}_TEXTURES = {
+  background: '{{ASSET_SLUG}}-background',
+} as const;
+
+export const {{ASSET_CONST_PREFIX}}_IMAGE_LOADS: readonly {{ASSET_CONST_PREFIX}}ImageAsset[] = [
+  { key: {{ASSET_CONST_PREFIX}}_TEXTURES.background, path: backgroundUrl },
+];
+
+export const {{ASSET_CONST_PREFIX}}_VARIANTS = {
+  // enemyType: ['texture-key-1', 'texture-key-2'],
+} as const;
+
+export const {{ASSET_CONST_PREFIX}}_BOSS_TEXTURES = {
+  // idle: 'boss-idle',
+  // attack: 'boss-attack',
+  // hit: 'boss-hit',
+  // defeat: 'boss-defeat',
+} as const;

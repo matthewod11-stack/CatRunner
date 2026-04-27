@@ -2,6 +2,8 @@
 
 This document defines how Beach Kitty should create, clean, store, and integrate gameplay art after the Phaser-only reset. It exists to keep Beach Level 1 from becoming another one-off art experiment and to make future levels repeatable.
 
+For the Phase 5 per-level workflow, templates, and scaffold command, see [`level-art-pipeline.md`](./level-art-pipeline.md).
+
 ## Goals
 
 - Make Level 1 (`BEACH`) look like a finished game rather than a wireframe with swapped PNGs.
@@ -182,8 +184,9 @@ Deferred until after Beach is fun and readable:
 
 - dynamic per-user animated gameplay cats
 - gameplay cat customization in active runner play
-- broad multi-level asset generalization beyond templates proven by Beach
 - runtime image generation for world building
+
+Phase 5 now owns the broad multi-level repeatability layer through `docs/architecture/level-art-pipeline.md`, `docs/templates/`, and `scripts/scaffold-level-art-pipeline.mjs`.
 
 ### Runtime Integration Targets
 

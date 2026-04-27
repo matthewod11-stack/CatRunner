@@ -1,17 +1,19 @@
 # Beach Kitty Multi-Level System — Session Progress Log
 
 > **Purpose:** Track progress across development sessions. Each session adds an entry at the TOP.
-> **Related Docs:** [ROADMAP_V4.md](./ROADMAP_V4.md) | [docs/archive/roadmaps/ROADMAP_V3_2026-04-23_phaser-runtime-cleanup.md](./docs/archive/roadmaps/ROADMAP_V3_2026-04-23_phaser-runtime-cleanup.md)
+> **Related Docs:** [Archived ROADMAP_V4](./docs/archive/roadmaps/ROADMAP_V4_2026-04-27_beach-completion-pipeline.md) | [docs/archive/roadmaps/ROADMAP_V3_2026-04-23_phaser-runtime-cleanup.md](./docs/archive/roadmaps/ROADMAP_V3_2026-04-23_phaser-runtime-cleanup.md)
 
 ---
 
 ## **ACTIVE ROADMAP**
 
 ```
-./ROADMAP_V4.md
+none currently
 ```
 
-**Start with `ROADMAP_V4.md` for active work.** `ROADMAP_V3.md` is now archived at `docs/archive/roadmaps/ROADMAP_V3_2026-04-23_phaser-runtime-cleanup.md`. V1 remains archived at `docs/archive/roadmaps/ROADMAP_V1_COMPLETE.md`.
+`ROADMAP_V4.md` is complete and archived at `docs/archive/roadmaps/ROADMAP_V4_2026-04-27_beach-completion-pipeline.md`.
+
+Next session should create `ROADMAP_CITYHEIGHTS.md` at the repo root. `./scripts/dev-init.sh` and the session-start workflow now discover root `ROADMAP_*.md` files automatically, so once that roadmap exists it should become the active plan without another hardcoded V-number update.
 
 ---
 
@@ -21,8 +23,9 @@
 # 1. Run session init
 ./scripts/dev-init.sh
 
-# 2. Read the active roadmap:
-sed -n '1,160p' ROADMAP_V4.md
+# 2. Create/read the next active roadmap:
+# expected next file: ROADMAP_CITYHEIGHTS.md
+# once created, ./scripts/dev-init.sh will detect it automatically
 
 # 3. Check the latest session entry below for handoff notes
 ```
@@ -33,6 +36,62 @@ sed -n '1,160p' ROADMAP_V4.md
 === ADD NEW SESSIONS AT THE TOP ===
 Most recent session should be first.
 -->
+
+---
+
+## Session: 2026-04-27 16:28 (Roadmap V4 archive and session close)
+
+### Completed
+- Archived completed `ROADMAP_V4.md` to `docs/archive/roadmaps/ROADMAP_V4_2026-04-27_beach-completion-pipeline.md`
+- Updated project handoff docs so there is no active root roadmap until `ROADMAP_CITYHEIGHTS.md` is created next session
+- Updated `scripts/dev-init.sh` to discover root `ROADMAP_*.md` or `ROADMAP.md` files automatically instead of hardcoding `ROADMAP_V4.md`
+- Updated local `$session-start` and `$session-end` skill instructions to use active root roadmap discovery instead of fixed V4/V3/V2 names
+- Kept Roadmap V4 Phase 5 as the completed repeatable level-art pipeline and City Heights seed
+
+### In Progress
+- `ROADMAP_CITYHEIGHTS.md` has not been created yet; that is the next session's first task
+
+### Issues Encountered
+- No new blockers during closeout
+- Existing production build large chunk warning remains visible and should stay tracked as a later bundle-size follow-up
+
+### Next Session Should
+- Create `ROADMAP_CITYHEIGHTS.md` at the repo root for the Level 2 City Heights art/runtime pass
+- Base that roadmap on `docs/plans/level-2-city-heights-visual-brief.md`, `docs/plans/level-2-city-heights-asset-inventory.md`, and `docs/plans/level-2-platformer-hero-sheet-contract.md`
+- Keep scaffolding for the other seven levels just-in-time, updating templates after City Heights teaches the next non-runner lessons
+
+---
+
+## Session: 2026-04-27 16:09 (Roadmap V4 Phase 5 repeatable level pipeline)
+
+### Completed
+- Completed Roadmap V4 Phase 5 by turning the Beach art/hero/manifest/QA process into a reusable multi-level pipeline
+- Added `docs/architecture/level-art-pipeline.md` as the default workflow for future level art passes
+- Added reusable templates under `docs/templates/` for level art briefs, prompt packs, asset inventories, manifest patterns, hero-sheet contracts, and QA checklists
+- Added `scripts/scaffold-level-art-pipeline.mjs` plus `npm run scaffold:level-art` for genre-aware per-level scaffolding
+- Encoded distinct genre profiles for runner, platformer, launcher, shooter, breakout, frogger, whack, snake, and climber levels so each game type gets different core mechanic, asset-family, hero-state, and QA guidance
+- Bootstrapped Level 2 City Heights (`ROOFTOPS`) with platformer-specific visual brief, prompt pack, asset inventory, hero-sheet contract, QA checklist, and level-local asset folders
+- Updated roadmap, feature status, architecture docs, docs indexes, AGENTS, and CLAUDE handoff guidance for the Phase 5 workflow
+
+### In Progress
+- City Heights art and runtime integration have not started; the next pass should use the seeded Level 2 docs rather than starting from scratch
+
+### Issues Encountered
+- The initial manifest template used a `.ts` extension, so `npx tsc --noEmit` tried to compile unresolved placeholders; renamed it to `level-asset-manifest.template.ts.txt`
+- Existing production build large chunk warning remains visible and should stay tracked as a later bundle-size follow-up
+
+### Verification
+- `npm run scaffold:level-art -- --level ROOFTOPS --dry-run` - passes and skips existing Level 2 scaffold files without overwriting
+- `npm run scaffold:level-art -- --level KITCHEN --dry-run` - passes and demonstrates launcher-specific future-level output
+- `npm run test:run` - 44 files, 210 tests passing
+- `npx tsc --noEmit` - passing
+- `npm run build` - passing with the existing large chunk warning
+- `npm run test:smoke` - 3 browser smoke tests passing
+
+### Next Session Should
+- Start the City Heights art pass from `docs/plans/level-2-city-heights-visual-brief.md` and `docs/plans/level-2-city-heights-asset-inventory.md`
+- Build or generate the first `assets/sprites/rooftops/` world-art pack and add a `scenes/platformer/rooftopsAssets.ts` manifest
+- Begin the platformer hero sheet from `docs/plans/level-2-platformer-hero-sheet-contract.md`
 
 ---
 
@@ -268,47 +327,3 @@ Most recent session should be first.
 - Start `ROADMAP_V4.md` Phase 1 with the Beach visual brief: palette, line style, contrast, horizon treatment, parallax depth, and UI relationship
 - Use `docs/plans/level-1-asset-inventory.md` as the source list for the Beach prompt pack and final art selection
 - Keep live cat generation deferred unless it can satisfy the documented runner-sheet contract without slowing Beach completion
-
----
-
-## Session: 2026-04-23 13:20 (Roadmap V4 reset and WIP cleanup)
-
-### Completed
-- Archived `ROADMAP_V3.md`, created `ROADMAP_V4.md`, and added `docs/architecture/asset-pipeline.md` as the new active planning surface
-- Repointed root guidance, docs indexes, `features.json`, and `scripts/dev-init.sh` at `ROADMAP_V4.md`
-- Removed the experimental platformer hero-sheet / matting WIP and restored `PlatformerScene` to the prior single-sprite path
-- Verified `npm run test:run`, `npm run test:smoke`, `npx tsc --noEmit`, and `npm run build` on the cleaned snapshot
-
-### In Progress
-- `ROADMAP_V4.md` Phase 0 has not started yet; Level 1 (`BEACH`) is the next active execution target
-- Unrelated local `vite.config.ts` and `.cursor/` changes remain outside this session’s commit scope
-
-### Issues Encountered
-- Test count dropped from 196 to 194 because the discarded hero-sheet experiment and its two tests were intentionally removed; no failures were introduced
-
-### Next Session Should
-- Kick off `ROADMAP_V4.md` Phase 0: lock the Beach gameplay-cat strategy and finalize the Beach asset inventory
-- Start the Beach art brief / prompt pack using `docs/architecture/asset-pipeline.md`
-- Keep unrelated local WIP isolated unless it becomes part of the V4 execution plan
-
----
-
-## Session: 2026-04-21 21:34
-
-### Completed
-- Landed the Phaser-only reset execution pass and verified the runtime now boots gameplay only through `PhaserGame`
-- Added Playwright browser smoke coverage for campaign boot, Kitty Closet, Phaser scene boot, victory, game over, Hall of Fame persistence, and Hall of Fame ordering/cap behavior
-- Verified `npm test`, `npm run test:smoke`, and `npx tsc --noEmit` all pass on the final session snapshot
-
-### In Progress
-- Platformer hero-sheet and sprite-matting work remains active WIP and was intentionally left out of this session's changes
-- A true `CAMPAIGN_COMPLETE` UI path is still not wired even though the enum exists
-
-### Issues Encountered
-- Vitest initially picked up the new Playwright spec; fixed by excluding `playwright/` from the Vite test runner config
-- No stored `/tmp` session-start test baseline existed for today, so the comparison step was skipped
-
-### Next Session Should
-- Resume the platformer hero-sheet and sprite-matting workstream on top of the now-stable Phaser-only runtime
-- Decide whether to wire a real `CAMPAIGN_COMPLETE` surface or keep campaign-complete state implicit through progression and Hall of Fame flows
-- Keep bundle-size follow-up visible while `dist/assets/index-*.js` remains oversized
