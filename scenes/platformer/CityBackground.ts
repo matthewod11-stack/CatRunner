@@ -5,6 +5,9 @@ import type { SceneManager } from './types';
 import { DEPTH } from './types';
 import { ROOFTOPS_BACKGROUND_TEXTURES } from './rooftopsAssets';
 
+const FAR_SKYLINE_HEIGHT = 360;
+const MID_SKYLINE_HEIGHT = 440;
+
 interface SkylineBuilding {
   x: number;
   width: number;
@@ -41,12 +44,20 @@ export class CityBackground implements SceneManager {
         .setDisplaySize(width, height)
         .setDepth(DEPTH.BG_FAR);
       this.farTile = this.scene.add.tileSprite(
-        width / 2, height - 48, width, 96, ROOFTOPS_BACKGROUND_TEXTURES.farSkyline,
+        width / 2,
+        height - FAR_SKYLINE_HEIGHT / 2,
+        width,
+        FAR_SKYLINE_HEIGHT,
+        ROOFTOPS_BACKGROUND_TEXTURES.farSkyline,
       )
         .setScrollFactor(0)
         .setDepth(DEPTH.BG_FAR + 0.1);
       this.midTile = this.scene.add.tileSprite(
-        width / 2, height - 58, width, 96, ROOFTOPS_BACKGROUND_TEXTURES.midSkyline,
+        width / 2,
+        height - MID_SKYLINE_HEIGHT / 2,
+        width,
+        MID_SKYLINE_HEIGHT,
+        ROOFTOPS_BACKGROUND_TEXTURES.midSkyline,
       )
         .setScrollFactor(0)
         .setDepth(DEPTH.BG_MID);

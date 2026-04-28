@@ -53,10 +53,11 @@ Turn City Heights into a true cozy pixel-art Beach Kitty platformer slice: a pol
 
 ## Phase 6 — Polish Loop
 
-- [WIP] Run movement/jump/stomp/side-hit/hazard/pickup/pause/eject scenarios through the web-game client
-- [ ] Tune opening-route geometry for jump readability and landing confidence
+- [x] Run movement/jump/stomp/side-hit/hazard/pickup/pause/eject scenarios through the web-game client
+- [x] Tune opening-route geometry for jump readability and landing confidence
+- [x] Add damage cooldown and recent interaction snapshots for readable stomp/side-hit QA
 - [ ] Replace the generated baseline with selected image-generation candidates where they improve the slice
-- [ ] Verify final screenshots against the art bible
+- [x] Verify final screenshots against the art bible
 - [x] Run `npm run test:run`, `npx tsc --noEmit`, `npm run build`, and `npm run test:smoke`
 
 ## Guardrails

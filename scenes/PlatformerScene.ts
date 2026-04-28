@@ -25,6 +25,32 @@ import { ROOFTOPS_IMAGE_LOADS, ROOFTOPS_PIXELATED_TEXTURE_KEYS } from './platfor
 const PLAYER_WIDTH = 40;
 const PLAYER_HEIGHT = 48;
 const BOUNCE_MULTIPLIER = 1.8;
+const DAMAGE_INVULNERABILITY_MS = 900;
+
+type PlatformerInteractionType =
+  | 'stomp'
+  | 'side-hit'
+  | 'neon-hit'
+  | 'shield-absorb'
+  | 'bounce'
+  | 'coin'
+  | 'powerup'
+  | 'fall';
+
+interface PlatformerInteractionSnapshot {
+  type: PlatformerInteractionType;
+  x: number;
+  y: number;
+  atMs: number;
+  targetKey: string | null;
+  detail?: string;
+}
+
+type PlatformerInteractionSource = {
+  x?: number;
+  y?: number;
+  texture?: { key: string };
+};
 
 // ─── Scene ──────────────────────────────────────────────────────────
 
@@ -53,6 +79,9 @@ export default class PlatformerScene extends SceneBridge {
   private isGameOver = false;
   private hasWon = false;
   private inBossArena = false;
+  private lastInteraction: PlatformerInteractionSnapshot | null = null;
+  private recentInteractions: PlatformerInteractionSnapshot[] = [];
+  private invulnerableUntilMs = 0;
 
   // Input
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -173,8 +202,11 @@ export default class PlatformerScene extends SceneBridge {
     this.physics.add.overlap(
       this.player, this.powerups.getGroup(),
       (_p, powerup) => {
+        const powerupSprite = powerup as Phaser.Physics.Arcade.Sprite;
+        const type = powerupSprite.getData('powerupType') as string | undefined;
+        this.recordInteraction('powerup', powerupSprite, type);
         this.audio.playSfx('powerup');
-        this.powerups.collectPowerup(powerup as Phaser.Physics.Arcade.Sprite);
+        this.powerups.collectPowerup(powerupSprite);
         this.queuePlayerAnimation('powerUp', 360);
       },
     );
@@ -348,6 +380,7 @@ export default class PlatformerScene extends SceneBridge {
     );
     if (result.stomped) {
       // Bounce up after stomp — reward for stomping
+      this.recordInteraction('stomp', enemySprite);
       this.player.body.setVelocityY(-this.config.playerConfig.jumpForce * 0.6);
       this.jumpCount = 0;
       this.queuePlayerAnimation('landStomp', 240);
@@ -359,11 +392,12 @@ export default class PlatformerScene extends SceneBridge {
       }
       this.emitScoreUpdate({ ...this.gameScore });
     } else {
-      this.handleDamage();
+      this.handleDamage('side-hit', enemySprite);
     }
   }
 
-  private handleBounce(_dish: Phaser.Physics.Arcade.Sprite): void {
+  private handleBounce(dish: Phaser.Physics.Arcade.Sprite): void {
+    this.recordInteraction('bounce', dish);
     this.player.body.setVelocityY(
       -this.config.playerConfig.jumpForce * BOUNCE_MULTIPLIER,
     );
@@ -374,19 +408,25 @@ export default class PlatformerScene extends SceneBridge {
 
   private handleNeonDamage(hazard: Phaser.GameObjects.GameObject): void {
     if (this.hazards.isNeonDangerous(hazard)) {
-      this.handleDamage();
+      this.handleDamage('neon-hit', hazard as PlatformerInteractionSource);
     }
   }
 
-  private handleDamage(): void {
+  private handleDamage(type: PlatformerInteractionType = 'side-hit', source?: PlatformerInteractionSource): void {
+    if (this.time.now < this.invulnerableUntilMs) return;
+
     // Shield absorbs one hit
     if (this.powerups.consumeShield()) {
+      this.invulnerableUntilMs = this.time.now + DAMAGE_INVULNERABILITY_MS;
+      this.recordInteraction('shield-absorb', source);
       this.queuePlayerAnimation('powerUp', 260);
       this.effects.flash(0x44ff88, 150);
       this.effects.spawnParticles(this.player.x, this.player.y, 0x44ff88, 8, 150);
       return;
     }
 
+    this.recordInteraction(type, source);
+    this.invulnerableUntilMs = this.time.now + DAMAGE_INVULNERABILITY_MS;
     this.lives -= 1;
     this.gameScore.lives = this.lives;
     this.gameScore.streak = 0;
@@ -420,6 +460,7 @@ export default class PlatformerScene extends SceneBridge {
   private collectCoin(coinSprite: Phaser.Physics.Arcade.Sprite): void {
     const cx = coinSprite.x;
     const cy = coinSprite.y;
+    this.recordInteraction('coin', coinSprite);
     coinSprite.destroy();
 
     this.audio.playSfx('coin');
@@ -472,13 +513,14 @@ export default class PlatformerScene extends SceneBridge {
       this.physics.add.overlap(
         this.player, this.boss.getFeatherGroup(),
         (_p, feather) => {
-          (feather as Phaser.Physics.Arcade.Sprite).destroy();
-          this.handleDamage();
+          const featherSprite = feather as Phaser.Physics.Arcade.Sprite;
+          featherSprite.destroy();
+          this.handleDamage('neon-hit', featherSprite);
         },
       );
       this.physics.add.overlap(
         this.player, this.boss.getMiniPigeonGroup(),
-        () => this.handleDamage(),
+        (_p, miniPigeon) => this.handleDamage('side-hit', miniPigeon as PlatformerInteractionSource),
       );
     }
   }
@@ -511,6 +553,8 @@ export default class PlatformerScene extends SceneBridge {
   }
 
   private handleFallDeath(): void {
+    this.recordInteraction('fall');
+    this.invulnerableUntilMs = this.time.now + DAMAGE_INVULNERABILITY_MS;
     this.lives -= 1;
     this.gameScore.lives = this.lives;
     this.gameScore.streak = 0;
@@ -669,11 +713,31 @@ export default class PlatformerScene extends SceneBridge {
   }
 
   private renderGameToText(): string {
+    if (!this.player?.body) {
+      return JSON.stringify({
+        mode: this.isGameOver ? 'GAME_OVER' : this.hasWon ? 'VICTORY' : 'UNAVAILABLE',
+        paused: false,
+        route: {
+          openingRouteId: this.config.openingRoute?.id ?? null,
+          openingRouteHandoffX: this.config.openingRoute?.handoffX ?? null,
+        },
+        player: null,
+        score: {
+          current: this.gameScore.current,
+          coins: this.gameScore.coins,
+          lives: this.lives,
+          multiplier: this.gameScore.multiplier,
+        },
+        lastInteraction: this.lastInteraction,
+        recentInteractions: this.recentInteractions,
+      });
+    }
+
     const body = this.player.body;
     const payload = {
       coordinateSystem: 'Phaser world coordinates; origin top-left, x right, y down',
       mode: this.isGameOver ? 'GAME_OVER' : this.hasWon ? 'VICTORY' : this.inBossArena ? 'BOSS' : 'PLAYING',
-      paused: this.scene.isPaused(),
+      paused: this.readPausedForSnapshot(),
       route: {
         openingRouteId: this.config.openingRoute?.id ?? null,
         openingRouteHandoffX: this.config.openingRoute?.handoffX ?? null,
@@ -698,6 +762,8 @@ export default class PlatformerScene extends SceneBridge {
         lives: this.lives,
         multiplier: this.gameScore.multiplier,
       },
+      lastInteraction: this.lastInteraction,
+      recentInteractions: this.recentInteractions,
       powerup: this.powerups.getState(),
       visible: {
         enemies: this.snapshotGroup(this.enemies.getGroup()),
@@ -731,5 +797,30 @@ export default class PlatformerScene extends SceneBridge {
         x: Math.round(child.x),
         y: Math.round(child.y),
       }));
+  }
+
+  private readPausedForSnapshot(): boolean {
+    try {
+      return this.scene.isPaused();
+    } catch {
+      return false;
+    }
+  }
+
+  private recordInteraction(
+    type: PlatformerInteractionType,
+    source?: PlatformerInteractionSource | null,
+    detail?: string,
+  ): void {
+    const interaction = {
+      type,
+      x: Math.round(source?.x ?? this.player.x),
+      y: Math.round(source?.y ?? this.player.y),
+      atMs: Math.round(this.time.now),
+      targetKey: source?.texture?.key ?? null,
+      ...(detail ? { detail } : {}),
+    };
+    this.lastInteraction = interaction;
+    this.recentInteractions = [interaction, ...this.recentInteractions].slice(0, 6);
   }
 }

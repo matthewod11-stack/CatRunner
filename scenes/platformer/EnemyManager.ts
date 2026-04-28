@@ -242,7 +242,7 @@ export class EnemyManager implements SceneManager {
     if (texKey !== fallbackKey) sprite.setDisplaySize(size.w, size.h);
     sprite.body!.setSize(size.w - 4, size.h - 2);
 
-    const speed = type === 'PIGEON' ? 60 : type === 'RAT' ? 200 : 0;
+    const speed = type === 'PIGEON' ? 60 : 0;
     const enemy: ActiveEnemy = {
       sprite,
       type,
@@ -250,15 +250,12 @@ export class EnemyManager implements SceneManager {
       patrolMaxX: placement.patrolMaxX,
       rooftopY: placement.rooftopY,
       speed,
-      state: type === 'PIGEON' ? 'patrol' : type === 'RAT' ? 'dash' : 'idle',
+      state: type === 'PIGEON' ? 'patrol' : 'idle',
       windupTimer: 0,
       triggered: false,
     };
 
     if (type === 'PIGEON') {
-      (sprite.body as Phaser.Physics.Arcade.Body).setVelocityX(speed);
-    }
-    if (type === 'RAT') {
       (sprite.body as Phaser.Physics.Arcade.Body).setVelocityX(speed);
     }
 

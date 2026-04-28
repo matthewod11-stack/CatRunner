@@ -10,8 +10,8 @@ export const ROOFTOPS_LEVEL_CONFIG: PlatformerLevelConfig = {
   starThresholds: [500, 1500, 3500],
 
   theme: {
-    skyGradient: ['#ff6b35', '#1a1a3e'],
-    skyGradientZone3: ['#e85d26', '#1a1a3e'],
+    skyGradient: ['#070a1e', '#1f2756'],
+    skyGradientZone3: ['#0b1028', '#2f326f'],
     platformColor: '#8b7355',
     platformEdgeColor: '#a89070',
     buildingColors: ['#1a1a2e', '#151528', '#1e1e35', '#191930', '#252540'],
@@ -93,17 +93,18 @@ export const ROOFTOPS_LEVEL_CONFIG: PlatformerLevelConfig = {
 
   openingRoute: {
     id: 'city-heights-opening-slice-v1',
-    handoffX: 3340,
+    handoffX: 3900,
     platforms: [
       { x: 100, width: 320, rooftopY: 500 },
       { x: 500, width: 220, rooftopY: 480 },
-      { x: 805, width: 180, rooftopY: 450 },
+      { x: 760, width: 240, rooftopY: 450 },
       { x: 1090, width: 260, rooftopY: 505 },
-      { x: 1465, width: 190, rooftopY: 462 },
+      { x: 1465, width: 220, rooftopY: 462 },
       { x: 1765, width: 240, rooftopY: 430 },
-      { x: 2120, width: 160, rooftopY: 475 },
+      { x: 2120, width: 190, rooftopY: 475 },
       { x: 2390, width: 280, rooftopY: 445 },
       { x: 2810, width: 320, rooftopY: 500 },
+      { x: 3270, width: 420, rooftopY: 480 },
     ],
     coins: [
       { x: 590, y: 440 },
@@ -112,10 +113,11 @@ export const ROOFTOPS_LEVEL_CONFIG: PlatformerLevelConfig = {
       { x: 1510, y: 420 },
       { x: 2190, y: 435 },
       { x: 2940, y: 460 },
+      { x: 3440, y: 440 },
     ],
     enemies: [
       { type: 'PIGEON', x: 880, platformIndex: 2, patrolPadding: 18 },
-      { type: 'RAT', x: 1130, platformIndex: 3, patrolPadding: 16 },
+      { type: 'RAT', x: 1210, platformIndex: 3, patrolPadding: 16 },
     ],
     hazards: [
       { type: 'AC_UNIT', x: 1260, platformIndex: 3 },
@@ -128,7 +130,7 @@ export const ROOFTOPS_LEVEL_CONFIG: PlatformerLevelConfig = {
     ],
     notes: [
       'Hand-authored flagship slice before procedural generation resumes.',
-      'Covers spawn, coin pickup, stomp, side-hit risk, blocker hazard, bounce pad, glide pickup, neon hazard, and shield pickup.',
+      'Covers spawn, coin pickup, stomp, side-hit risk, blocker hazard, bounce pad, glide pickup, neon hazard, shield pickup, and a calm handoff platform.',
     ],
   },
 };

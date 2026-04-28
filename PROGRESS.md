@@ -38,6 +38,72 @@ Most recent session should be first.
 
 ---
 
+## Session: 2026-04-28 16:49 (City Heights Phase 6 visual closeout)
+
+### Completed
+- Closed out the Phase 6 playtest/polish pass after final in-browser approval
+- Replaced the rough four-band sky with a starry-night pixel backdrop and crescent moon
+- Scaled the background skyline strips up so buildings rise roughly halfway into the camera and feel closer to the route
+- Made foreground/playable building facades draw with an opaque backing so the skyline no longer shows through buildings the player stands on
+- Refreshed City Heights QA artifacts and state snapshots under `docs/artifacts/level-2-city-heights/`
+- Updated `ROADMAP_CITYHEIGHTS.md`, `features.json`, `PROGRESS.md`, and Level 2 art/QA docs
+
+### In Progress
+- Phase 6 asset replacement remains open only for stronger selected/generated pixel candidates where they improve gameplay-scale readability
+- Hero jump/fall silhouette contrast remains the most useful next art pass
+
+### Issues Encountered
+- Existing production build large chunk warning remains visible
+- Headless canvas-only captures are still unreliable for WebGL, so full-page Playwright screenshots remain the visual evidence path
+
+### Verification
+- `npm run test:run` - 46 files, 222 tests passing
+- `npx tsc --noEmit` - passing
+- `npm run build` - passing with the existing large chunk warning
+- `npm run test:smoke` - 3 browser smoke tests passing
+- `docs/artifacts/level-2-city-heights/latest-browser-errors.json` - `[]`
+
+### Next Session Should
+- Begin the selected image-generation replacement pass for City Heights hero, enemy, hazard, and remaining environment art
+- Keep the starry-night backdrop and close-building read as the new City Heights baseline unless a replacement clearly improves it
+- Avoid replacing baseline assets that are less charming but more readable at platformer gameplay scale
+
+---
+
+## Session: 2026-04-28 15:56 (City Heights Phase 6 polish)
+
+### Completed
+- Tuned the City Heights opening route: widened the first pigeon landing, extended the calm handoff platform, and delayed procedural takeover to `handoffX: 3900`
+- Made the seeded opening-route rat a stationary side-hit target and moved it after the stompable pigeon
+- Added a real damage invulnerability gate so one overlap cannot drain multiple lives during enemy/hazard QA
+- Added `lastInteraction` and `recentInteractions` to `window.render_game_to_text()` for stomp, side-hit, pickup, bounce, fall, and shield/power-up verification
+- Reduced facade clutter by lowering top-window rows and making window alpha deterministic
+- Replaced the rough four-band City Heights sky with a starry-night pixel backdrop and taller background skyline strips that reach roughly half the camera height
+- Captured the full Phase 6 artifact set under `docs/artifacts/level-2-city-heights/`, including `03-stomp-vs-side-hit.png`, `06-opening-route-complete.png`, `07-victory.png`, and `08-game-over.png`
+- Updated `ROADMAP_CITYHEIGHTS.md`, `features.json`, and `docs/plans/level-2-city-heights-qa-checklist.md`
+
+### In Progress
+- City Heights Phase 6 asset replacement remains open: select stronger generated pixel candidates and replace the baseline pack where quality materially improves
+- Hero jump/fall contrast still deserves a regenerated or cleaned-up sheet pass
+
+### Issues Encountered
+- The generic fixed web-game burst is useful for stress, but it is not a clean no-fall route script; targeted Playwright steps plus state snapshots are the reliable QA evidence for Phase 6
+- Existing production build large chunk warning remains
+
+### Verification
+- `npm run test:run` - 46 files, 222 tests passing
+- `npx tsc --noEmit` - passing
+- `npm run build` - passing with the existing large chunk warning
+- `npm run test:smoke` - 3 browser smoke tests passing
+- `docs/artifacts/level-2-city-heights/latest-browser-errors.json` - `[]`
+
+### Next Session Should
+- Start the selected image-generation replacement pass for City Heights background, hero silhouette, enemy, and hazard art
+- Keep the committed baseline assets until a replacement beats them in readability at gameplay scale
+- Consider adding a dedicated no-fall route choreography only if automated movement evidence becomes more important than manual playtest feel
+
+---
+
 ## Session: 2026-04-28 15:35 (City Heights session-end checkpoint)
 
 ### Completed
@@ -277,116 +343,3 @@ Most recent session should be first.
 - Start with Roadmap V4 Phase 3/4 scale, baseline, hitbox, and readability tuning
 - Use the new hero contract doc as the source of truth for any further hero-sheet polish or replacement
 - Keep boss-practice smoke coverage as the guardrail for shell ammo and React/Phaser HUD sync
-
----
-
-## Session: 2026-04-24 14:26 (Roadmap V4 Phase 1 handoff)
-
-### Completed
-- Completed Roadmap V4 Phase 0 and Phase 1 for Beach: asset strategy, Beach art brief, prompt pack, generated SVG world-art pack, and Beach asset manifest
-- Wired RunnerScene to deterministic Beach art for environment, obstacles, collectibles, power-ups, background entities, boss states, and shell projectile art
-- Polished Phase 1 assets from live review: cleaner sun/clouds, stronger beachball, larger sandcastle, higher-fidelity Sand Monster, improved boats/jetskis, and left-to-right planes for depth
-- Fixed boss fight shell economy so boss entry grants enough shell ammo, preserves earned ammo, and refills a small floor instead of leaving players stuck
-- Improved boss feedback with readable thrown shell trail, boss hit states, and correct defeat burial layering
-- Fixed React/Phaser bridge startup updates by passing direct bridge callbacks, and expanded Playwright smoke coverage for boss-practice ammo/HUD sync
-- Updated ROADMAP_V4.md, PROGRESS.md, active Beach docs, AGENTS.md, CLAUDE.md, and features.json for the new handoff state
-
-### In Progress
-- Roadmap V4 Phase 2 is next: define and produce the animated Beach runner hero sheet
-- Phase 4 manual playtest remains open for full-run pacing, hitboxes, HUD/readability, and boss feel after the hero sheet lands
-
-### Issues Encountered
-- Boss-practice smoke revealed the boss could be visible while React still reported PLAYING; direct bridge callbacks now make scene status/HUD updates deterministic
-- Existing production build large chunk warning remains visible and should stay tracked as a later bundle-size follow-up
-
-### Next Session Should
-- Start Phase 2 from ROADMAP_V4.md and docs/plans/level-1-asset-inventory.md
-- Use the Game Studio sprite-pipeline workflow for the Beach runner hero-sheet contract before making more world-art changes
-- Keep the boss-practice smoke path as the regression guard for shell ammo and React/Phaser HUD sync
-
----
-
-## Session: 2026-04-24 14:10 (Beach player-review polish and boss ammo fix)
-
-### Completed
-- Ran a player-review polish pass on the Phase 1 Beach art pack: simplified sun/clouds, improved boat contrast, reshaped the beachball, enlarged the sandcastle, and upgraded Sand Monster idle/attack/hit/defeat fidelity
-- Changed Beach airplane background entities to spawn left-to-right while boats continue right-to-left for better parallax depth
-- Replaced fragile boss emergency shell pickups with a tested boss ammo economy: boss entry now tops up enough shell ammo to win, preserves extra earned ammo, and refills a small ammo floor after the intro
-- Added `scenes/runner/bossAmmo.ts` with focused unit coverage for required shell hits, boss-start top-up, and refill timing
-- Added a dev smoke hook for boss-practice startup and expanded Playwright smoke coverage to assert boss practice reaches `BOSS_FIGHT` with at least enough shell ammo
-- Fixed a bridge gap found by that smoke test: Phaser scene updates now reach React through direct bridge callbacks, and RunnerScene shell ammo HUD updates use `emitHudUpdate`
-- Improved boss shell readability with a larger shell projectile, elevated throw path, spin, and bright trail
-- Moved the defeated Sand Monster behind the falling defeat debris and cleared the boss health bar once burial starts
-- Increased water-entity readability by enlarging boats/jetskis, raising their waterline spawn band, and increasing their runtime opacity
-- Updated `ROADMAP_V4.md`, the Beach visual brief, and prompt pack to record the polish decisions and pulled-forward manifest/runtime cleanup
-
-### In Progress
-- `ROADMAP_V4.md` Phase 2 remains the next active execution target: define and produce the animated Beach runner hero sheet
-- Phase 4 still needs a longer manual playtest for full run pacing, hitbox feel, and boss fairness after the hero sheet lands
-
-### Issues Encountered
-- The new boss-practice smoke check first revealed that the boss was visible while React still reported `PLAYING`; direct bridge callbacks fixed the startup/status/HUD handoff
-- The existing large main bundle warning remains during production build
-
-### Verification
-- `npm run test:run` — 43 files, 201 tests passing
-- `npx tsc --noEmit` — passing
-- `npm run build` — passing with the existing large chunk warning
-- `npm run test:smoke` — 3 browser smoke tests passing, including boss-practice ammo coverage
-- Runtime screenshot checks captured the revised asset sheet, shell-throw trail, boss burial layering, and Beach boss-practice screen
-
-### Next Session Should
-- Start Phase 2 with the Beach runner hero-sheet contract and keep using the Game Studio / sprite-pipeline workflow
-- Use the current Beach art pack as the visual baseline unless a full manual playtest finds scale or hitbox issues
-- Keep the boss-practice smoke path as the regression guard for shell ammo and React/Phaser HUD sync
-
----
-
-## Session: 2026-04-24 13:30 (Roadmap V4 Phase 1 Beach world art pack)
-
-### Completed
-- Created the Beach visual brief in `docs/plans/level-1-beach-visual-brief.md`
-- Created the Beach prompt/source-generation pack in `docs/plans/level-1-beach-prompt-pack.md`
-- Added `scripts/generate-beach-art-pack.mjs` and generated a committed SVG world-art baseline under `assets/sprites/beach/`
-- Added `scenes/runner/beachAssets.ts` as the Beach asset manifest and `scenes/runner/beachAssets.test.ts` to lock manifest coverage
-- Wired `RunnerScene` to the Beach manifest for environment, obstacles, collectibles, power-ups, background entities, boss states, and shell projectile art
-- Removed the runtime coin-texture stand-ins for `SAND_PROJECTILE`, `SPEED`, `MAGNET`, and `SUPER_SIZE`
-- Marked `ROADMAP_V4.md` Phase 1 complete and updated the active inventory plan with Phase 1 sources/status
-- Verified `npm run test:run`, `npm run test:smoke`, `npx tsc --noEmit`, and `npm run build`
-
-### In Progress
-- `ROADMAP_V4.md` Phase 2 is the next active execution target: define and produce the animated Beach runner hero sheet
-- Phase 4 still needs a focused in-game readability/playtest pass against the new SVG pack for scale, baseline, parallax, hitboxes, and HUD clarity
-
-### Issues Encountered
-- Build remains green but `RunnerScene` grew from the imported SVG manifest; the existing large main bundle warning remains visible
-
-### Next Session Should
-- Start `ROADMAP_V4.md` Phase 2 with the Beach runner hero-sheet contract
-- Decide whether the Phase 2 hero sheet should be SVG-authored, generated as a raster sheet, or produced through the documented sprite-pipeline workflow
-- Run a focused Beach playtest before treating the Phase 1 SVG art as fully polished
-
----
-
-## Session: 2026-04-24 13:10 (Roadmap V4 Phase 0 complete)
-
-### Completed
-- Locked the Level 1 gameplay-cat strategy: Beach ships with a curated animated runner hero sheet first; live cat generation remains optional and off the gameplay critical path
-- Expanded `docs/architecture/asset-pipeline.md` with the Level 1 operating decisions, critical path, deferred work, and first runtime integration targets
-- Added `docs/plans/level-1-asset-inventory.md` with the Beach asset inventory, current sources, missing final art, and manifest/runtime targets
-- Marked `ROADMAP_V4.md` Phase 0 complete and linked it to the asset-pipeline contract plus the active inventory plan
-- Kept `AGENTS.md` and `CLAUDE.md` aligned with the new active plan document
-- Removed stale local WIP by restoring `vite.config.ts` to the tracked baseline and deleting `.cursor/mcp.json`
-- Verified `npm run test:run`, `npm run test:smoke`, `npx tsc --noEmit`, and `npm run build`
-
-### In Progress
-- `ROADMAP_V4.md` Phase 1 is the next active execution target: produce the Beach visual brief and world-art pack
-- `RunnerScene` still hard-codes Beach texture loading and still reuses the coin texture for `SAND_PROJECTILE`, `SPEED`, `MAGNET`, and `SUPER_SIZE`; this is now explicitly tracked for the manifest/runtime cleanup path
-
-### Issues Encountered
-- None for Phase 0; this was a planning/docs pass with green verification
-
-### Next Session Should
-- Start `ROADMAP_V4.md` Phase 1 with the Beach visual brief: palette, line style, contrast, horizon treatment, parallax depth, and UI relationship
-- Use `docs/plans/level-1-asset-inventory.md` as the source list for the Beach prompt pack and final art selection
-- Keep live cat generation deferred unless it can satisfy the documented runner-sheet contract without slowing Beach completion

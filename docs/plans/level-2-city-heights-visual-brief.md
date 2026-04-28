@@ -12,7 +12,7 @@ Related pipeline docs:
 
 ## Direction
 
-City Heights is now the flagship cozy pixel-art platformer slice for Beach Kitty. It should feel like a warm, funny rooftop adventure: crisp pixel silhouettes, readable Mario-style jumps, charming rooftop props, and a theatrical Pigeon King promise. The first read must be "where can I land, what can hurt me, and what can I stomp" before the player notices skyline detail.
+City Heights is now the flagship cozy pixel-art platformer slice for Beach Kitty. It should feel like a funny after-dark rooftop adventure inside the city: crisp pixel silhouettes, readable Mario-style jumps, charming rooftop props, close background buildings, and a theatrical Pigeon King promise. The first read must be "where can I land, what can hurt me, and what can I stomp" before the player notices skyline detail.
 
 ## Genre Contract
 
@@ -29,8 +29,8 @@ Genre-specific readability focus:
 
 | Role | Colors | Usage |
 | --- | --- | --- |
-| Background | `#ff9f43`, `#ffd166`, `#7c3aed`, `#1a1a3e` | banded golden-hour sky and distant atmosphere |
-| Far skyline | `#0d0d2b`, `#141436`, `#24244f` | low-contrast pixel silhouettes |
+| Background | `#070a1e`, `#0f1537`, `#1f2756`, `#fff8c7` | full starry-night pixel backdrop with moon and sparse stars |
+| Far skyline | `#090d23`, `#0e122d`, `#1f2756` | tall, close-feeling pixel silhouettes rising at least halfway up the camera |
 | Gameplay rooftops | `#8b7355`, `#a89070`, `#d8c198`, `#2f251c` | walkable surfaces, top lips, platform undersides |
 | Hero | `#f6b06d`, `#ffcf8a`, `#fef3c7`, `#273043` | Beach Kitty pixel hero sheet |
 | Hazards/enemies | `#94a3b8`, `#ef4444`, `#d946ef`, `#f97316` | pigeons, rats, AC, neon, timed danger states |
@@ -42,7 +42,7 @@ Genre-specific readability focus:
 - True pixel art only for final gameplay assets: no vector gradients, antialiased sprite edges, soft blur, or fake transparency.
 - Use nearest-neighbor scaling and fixed source grids.
 - Gameplay sprites carry stronger outlines and cleaner silhouettes than background detail.
-- Background strips can use banded pixel shading and sparse dithering, but must stay lower contrast than platforms.
+- Backgrounds can use pixel haze and sparse star detail, but must stay lower contrast than platforms.
 - Windows and facade marks must be sparse and dim enough to avoid reading as coins.
 
 ## Camera And Readability

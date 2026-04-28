@@ -1,0 +1,96 @@
+{
+  "coordinateSystem": "Phaser world coordinates; origin top-left, x right, y down",
+  "mode": "PLAYING",
+  "paused": true,
+  "route": {
+    "openingRouteId": "city-heights-opening-slice-v1",
+    "openingRouteHandoffX": 3900
+  },
+  "player": {
+    "x": 1436,
+    "y": 760,
+    "vx": 0,
+    "vy": 887,
+    "facing": "right",
+    "grounded": false,
+    "jumpsUsed": 1,
+    "maxJumps": 2
+  },
+  "camera": {
+    "scrollX": 944,
+    "scrollY": 280
+  },
+  "score": {
+    "current": 51,
+    "coins": 0,
+    "lives": 9,
+    "multiplier": 1
+  },
+  "lastInteraction": {
+    "type": "stomp",
+    "x": 1130,
+    "y": 491,
+    "atMs": 6929,
+    "targetKey": "rooftops-enemy-rat"
+  },
+  "recentInteractions": [
+    {
+      "type": "stomp",
+      "x": 1130,
+      "y": 491,
+      "atMs": 6929,
+      "targetKey": "rooftops-enemy-rat"
+    },
+    {
+      "type": "stomp",
+      "x": 912,
+      "y": 430,
+      "atMs": 6179,
+      "targetKey": "rooftops-enemy-pigeon"
+    }
+  ],
+  "powerup": {
+    "type": null,
+    "remainingMs": 0
+  },
+  "visible": {
+    "enemies": [],
+    "hazards": [
+      {
+        "key": "rooftops-hazard-ac-unit",
+        "x": 1275,
+        "y": 493
+      },
+      {
+        "key": "rooftops-hazard-satellite-dish",
+        "x": 1529,
+        "y": 452
+      }
+    ],
+    "coins": [
+      {
+        "key": "rooftops-coin",
+        "x": 860,
+        "y": 406
+      },
+      {
+        "key": "rooftops-coin",
+        "x": 1170,
+        "y": 461
+      },
+      {
+        "key": "rooftops-coin",
+        "x": 1510,
+        "y": 416
+      }
+    ],
+    "powerups": [
+      {
+        "key": "rooftops-powerup-glide",
+        "x": 1875,
+        "y": 385
+      }
+    ]
+  },
+  "boss": null
+}

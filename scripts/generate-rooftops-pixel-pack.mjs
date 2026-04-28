@@ -10,12 +10,19 @@ const C = {
   transparent: [0, 0, 0, 0],
   ink: [17, 24, 39, 255],
   ink2: [39, 48, 67, 255],
+  nightTop: [7, 10, 30, 255],
+  nightMid: [15, 21, 55, 255],
+  nightLow: [31, 39, 86, 255],
+  nightHaze: [64, 66, 126, 255],
+  star: [255, 248, 199, 255],
+  starDim: [172, 196, 255, 170],
+  moon: [255, 238, 170, 245],
   skyOrange: [255, 159, 67, 255],
   skyGold: [255, 209, 102, 255],
   skyPurple: [124, 58, 237, 255],
   skyDeep: [26, 26, 62, 255],
-  skylineFar: [13, 13, 43, 255],
-  skylineMid: [20, 20, 54, 255],
+  skylineFar: [9, 13, 35, 235],
+  skylineMid: [14, 18, 45, 245],
   buildingA: [26, 26, 46, 255],
   buildingB: [30, 30, 53, 255],
   windowDim: [255, 204, 68, 120],
@@ -132,6 +139,15 @@ function stamp(dst, src, dx, dy) {
   }
 }
 
+function mixColor(a, b, t) {
+  return [
+    Math.round(a[0] + (b[0] - a[0]) * t),
+    Math.round(a[1] + (b[1] - a[1]) * t),
+    Math.round(a[2] + (b[2] - a[2]) * t),
+    Math.round(a[3] + (b[3] - a[3]) * t),
+  ];
+}
+
 const crcTable = new Uint32Array(256).map((_, n) => {
   let c = n;
   for (let k = 0; k < 8; k++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
@@ -186,39 +202,62 @@ async function save(relPath, img) {
 
 function sky() {
   const img = makeImage(320, 180);
-  const bands = [
-    [0, 42, C.skyOrange],
-    [42, 78, C.skyGold],
-    [78, 126, C.skyPurple],
-    [126, 180, C.skyDeep],
+  for (let y = 0; y < img.height; y++) {
+    const t = y / (img.height - 1);
+    const upper = mixColor(C.nightTop, C.nightMid, Math.min(1, t * 1.6));
+    const lower = mixColor(C.nightMid, C.nightLow, Math.max(0, (t - 0.35) / 0.65));
+    const color = t < 0.45 ? upper : lower;
+    rect(img, 0, y, img.width, 1, color);
+  }
+
+  // Broad pixel haze near the horizon keeps the full backdrop from reading as flat black.
+  for (let y = 112; y < img.height; y += 3) {
+    const alpha = Math.max(28, 120 - (y - 112) * 2);
+    rect(img, 0, y, img.width, 1, [C.nightHaze[0], C.nightHaze[1], C.nightHaze[2], alpha]);
+  }
+
+  const stars = [
+    [18, 16, 1], [42, 36, 0], [73, 20, 1], [96, 58, 0], [126, 30, 1],
+    [151, 72, 0], [178, 18, 1], [207, 45, 0], [238, 24, 1], [286, 52, 0],
+    [28, 88, 0], [62, 118, 1], [111, 101, 0], [143, 132, 0], [191, 97, 1],
+    [222, 126, 0], [268, 94, 0], [304, 118, 1], [12, 145, 0], [252, 151, 0],
   ];
-  for (const [y0, y1, color] of bands) rect(img, 0, y0, 320, y1 - y0, color);
-  for (let y = 50; y < 145; y += 7) {
-    for (let x = (y * 3) % 11; x < 320; x += 17) {
-      blendPixel(img, x, y, y < 90 ? [255, 230, 150, 90] : [255, 180, 120, 70]);
+  for (const [x, y, bright] of stars) {
+    blendPixel(img, x, y, bright ? C.star : C.starDim);
+    if (bright) {
+      blendPixel(img, x - 1, y, C.starDim);
+      blendPixel(img, x + 1, y, C.starDim);
+      blendPixel(img, x, y - 1, C.starDim);
+      blendPixel(img, x, y + 1, C.starDim);
     }
   }
+
+  circle(img, 270, 34, 13, C.moon);
+  circle(img, 276, 30, 12, C.nightMid);
   return img;
 }
 
 function skyline(kind) {
-  const img = makeImage(320, 96);
-  const base = kind === 'far' ? 92 : 94;
+  const img = makeImage(320, kind === 'far' ? 360 : 440);
+  const base = img.height - 4;
   const color = kind === 'far' ? C.skylineFar : C.skylineMid;
   const accent = kind === 'far' ? [255, 204, 68, 35] : [255, 204, 68, 55];
   let x = 0;
   let i = 0;
   while (x < 320) {
-    const w = kind === 'far' ? 14 + (i % 5) * 5 : 18 + (i % 6) * 6;
-    const h = kind === 'far' ? 24 + (i * 17) % 46 : 36 + (i * 23) % 54;
+    const w = kind === 'far' ? 24 + (i % 5) * 9 : 32 + (i % 6) * 12;
+    const minH = kind === 'far' ? 150 : 220;
+    const rangeH = kind === 'far' ? 145 : 165;
+    const h = minH + (i * (kind === 'far' ? 29 : 37)) % rangeH;
     rect(img, x, base - h, w, h, color);
-    if (i % 3 === 0) rect(img, x + Math.floor(w / 2), base - h - 6, 2, 6, color);
-    for (let wy = base - h + 8; wy < base - 7; wy += 12) {
-      for (let wx = x + 4; wx < x + w - 3; wx += 8) {
+    if (i % 3 === 0) rect(img, x + Math.floor(w / 2), base - h - 16, 3, 16, color);
+    if (i % 4 === 1) rect(img, x + w - 10, base - h - 8, 6, 8, color);
+    for (let wy = base - h + 18; wy < base - 12; wy += kind === 'far' ? 22 : 24) {
+      for (let wx = x + 8; wx < x + w - 6; wx += kind === 'far' ? 13 : 16) {
         if ((wx + wy + i) % 4 === 0) rect(img, wx, wy, 2, 3, accent);
       }
     }
-    x += w + (kind === 'far' ? 5 : 7);
+    x += w + (kind === 'far' ? 8 : 10);
     i++;
   }
   return img;

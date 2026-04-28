@@ -1,0 +1,110 @@
+{
+  "coordinateSystem": "Phaser world coordinates; origin top-left, x right, y down",
+  "mode": "PLAYING",
+  "paused": false,
+  "route": {
+    "openingRouteId": "city-heights-opening-slice-v1",
+    "openingRouteHandoffX": 3900
+  },
+  "player": {
+    "x": 3553,
+    "y": 487,
+    "vx": 0,
+    "vy": 0,
+    "facing": "right",
+    "grounded": true,
+    "jumpsUsed": 0,
+    "maxJumps": 2
+  },
+  "camera": {
+    "scrollX": 3053,
+    "scrollY": 117
+  },
+  "score": {
+    "current": 43,
+    "coins": 2,
+    "lives": 4,
+    "multiplier": 1
+  },
+  "lastInteraction": {
+    "type": "coin",
+    "x": 3440,
+    "y": 440,
+    "atMs": 11257,
+    "targetKey": "rooftops-coin"
+  },
+  "recentInteractions": [
+    {
+      "type": "coin",
+      "x": 3440,
+      "y": 440,
+      "atMs": 11257,
+      "targetKey": "rooftops-coin"
+    },
+    {
+      "type": "powerup",
+      "x": 2985,
+      "y": 450,
+      "atMs": 9613,
+      "targetKey": "rooftops-powerup-shield",
+      "detail": "SHIELD"
+    },
+    {
+      "type": "fall",
+      "x": 3013,
+      "y": 808,
+      "atMs": 9580,
+      "targetKey": null
+    },
+    {
+      "type": "fall",
+      "x": 2435,
+      "y": 808,
+      "atMs": 7514,
+      "targetKey": null
+    },
+    {
+      "type": "fall",
+      "x": 1992,
+      "y": 801,
+      "atMs": 5147,
+      "targetKey": null
+    },
+    {
+      "type": "fall",
+      "x": 1429,
+      "y": 817,
+      "atMs": 3054,
+      "targetKey": null
+    }
+  ],
+  "powerup": {
+    "type": "SHIELD",
+    "remainingMs": null
+  },
+  "visible": {
+    "enemies": [
+      {
+        "key": "rooftops-enemy-pigeon",
+        "x": 4120,
+        "y": 436
+      }
+    ],
+    "hazards": [
+      {
+        "key": "rooftops-hazard-ac-unit",
+        "x": 4069,
+        "y": 444
+      }
+    ],
+    "coins": [
+      {
+        "key": "rooftops-coin",
+        "x": 2940,
+        "y": 452
+      }
+    ],
+    "powerups": []
+  },
+  "boss": null
+}

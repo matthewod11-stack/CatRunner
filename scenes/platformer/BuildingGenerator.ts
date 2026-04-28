@@ -280,16 +280,19 @@ export class BuildingGenerator implements SceneManager {
       // Building facade
       const colorHex = colors[i % colors.length];
       const color = Phaser.Display.Color.HexStringToColor(colorHex).color;
-      this.facadeGraphics.fillStyle(color);
+      this.facadeGraphics.fillStyle(0x070a14, 1);
+      this.facadeGraphics.fillRect(b.x, b.rooftopY + ROOFTOP_HEIGHT, b.width, b.height);
+      this.facadeGraphics.fillStyle(color, 1);
       this.facadeGraphics.fillRect(b.x, b.rooftopY + ROOFTOP_HEIGHT, b.width, b.height);
 
       if (this.scene.textures.exists(ROOFTOPS_BACKGROUND_TEXTURES.buildingFacadeTile)) {
         this.drawPixelFacadePattern(b);
       }
 
-      // Windows
-      this.facadeGraphics.fillStyle(0xffcc44, 0.15 + Math.random() * 0.2);
-      const windowStartY = b.rooftopY + ROOFTOP_HEIGHT + 18;
+      // Windows start lower so the gameplay lane stays readable against the facade.
+      const windowAlpha = 0.14 + ((i * 29) % 4) * 0.04;
+      this.facadeGraphics.fillStyle(0xffcc44, windowAlpha);
+      const windowStartY = b.rooftopY + ROOFTOP_HEIGHT + 44;
       for (let wy = windowStartY; wy < b.rooftopY + b.height - 20; wy += 28) {
         for (let wx = b.x + 12; wx < b.x + b.width - 12; wx += 20) {
           // Skip some windows randomly for variety

@@ -310,7 +310,7 @@
       },
       "qa-captures-and-polish": {
         "status": "in-progress",
-        "notes": "First screenshots and browser state artifacts exist; stomp/terminal captures, route tuning, and higher-quality asset replacement remain."
+        "notes": "Phase 6 captures now cover stomp, side-hit, hazard/powerup, pause, opening-route handoff, victory, and game-over; sky art was replaced with a starry-night pixel backdrop, taller skyline strips, and opaque foreground facades; higher-quality asset replacement remains."
       }
     }
   }

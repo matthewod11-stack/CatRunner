@@ -25,7 +25,7 @@ Use these constraints for every generated candidate unless a section explicitly 
 
 ### Pixel Sky Strip
 
-Prompt: Cozy pixel-art golden-hour city sky for a side-view platformer, broad orange-to-gold-to-purple bands, sparse pixel dithering, no buildings in the foreground, no characters, opaque 320x180 background, readable behind HUD, no smooth gradient.
+Prompt: Cozy pixel-art starry night sky for a side-view rooftop platformer, deep navy to indigo pixel atmosphere, crescent moon, sparse bright stars, subtle horizon haze, no buildings in the foreground, no characters, opaque 320x180 background, readable behind HUD, no smooth gradient and no four-band poster sky.
 
 Export target: `assets/sprites/rooftops/environment/sky.png`.
 
@@ -33,7 +33,7 @@ Acceptance: background support only; no high-contrast details near the gameplay 
 
 ### Far Skyline
 
-Prompt: Low-contrast pixel-art distant city skyline strip, deep navy-purple buildings, simple rooflines, sparse dim warm windows, seamless horizontal parallax strip, no foreground collision edges, opaque background.
+Prompt: Low-contrast pixel-art distant city skyline strip, tall dark navy buildings rising at least halfway up the camera, simple rooflines, sparse dim warm windows, seamless horizontal parallax strip, no foreground collision edges, transparent sky area.
 
 Export target: `assets/sprites/rooftops/environment/far-skyline.png`.
 
@@ -41,7 +41,7 @@ Acceptance: reads as depth, never as landing platforms.
 
 ### Mid Skyline
 
-Prompt: Pixel-art mid-distance city skyline strip, dark blue-purple buildings, larger dim window clusters, simple rooftop silhouettes, parallax-ready, lower contrast than gameplay rooftops.
+Prompt: Pixel-art mid-distance city skyline strip, very tall close-feeling dark blue buildings, larger dim window clusters, simple rooftop silhouettes, parallax-ready, lower contrast than gameplay rooftops, transparent sky area.
 
 Export target: `assets/sprites/rooftops/environment/mid-skyline.png`.
 

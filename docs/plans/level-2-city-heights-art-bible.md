@@ -12,7 +12,7 @@ Related docs:
 
 ## Slice Promise
 
-City Heights should feel like a cozy SNES-era rooftop platformer starring Beach Kitty. The first playable slice is not a skyline collage; it is a clear platforming route with funny rooftop business: pigeons acting important, AC units puffing like tiny factories, laundry lines with personality, satellite dishes used as bounce pads, and a ridiculous Pigeon King promise in the distance.
+City Heights should feel like a cozy SNES-era rooftop platformer starring Beach Kitty after dark. The first playable slice is not a flat skyline postcard; it is a clear platforming route inside a close city canyon with funny rooftop business: pigeons acting important, AC units puffing like tiny factories, laundry lines with personality, satellite dishes used as bounce pads, and a ridiculous Pigeon King promise in the distance.
 
 ## Pixel Rules
 
@@ -27,8 +27,8 @@ City Heights should feel like a cozy SNES-era rooftop platformer starring Beach 
 
 | Role | Colors | Notes |
 | --- | --- | --- |
-| Evening sky | `#ff9f43`, `#ffd166`, `#7c3aed`, `#1a1a3e` | Use broad pixel bands and sparse dithering, not smooth gradients |
-| Far skyline | `#0d0d2b`, `#141436`, `#24244f` | Low contrast, never a landing-surface read |
+| Starry night sky | `#070a1e`, `#0f1537`, `#1f2756`, `#fff8c7` | Use a full pixel backdrop with stars and moon, not four broad color bands |
+| Far skyline | `#090d23`, `#0e122d`, `#1f2756` | Tall silhouettes should reach at least halfway up the camera, never a landing-surface read |
 | Rooftop surfaces | `#8b7355`, `#a89070`, `#d8c198`, `#2f251c` | Highest environmental contrast belongs to top collision lips |
 | Cat hero | `#f6b06d`, `#ffcf8a`, `#fef3c7`, `#273043` | Warm Beach Kitty read, dark outline, bright face pixels |
 | Enemies/hazards | `#94a3b8`, `#ef4444`, `#d946ef`, `#f97316` | Hazard states must not be confused with coins |
