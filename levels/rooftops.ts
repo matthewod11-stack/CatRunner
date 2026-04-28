@@ -90,4 +90,45 @@ export const ROOFTOPS_LEVEL_CONFIG: PlatformerLevelConfig = {
     spawnPerZone: 1,
     fireEscapeBonusChance: 0.1,
   },
+
+  openingRoute: {
+    id: 'city-heights-opening-slice-v1',
+    handoffX: 3340,
+    platforms: [
+      { x: 100, width: 320, rooftopY: 500 },
+      { x: 500, width: 220, rooftopY: 480 },
+      { x: 805, width: 180, rooftopY: 450 },
+      { x: 1090, width: 260, rooftopY: 505 },
+      { x: 1465, width: 190, rooftopY: 462 },
+      { x: 1765, width: 240, rooftopY: 430 },
+      { x: 2120, width: 160, rooftopY: 475 },
+      { x: 2390, width: 280, rooftopY: 445 },
+      { x: 2810, width: 320, rooftopY: 500 },
+    ],
+    coins: [
+      { x: 590, y: 440 },
+      { x: 860, y: 410 },
+      { x: 1170, y: 465 },
+      { x: 1510, y: 420 },
+      { x: 2190, y: 435 },
+      { x: 2940, y: 460 },
+    ],
+    enemies: [
+      { type: 'PIGEON', x: 880, platformIndex: 2, patrolPadding: 18 },
+      { type: 'RAT', x: 1130, platformIndex: 3, patrolPadding: 16 },
+    ],
+    hazards: [
+      { type: 'AC_UNIT', x: 1260, platformIndex: 3 },
+      { type: 'SATELLITE_DISH', x: 1515, platformIndex: 4 },
+      { type: 'NEON_SIGN', x: 2450, platformIndex: 7, isOn: true },
+    ],
+    powerups: [
+      { type: 'GLIDE', x: 1875, y: 390 },
+      { type: 'SHIELD', x: 2985, y: 456 },
+    ],
+    notes: [
+      'Hand-authored flagship slice before procedural generation resumes.',
+      'Covers spawn, coin pickup, stomp, side-hit risk, blocker hazard, bounce pad, glide pickup, neon hazard, and shield pickup.',
+    ],
+  },
 };

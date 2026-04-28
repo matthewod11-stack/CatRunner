@@ -444,6 +444,49 @@ export interface PlatformerPowerupConfig {
   fireEscapeBonusChance: number;
 }
 
+export interface PlatformerOpeningRoutePlatform {
+  x: number;
+  width: number;
+  rooftopY: number;
+}
+
+export interface PlatformerOpeningRouteCoin {
+  x: number;
+  y: number;
+}
+
+export interface PlatformerOpeningRouteEnemy {
+  type: ZoneEnemyConfig['type'];
+  x: number;
+  platformIndex: number;
+  patrolPadding?: number;
+}
+
+export interface PlatformerOpeningRouteHazard {
+  type: ZoneHazardConfig['type'];
+  x: number;
+  platformIndex: number;
+  isOn?: boolean;
+  destinationX?: number;
+}
+
+export interface PlatformerOpeningRoutePowerup {
+  type: 'TRIPLE_JUMP' | 'GLIDE' | 'SHIELD';
+  x: number;
+  y: number;
+}
+
+export interface PlatformerOpeningRouteConfig {
+  id: string;
+  handoffX: number;
+  platforms: PlatformerOpeningRoutePlatform[];
+  coins?: PlatformerOpeningRouteCoin[];
+  enemies?: PlatformerOpeningRouteEnemy[];
+  hazards?: PlatformerOpeningRouteHazard[];
+  powerups?: PlatformerOpeningRoutePowerup[];
+  notes?: string[];
+}
+
 /** Visual theme for the platformer */
 export interface PlatformerThemeConfig {
   /** Sky gradient colors [top, bottom] */
@@ -485,6 +528,8 @@ export interface PlatformerLevelConfig extends CampaignLevelMeta {
   startLives: number;
   boss: PlatformerBossConfig;
   powerups: PlatformerPowerupConfig;
+  /** Optional hand-authored first-slice route before procedural generation resumes. */
+  openingRoute?: PlatformerOpeningRouteConfig;
 }
 
 // ─── Launcher (Level 3: Kitchen) ────────────────────────────────────

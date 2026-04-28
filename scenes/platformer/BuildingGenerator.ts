@@ -3,6 +3,11 @@ import type { PlatformerLevelConfig } from '../../types';
 import { getZoneIndex, resolveZoneParams } from './generation';
 import type { BuildingData, FireEscapeData, SceneManager } from './types';
 import { DEPTH } from './types';
+import {
+  ROOFTOPS_BACKGROUND_TEXTURES,
+  ROOFTOPS_COLLECTIBLE_TEXTURES,
+  ROOFTOPS_ENTITY_TEXTURES,
+} from './rooftopsAssets';
 
 const ROOFTOP_HEIGHT = 8;
 const PLATFORM_BUFFER = 600;
@@ -45,9 +50,13 @@ export class BuildingGenerator implements SceneManager {
 
     this.lastRooftopY = this.config.generation.startY;
 
-    // Starting building — wide and safe
-    this.createBuilding(100, 300, this.config.generation.startY, 0);
-    this.generatedUpToX = 400;
+    if (this.config.openingRoute) {
+      this.createOpeningRoute();
+    } else {
+      // Starting building — wide and safe
+      this.createBuilding(100, 300, this.config.generation.startY, 0);
+      this.generatedUpToX = 400;
+    }
   }
 
   update(_time: number, _delta: number): void {
@@ -145,7 +154,9 @@ export class BuildingGenerator implements SceneManager {
   private createBuilding(x: number, width: number, rooftopY: number, zoneIndex: number): void {
     // Rooftop collision surface
     const key = `roof-${width}`;
-    if (!this.scene.textures.exists(key)) {
+    const hasPixelRoof = this.scene.textures.exists(ROOFTOPS_BACKGROUND_TEXTURES.rooftopCap);
+    const textureKey = hasPixelRoof ? ROOFTOPS_BACKGROUND_TEXTURES.rooftopCap : key;
+    if (!hasPixelRoof && !this.scene.textures.exists(key)) {
       const g = this.scene.make.graphics({}, false);
       g.fillStyle(Phaser.Display.Color.HexStringToColor(this.config.theme.platformColor).color);
       g.fillRect(0, 0, width, ROOFTOP_HEIGHT);
@@ -158,9 +169,10 @@ export class BuildingGenerator implements SceneManager {
     const roof = this.rooftops.create(
       x + width / 2,
       rooftopY + ROOFTOP_HEIGHT / 2,
-      key,
+      textureKey,
     ) as Phaser.Physics.Arcade.Sprite;
     roof.setDepth(DEPTH.PLATFORMS);
+    if (hasPixelRoof) roof.setDisplaySize(width, 12);
     roof.refreshBody();
 
     const height = this.config.generation.deathY - rooftopY + 200;
@@ -180,7 +192,9 @@ export class BuildingGenerator implements SceneManager {
     const feY = rooftopY + Phaser.Math.Between(30, 80);
 
     const key = 'fire-escape';
-    if (!this.scene.textures.exists(key)) {
+    const hasPixelFireEscape = this.scene.textures.exists(ROOFTOPS_ENTITY_TEXTURES.fireEscape);
+    const textureKey = hasPixelFireEscape ? ROOFTOPS_ENTITY_TEXTURES.fireEscape : key;
+    if (!hasPixelFireEscape && !this.scene.textures.exists(key)) {
       const g = this.scene.make.graphics({}, false);
       g.fillStyle(0x5a4a3a);
       g.fillRect(0, 0, FIRE_ESCAPE_WIDTH, FIRE_ESCAPE_HEIGHT);
@@ -193,9 +207,10 @@ export class BuildingGenerator implements SceneManager {
     const plat = this.secondaryPlatforms.create(
       feX + FIRE_ESCAPE_WIDTH / 2,
       feY + FIRE_ESCAPE_HEIGHT / 2,
-      key,
+      textureKey,
     ) as Phaser.Physics.Arcade.Sprite;
     plat.setDepth(DEPTH.PLATFORMS);
+    if (hasPixelFireEscape) plat.setDisplaySize(FIRE_ESCAPE_WIDTH * 1.8, FIRE_ESCAPE_HEIGHT * 3);
     plat.refreshBody();
 
     this.fireEscapes.push({ x: feX, y: feY, width: FIRE_ESCAPE_WIDTH, buildingIndex, side });
@@ -203,7 +218,10 @@ export class BuildingGenerator implements SceneManager {
 
   private createCoin(x: number, y: number): void {
     const COIN_SIZE = 20;
-    if (!this.scene.textures.exists('coin')) {
+    const textureKey = this.scene.textures.exists(ROOFTOPS_COLLECTIBLE_TEXTURES.coin)
+      ? ROOFTOPS_COLLECTIBLE_TEXTURES.coin
+      : 'coin';
+    if (textureKey === 'coin' && !this.scene.textures.exists('coin')) {
       const g = this.scene.make.graphics({}, false);
       g.fillStyle(0xffdd44);
       g.fillCircle(COIN_SIZE / 2, COIN_SIZE / 2, COIN_SIZE / 2);
@@ -213,8 +231,9 @@ export class BuildingGenerator implements SceneManager {
       g.destroy();
     }
 
-    const coin = this.coins.create(x, y, 'coin') as Phaser.Physics.Arcade.Sprite;
+    const coin = this.coins.create(x, y, textureKey) as Phaser.Physics.Arcade.Sprite;
     coin.setDepth(DEPTH.COINS);
+    if (textureKey !== 'coin') coin.setDisplaySize(COIN_SIZE, COIN_SIZE);
     coin.refreshBody();
     this.scene.tweens.add({
       targets: coin,
@@ -224,6 +243,24 @@ export class BuildingGenerator implements SceneManager {
       repeat: -1,
       ease: 'Sine.easeInOut',
     });
+  }
+
+  private createOpeningRoute(): void {
+    const route = this.config.openingRoute!;
+    for (let i = 0; i < route.platforms.length; i++) {
+      const platform = route.platforms[i];
+      this.createBuilding(platform.x, platform.width, platform.rooftopY, 0);
+      this.lastRooftopY = platform.rooftopY;
+    }
+
+    for (const coin of route.coins ?? []) {
+      this.createCoin(coin.x, coin.y);
+    }
+
+    this.generatedUpToX = Math.max(
+      route.handoffX,
+      ...route.platforms.map(platform => platform.x + platform.width),
+    );
   }
 
   // ── Rendering ─────────────────────────────────────────────────
@@ -246,6 +283,10 @@ export class BuildingGenerator implements SceneManager {
       this.facadeGraphics.fillStyle(color);
       this.facadeGraphics.fillRect(b.x, b.rooftopY + ROOFTOP_HEIGHT, b.width, b.height);
 
+      if (this.scene.textures.exists(ROOFTOPS_BACKGROUND_TEXTURES.buildingFacadeTile)) {
+        this.drawPixelFacadePattern(b);
+      }
+
       // Windows
       this.facadeGraphics.fillStyle(0xffcc44, 0.15 + Math.random() * 0.2);
       const windowStartY = b.rooftopY + ROOFTOP_HEIGHT + 18;
@@ -267,6 +308,13 @@ export class BuildingGenerator implements SceneManager {
       this.facadeGraphics.fillStyle(0x5a4a3a);
       const railX = fe.side === 'left' ? fe.x : fe.x + fe.width - 2;
       this.facadeGraphics.fillRect(railX, fe.y, 2, 40);
+    }
+  }
+
+  private drawPixelFacadePattern(b: BuildingData): void {
+    this.facadeGraphics.fillStyle(0x1a1a2e, 0.28);
+    for (let y = b.rooftopY + ROOFTOP_HEIGHT + 10; y < b.rooftopY + b.height - 16; y += 32) {
+      this.facadeGraphics.fillRect(b.x + 4, y, b.width - 8, 2);
     }
   }
 

@@ -56,6 +56,13 @@ const MAX_LIVES = 9;
 const DEV_UNLOCK_ALL = import.meta.env.DEV || new URLSearchParams(window.location.search).has('unlock_all');
 const DEV_SMOKE_TEST_API = import.meta.env.DEV;
 
+function getInitialSelectedLevel(): LevelId {
+  const requested = new URLSearchParams(window.location.search).get('level');
+  return requested && LEVEL_ORDER.includes(requested as LevelId)
+    ? requested as LevelId
+    : LEVEL_ORDER[0];
+}
+
 const App: React.FC = () => {
   const prefersReducedMotion = useDocumentReducedMotionClass();
 
@@ -68,7 +75,7 @@ const App: React.FC = () => {
   const [phaserPaused, setPhaserPaused] = useState(false);
   const [shellAmmo, setShellAmmo] = useState<number | undefined>(undefined);
   const [completedLevels, setCompletedLevels] = useState(() => loadCompletedLevels());
-  const [selectedLevel, setSelectedLevel] = useState<LevelId>(() => LEVEL_ORDER[0]);
+  const [selectedLevel, setSelectedLevel] = useState<LevelId>(() => getInitialSelectedLevel());
   const acceptSceneScoreRef = useRef(false);
 
   const { tuning } = useTuningStore();

@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
 import type { PlatformerLevelConfig } from '../../types';
-import { getZoneIndex } from './generation';
+import { getZoneIndex, isBeforeOpeningRouteHandoff } from './generation';
 import type { BuildingData, PlatformerHazardType, SceneManager } from './types';
 import { DEPTH } from './types';
+import { ROOFTOPS_HAZARD_TEXTURES, ROOFTOPS_NEON_TEXTURES } from './rooftopsAssets';
 
 const AC_UNIT_SIZE = { w: 30, h: 25 };
 const SATELLITE_SIZE = { w: 28, h: 20 };
@@ -44,6 +45,7 @@ export class HazardManager implements SceneManager {
 
   private hazards: ActiveHazard[] = [];
   private placedBuildingIndices = new Set<number>();
+  private seededOpeningRoute = false;
 
   /** Graphics for clothesline ropes */
   private ropeGraphics!: Phaser.GameObjects.Graphics;
@@ -66,6 +68,7 @@ export class HazardManager implements SceneManager {
     this.ropeGraphics = this.scene.add.graphics().setDepth(DEPTH.HAZARDS);
 
     this.createTextures();
+    this.seedOpeningRouteHazards();
   }
 
   update(_time: number, delta: number): void {
@@ -112,7 +115,7 @@ export class HazardManager implements SceneManager {
 
   private createTextures(): void {
     // AC Unit
-    if (!this.scene.textures.exists('ac-unit')) {
+    if (!this.scene.textures.exists(this.acUnitTexture())) {
       const g = this.scene.make.graphics({}, false);
       g.fillStyle(0x444455);
       g.fillRoundedRect(0, 0, AC_UNIT_SIZE.w, AC_UNIT_SIZE.h, 3);
@@ -125,7 +128,7 @@ export class HazardManager implements SceneManager {
     }
 
     // Satellite Dish
-    if (!this.scene.textures.exists('satellite-dish')) {
+    if (!this.scene.textures.exists(this.satelliteTexture())) {
       const g = this.scene.make.graphics({}, false);
       g.fillStyle(0x888899);
       g.fillEllipse(SATELLITE_SIZE.w / 2, SATELLITE_SIZE.h / 2, SATELLITE_SIZE.w, SATELLITE_SIZE.h);
@@ -136,7 +139,7 @@ export class HazardManager implements SceneManager {
     }
 
     // Neon Sign (ON)
-    if (!this.scene.textures.exists('neon-on')) {
+    if (!this.scene.textures.exists(this.neonOnTexture())) {
       const g = this.scene.make.graphics({}, false);
       g.fillStyle(0xff0066);
       g.fillRect(0, 0, NEON_SIZE.w, NEON_SIZE.h);
@@ -145,7 +148,7 @@ export class HazardManager implements SceneManager {
     }
 
     // Neon Sign (OFF)
-    if (!this.scene.textures.exists('neon-off')) {
+    if (!this.scene.textures.exists(this.neonOffTexture())) {
       const g = this.scene.make.graphics({}, false);
       g.fillStyle(0x331122);
       g.fillRect(0, 0, NEON_SIZE.w, NEON_SIZE.h);
@@ -163,6 +166,26 @@ export class HazardManager implements SceneManager {
     }
   }
 
+  private acUnitTexture(): string {
+    return this.scene.textures.exists(ROOFTOPS_HAZARD_TEXTURES.AC_UNIT)
+      ? ROOFTOPS_HAZARD_TEXTURES.AC_UNIT
+      : 'ac-unit';
+  }
+
+  private satelliteTexture(): string {
+    return this.scene.textures.exists(ROOFTOPS_HAZARD_TEXTURES.SATELLITE_DISH)
+      ? ROOFTOPS_HAZARD_TEXTURES.SATELLITE_DISH
+      : 'satellite-dish';
+  }
+
+  private neonOnTexture(): string {
+    return this.scene.textures.exists(ROOFTOPS_NEON_TEXTURES.on) ? ROOFTOPS_NEON_TEXTURES.on : 'neon-on';
+  }
+
+  private neonOffTexture(): string {
+    return this.scene.textures.exists(ROOFTOPS_NEON_TEXTURES.off) ? ROOFTOPS_NEON_TEXTURES.off : 'neon-off';
+  }
+
   // ── Placement ─────────────────────────────────────────────────
 
   private tryPlaceHazards(): void {
@@ -174,6 +197,7 @@ export class HazardManager implements SceneManager {
       if (this.placedBuildingIndices.has(i)) continue;
       const b = buildings[i];
       if (b.x > viewRight + 300 || b.x + b.width < cam.scrollX) continue;
+      if (isBeforeOpeningRouteHandoff(this.config, b.x)) continue;
 
       const distance = b.x;
       const zoneIdx = getZoneIndex(this.config.zones, distance);
@@ -217,9 +241,10 @@ export class HazardManager implements SceneManager {
     const y = building.rooftopY - AC_UNIT_SIZE.h;
 
     const sprite = this.staticGroup.create(
-      x + AC_UNIT_SIZE.w / 2, y + AC_UNIT_SIZE.h / 2, 'ac-unit',
+      x + AC_UNIT_SIZE.w / 2, y + AC_UNIT_SIZE.h / 2, this.acUnitTexture(),
     ) as Phaser.Physics.Arcade.Sprite;
     sprite.setDepth(DEPTH.HAZARDS);
+    sprite.setDisplaySize(AC_UNIT_SIZE.w, AC_UNIT_SIZE.h);
     sprite.refreshBody();
 
     // 40% chance of steam variant
@@ -236,9 +261,10 @@ export class HazardManager implements SceneManager {
     const y = building.rooftopY - SATELLITE_SIZE.h;
 
     const sprite = this.bounceGroup.create(
-      x + SATELLITE_SIZE.w / 2, y + SATELLITE_SIZE.h / 2, 'satellite-dish',
+      x + SATELLITE_SIZE.w / 2, y + SATELLITE_SIZE.h / 2, this.satelliteTexture(),
     ) as Phaser.Physics.Arcade.Sprite;
     sprite.setDepth(DEPTH.HAZARDS);
+    sprite.setDisplaySize(SATELLITE_SIZE.w, SATELLITE_SIZE.h);
     sprite.refreshBody();
 
     this.hazards.push({ type: 'SATELLITE_DISH', sprite, buildingIndex });
@@ -251,15 +277,87 @@ export class HazardManager implements SceneManager {
     const y = building.rooftopY - NEON_SIZE.h + 5;
 
     const sprite = this.damageGroup.create(
-      x + NEON_SIZE.w / 2, y + NEON_SIZE.h / 2, 'neon-on',
+      x + NEON_SIZE.w / 2, y + NEON_SIZE.h / 2, this.neonOnTexture(),
     ) as Phaser.Physics.Arcade.Sprite;
     sprite.setDepth(DEPTH.HAZARDS);
+    sprite.setDisplaySize(NEON_SIZE.w, NEON_SIZE.h);
     sprite.refreshBody();
 
     this.hazards.push({
       type: 'NEON_SIGN', sprite, buildingIndex,
       isOn: true, cycleTimer: Math.random() * NEON_CYCLE_MS, // offset so they don't all sync
     });
+  }
+
+  private seedOpeningRouteHazards(): void {
+    if (this.seededOpeningRoute || !this.config.openingRoute) return;
+    this.seededOpeningRoute = true;
+
+    for (const entry of this.config.openingRoute.hazards ?? []) {
+      const platform = this.config.openingRoute.platforms[entry.platformIndex];
+      if (!platform) continue;
+      this.placeExplicitHazard(entry.type as PlatformerHazardType, platform, entry);
+    }
+  }
+
+  private placeExplicitHazard(
+    type: PlatformerHazardType,
+    platform: { rooftopY: number },
+    entry: NonNullable<NonNullable<PlatformerLevelConfig['openingRoute']>['hazards']>[number],
+  ): void {
+    switch (type) {
+      case 'AC_UNIT': {
+        const x = entry.x;
+        const y = platform.rooftopY - AC_UNIT_SIZE.h;
+        const sprite = this.staticGroup.create(
+          x + AC_UNIT_SIZE.w / 2, y + AC_UNIT_SIZE.h / 2, this.acUnitTexture(),
+        ) as Phaser.Physics.Arcade.Sprite;
+        sprite.setDepth(DEPTH.HAZARDS);
+        sprite.setDisplaySize(AC_UNIT_SIZE.w, AC_UNIT_SIZE.h);
+        sprite.refreshBody();
+        this.hazards.push({ type, sprite, buildingIndex: entry.platformIndex, steamDirection: 1, steamTimer: 0 });
+        break;
+      }
+      case 'SATELLITE_DISH': {
+        const x = entry.x;
+        const y = platform.rooftopY - SATELLITE_SIZE.h;
+        const sprite = this.bounceGroup.create(
+          x + SATELLITE_SIZE.w / 2, y + SATELLITE_SIZE.h / 2, this.satelliteTexture(),
+        ) as Phaser.Physics.Arcade.Sprite;
+        sprite.setDepth(DEPTH.HAZARDS);
+        sprite.setDisplaySize(SATELLITE_SIZE.w, SATELLITE_SIZE.h);
+        sprite.refreshBody();
+        this.hazards.push({ type, sprite, buildingIndex: entry.platformIndex });
+        break;
+      }
+      case 'NEON_SIGN': {
+        const x = entry.x;
+        const y = platform.rooftopY - NEON_SIZE.h + 5;
+        const sprite = this.damageGroup.create(
+          x + NEON_SIZE.w / 2, y + NEON_SIZE.h / 2, entry.isOn === false ? this.neonOffTexture() : this.neonOnTexture(),
+        ) as Phaser.Physics.Arcade.Sprite;
+        sprite.setDepth(DEPTH.HAZARDS);
+        sprite.setDisplaySize(NEON_SIZE.w, NEON_SIZE.h);
+        sprite.refreshBody();
+        this.hazards.push({
+          type, sprite, buildingIndex: entry.platformIndex,
+          isOn: entry.isOn ?? true, cycleTimer: 0,
+        });
+        break;
+      }
+      case 'CLOTHESLINE': {
+        const sprite = this.clotheslineGroup.create(
+          entry.x, platform.rooftopY - 10, 'clothesline-plat',
+        ) as Phaser.Physics.Arcade.Sprite;
+        sprite.setDepth(DEPTH.HAZARDS);
+        sprite.refreshBody();
+        this.hazards.push({
+          type, sprite, buildingIndex: entry.platformIndex,
+          destinationX: entry.destinationX ?? entry.x + 160,
+        });
+        break;
+      }
+    }
   }
 
   private placeClothesline(
@@ -300,7 +398,7 @@ export class HazardManager implements SceneManager {
         h.isOn = !h.isOn;
 
         const sprite = h.sprite as Phaser.Physics.Arcade.Sprite;
-        sprite.setTexture(h.isOn ? 'neon-on' : 'neon-off');
+        sprite.setTexture(h.isOn ? this.neonOnTexture() : this.neonOffTexture());
         sprite.setAlpha(h.isOn ? 1 : 0.3);
       }
     }

@@ -8,12 +8,12 @@
 ## **ACTIVE ROADMAP**
 
 ```
-none currently
+ROADMAP_CITYHEIGHTS.md
 ```
 
 `ROADMAP_V4.md` is complete and archived at `docs/archive/roadmaps/ROADMAP_V4_2026-04-27_beach-completion-pipeline.md`.
 
-Next session should create `ROADMAP_CITYHEIGHTS.md` at the repo root. `./scripts/dev-init.sh` and the session-start workflow now discover root `ROADMAP_*.md` files automatically, so once that roadmap exists it should become the active plan without another hardcoded V-number update.
+`ROADMAP_CITYHEIGHTS.md` is active at the repo root. `./scripts/dev-init.sh` and the session-start workflow discover root `ROADMAP_*.md` files automatically.
 
 ---
 
@@ -23,9 +23,8 @@ Next session should create `ROADMAP_CITYHEIGHTS.md` at the repo root. `./scripts
 # 1. Run session init
 ./scripts/dev-init.sh
 
-# 2. Create/read the next active roadmap:
-# expected next file: ROADMAP_CITYHEIGHTS.md
-# once created, ./scripts/dev-init.sh will detect it automatically
+# 2. Read the active roadmap:
+ROADMAP_CITYHEIGHTS.md
 
 # 3. Check the latest session entry below for handoff notes
 ```
@@ -36,6 +35,70 @@ Next session should create `ROADMAP_CITYHEIGHTS.md` at the repo root. `./scripts
 === ADD NEW SESSIONS AT THE TOP ===
 Most recent session should be first.
 -->
+
+---
+
+## Session: 2026-04-28 15:35 (City Heights session-end checkpoint)
+
+### Completed
+- Re-ran session-end verification after the City Heights flagship pixel platformer foundation
+- Confirmed the user playtest feedback: City Heights "plays great"
+- Updated `ROADMAP_CITYHEIGHTS.md` Phase 5 screenshot/findings items to complete and marked Phase 6 playtest as WIP
+- Confirmed first-pass screenshots and render-state artifacts exist under `docs/artifacts/level-2-city-heights/`
+
+### In Progress
+- City Heights Phase 6 polish remains active: stomp-vs-side-hit capture, opening-route tuning, and replacement of baseline generated assets with stronger selected image-generation candidates
+
+### Issues Encountered
+- No new blockers; the existing production build large chunk warning remains visible
+- No same-day `/tmp/session-test-baseline-20260428.json` was present; the only baseline file was `/tmp/session-test-baseline-20260427.json`
+
+### Verification
+- `npx tsc --noEmit` - passing
+- `npm run test:run` - 46 files, 222 tests passing
+- `npm run build` - passing with the existing large chunk warning
+- `npm run test:smoke` - 3 browser smoke tests passing
+
+### Next Session Should
+- Continue `ROADMAP_CITYHEIGHTS.md` Phase 6 polish
+- Capture the missing `03-stomp-vs-side-hit.png`, `06-opening-route-complete.png`, `07-victory.png`, and `08-game-over.png`
+- Tune jump spacing, landing lips, and hero/enemy/hazard scale from the first screenshots
+- Start replacing the generated baseline with selected higher-quality pixel candidates
+
+---
+
+## Session: 2026-04-28 14:50 (City Heights flagship pixel platformer foundation)
+
+### Completed
+- Created active root `ROADMAP_CITYHEIGHTS.md` for the Level 2 flagship true-pixel platformer slice
+- Added `docs/plans/level-2-city-heights-art-bible.md`
+- Pivoted the Level 2 visual brief, prompt pack, asset inventory, hero-sheet contract, and QA checklist to true cozy pixel-art rules and opening-route scope
+- Added `scripts/generate-rooftops-pixel-pack.mjs` plus `npm run generate:rooftops-pixel-pack`
+- Generated committed City Heights pixel baseline assets under `assets/sprites/rooftops/`
+- Added `scenes/platformer/rooftopsAssets.ts` and manifest tests
+- Added `scenes/platformer/heroSheet.ts` and resolver/contract tests for the 64x64 platformer Beach Kitty sheet
+- Added `openingRoute` config support and seeded a deterministic City Heights opening route in `levels/rooftops.ts`
+- Taught platformer managers to prefer manifest assets and seed opening-route enemies, hazards, coins, and power-ups
+- Added platformer web-game hooks: `window.render_game_to_text()` and best-effort `window.advanceTime(ms)`
+- Updated `AGENTS.md`, `CLAUDE.md`, and `features.json` for the active City Heights roadmap
+
+### In Progress
+- First browser screenshot/playtest capture pass is complete; Phase 6 polish and asset replacement remain active
+
+### Issues Encountered
+- `vitest run --runInBand` is not a valid Vitest option; reran with the repo script directly
+
+### Verification
+- `npx tsc --noEmit` - passing
+- `npm run test:run` - 46 files, 222 tests passing
+- `npm run build` - passing with the existing large chunk warning
+- `npm run test:smoke` - 3 browser smoke tests passing
+- Web-game client action loop against `http://127.0.0.1:5173/?unlock_all=1&level=ROOFTOPS` - state snapshots produced with no console-error files; full-page captures saved under `docs/artifacts/level-2-city-heights/`
+
+### Next Session Should
+- Continue the City Heights browser/playtest loop and capture the remaining QA screenshots
+- Tune opening-route jump spacing, landing lip readability, and enemy/hazard/pickup scale based on screenshots
+- Replace generated baseline art with selected image-generation candidates where they improve the slice
 
 ---
 

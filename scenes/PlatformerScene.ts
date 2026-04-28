@@ -2,7 +2,6 @@ import Phaser from 'phaser';
 import { SceneBridge } from './shared/SceneBridge';
 import type { PlatformerSceneInitData } from './shared/bridgeProtocol';
 import type { PlatformerLevelConfig, GameScore, GameStatus } from '../types';
-import { loadCatSprite, CAT_TEXTURE_KEY } from './shared/SpriteLoader';
 import { EffectsManager } from './shared/EffectsManager';
 import { PhaserAudio } from './shared/PhaserAudio';
 import { BuildingGenerator } from './platformer/BuildingGenerator';
@@ -12,6 +11,14 @@ import { HazardManager } from './platformer/HazardManager';
 import { PowerupManager } from './platformer/PowerupManager';
 import { PigeonKingBoss } from './platformer/PigeonKingBoss';
 import { DEPTH } from './platformer/types';
+import {
+  ROOFTOPS_HERO_ANIMATIONS,
+  ROOFTOPS_HERO_ANIMATION_KEYS,
+  ROOFTOPS_HERO_SHEET,
+  resolveRooftopsHeroAnimation,
+  type RooftopsHeroAnimationId,
+} from './platformer/heroSheet';
+import { ROOFTOPS_IMAGE_LOADS, ROOFTOPS_PIXELATED_TEXTURE_KEYS } from './platformer/rooftopsAssets';
 
 // ─── Constants ──────────────────────────────────────────────────────
 
@@ -30,6 +37,10 @@ export default class PlatformerScene extends SceneBridge {
   private facingRight = true;
   private isOnGround = false;
   private maxJumps = 2;
+  private currentPlayerAnimationKey: string | null = null;
+  private playerAnimationOverride: { id: RooftopsHeroAnimationId; until: number } | null = null;
+  private renderTextHook: (() => string) | null = null;
+  private advanceTimeHook: ((ms: number) => string) | null = null;
 
   // Game state
   private lives = 3;
@@ -70,7 +81,15 @@ export default class PlatformerScene extends SceneBridge {
   }
 
   preload(): void {
-    loadCatSprite(this, this.catSpriteUrl);
+    // Custom still-image cats stay in identity surfaces until they can satisfy this sheet contract.
+    this.load.spritesheet(ROOFTOPS_HERO_SHEET.key, ROOFTOPS_HERO_SHEET.path, {
+      frameWidth: ROOFTOPS_HERO_SHEET.frameWidth,
+      frameHeight: ROOFTOPS_HERO_SHEET.frameHeight,
+      endFrame: ROOFTOPS_HERO_SHEET.frameMax - 1,
+    });
+    for (const asset of ROOFTOPS_IMAGE_LOADS) {
+      this.load.image(asset.key, asset.path);
+    }
     EffectsManager.createParticleTexture(this);
   }
 
@@ -87,6 +106,8 @@ export default class PlatformerScene extends SceneBridge {
 
     // Audio — procedural SFX + music
     this.audio = new PhaserAudio(this);
+    this.applyPixelTextureFilters();
+    this.registerPlayerAnimations();
 
     // ── Instantiate managers ────────────────────────────────────
 
@@ -154,6 +175,7 @@ export default class PlatformerScene extends SceneBridge {
       (_p, powerup) => {
         this.audio.playSfx('powerup');
         this.powerups.collectPowerup(powerup as Phaser.Physics.Arcade.Sprite);
+        this.queuePlayerAnimation('powerUp', 360);
       },
     );
     this.physics.add.overlap(
@@ -188,6 +210,8 @@ export default class PlatformerScene extends SceneBridge {
     this.gameScore.lives = this.lives;
     this.emitScoreUpdate({ ...this.gameScore });
     this.emitStatusChange('PLAYING' as GameStatus);
+    this.installWebGameTestHooks();
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.uninstallWebGameTestHooks());
 
     // ── Pause keybindings ───────────────────────────────────────
 
@@ -225,16 +249,15 @@ export default class PlatformerScene extends SceneBridge {
   // ─── Player Creation ──────────────────────────────────────────
 
   private createPlayer(): void {
-    const hasCatTexture = this.textures.exists(CAT_TEXTURE_KEY);
-    if (hasCatTexture) {
+    const hasHeroSheet = this.textures.exists(ROOFTOPS_HERO_SHEET.key);
+    if (hasHeroSheet) {
       this.player = this.physics.add.sprite(
-        this.startX, this.config.generation.startY - 60, CAT_TEXTURE_KEY,
+        this.startX, this.config.generation.startY - 60, ROOFTOPS_HERO_SHEET.key, 0,
       );
-      // Scale the cat sprite to fit PLAYER_WIDTH x PLAYER_HEIGHT
-      const tex = this.textures.get(CAT_TEXTURE_KEY).getSourceImage();
-      const scaleX = PLAYER_WIDTH / tex.width;
-      const scaleY = PLAYER_HEIGHT / tex.height;
-      this.player.setScale(scaleX, scaleY);
+      this.player
+        .setOrigin(ROOFTOPS_HERO_SHEET.origin.x, ROOFTOPS_HERO_SHEET.origin.y)
+        .setDisplaySize(ROOFTOPS_HERO_SHEET.renderSize.width, ROOFTOPS_HERO_SHEET.renderSize.height);
+      this.playPlayerAnimation('idle');
     } else {
       // Fallback: colored rectangle
       const g = this.make.graphics({}, false);
@@ -301,7 +324,8 @@ export default class PlatformerScene extends SceneBridge {
     }
 
     // Glide (reduce gravity while holding jump + falling + has glide powerup)
-    if (this.powerups.hasGlide() && this.jumpHeld && body.velocity.y > 0) {
+    const isGliding = this.powerups.hasGlide() && this.jumpHeld && body.velocity.y > 0;
+    if (isGliding) {
       body.setGravityY(
         this.config.playerConfig.gravity * this.config.powerups.glideGravityMultiplier,
       );
@@ -309,14 +333,7 @@ export default class PlatformerScene extends SceneBridge {
       body.setGravityY(this.config.playerConfig.gravity);
     }
 
-    // Squash/stretch for jump feel
-    if (!this.isOnGround) {
-      const vy = body.velocity.y;
-      if (vy < -100) this.player.setScale(0.85, 1.15);
-      else if (vy > 100) this.player.setScale(1.1, 0.9);
-    } else {
-      this.player.setScale(1, 1);
-    }
+    this.updatePlayerAnimation(isGliding);
   }
 
   // ─── Collision Handlers ───────────────────────────────────────
@@ -333,6 +350,7 @@ export default class PlatformerScene extends SceneBridge {
       // Bounce up after stomp — reward for stomping
       this.player.body.setVelocityY(-this.config.playerConfig.jumpForce * 0.6);
       this.jumpCount = 0;
+      this.queuePlayerAnimation('landStomp', 240);
       this.audio.playSfx('hit');
       this.gameScore.current += result.points;
       this.gameScore.streak += 1;
@@ -363,6 +381,7 @@ export default class PlatformerScene extends SceneBridge {
   private handleDamage(): void {
     // Shield absorbs one hit
     if (this.powerups.consumeShield()) {
+      this.queuePlayerAnimation('powerUp', 260);
       this.effects.flash(0x44ff88, 150);
       this.effects.spawnParticles(this.player.x, this.player.y, 0x44ff88, 8, 150);
       return;
@@ -374,6 +393,7 @@ export default class PlatformerScene extends SceneBridge {
     this.gameScore.multiplier = 1;
 
     this.audio.playSfx('hit');
+    this.queuePlayerAnimation('hurt', 320);
     this.effects.flash(0xff0000, 200);
     this.effects.shake(0.015, 150);
     this.emitLivesChanged(this.lives);
@@ -381,6 +401,7 @@ export default class PlatformerScene extends SceneBridge {
 
     if (this.lives <= 0) {
       this.isGameOver = true;
+      this.playPlayerAnimation('defeat', true);
       this.emitGameOver(this.gameScore.current);
       return;
     }
@@ -443,6 +464,7 @@ export default class PlatformerScene extends SceneBridge {
           this.audio.playSfx('boss_hit');
           this.player.body.setVelocityY(-this.config.playerConfig.jumpForce * 0.7);
           this.jumpCount = 0;
+          this.queuePlayerAnimation('landStomp', 260);
           this.gameScore.current += 100;
           this.emitScoreUpdate({ ...this.gameScore });
         }
@@ -469,6 +491,7 @@ export default class PlatformerScene extends SceneBridge {
 
   private handleVictory(): void {
     this.hasWon = true;
+    this.playPlayerAnimation('victory', true);
     this.audio.playSfx('mult');
     this.effects.spawnParticles(this.player.x, this.player.y, 0xffdd44, 20, 300);
     this.emitLevelComplete({
@@ -494,6 +517,7 @@ export default class PlatformerScene extends SceneBridge {
     this.gameScore.multiplier = 1;
 
     this.audio.playSfx('meow');
+    this.queuePlayerAnimation('hurt', 320);
     this.effects.flash(0xff0000, 200);
     this.effects.shake(0.015, 150);
     this.emitLivesChanged(this.lives);
@@ -501,6 +525,7 @@ export default class PlatformerScene extends SceneBridge {
 
     if (this.lives <= 0) {
       this.isGameOver = true;
+      this.playPlayerAnimation('defeat', true);
       this.emitGameOver(this.gameScore.current);
       return;
     }
@@ -558,5 +583,153 @@ export default class PlatformerScene extends SceneBridge {
       if (patch.isPaused && !this.scene.isPaused()) this.scene.pause();
       else if (!patch.isPaused && this.scene.isPaused()) this.scene.resume();
     }
+  }
+
+  private applyPixelTextureFilters(): void {
+    for (const key of [ROOFTOPS_HERO_SHEET.key, ...ROOFTOPS_PIXELATED_TEXTURE_KEYS]) {
+      if (!this.textures.exists(key)) continue;
+      this.textures.get(key).setFilter(Phaser.Textures.FilterMode.NEAREST);
+    }
+  }
+
+  private registerPlayerAnimations(): void {
+    for (const animation of ROOFTOPS_HERO_ANIMATIONS) {
+      if (this.anims.exists(animation.key)) continue;
+      this.anims.create({
+        key: animation.key,
+        frames: animation.frames.map(frame => ({ key: ROOFTOPS_HERO_SHEET.key, frame })),
+        frameRate: animation.frameRate,
+        repeat: animation.repeat,
+      });
+    }
+  }
+
+  private queuePlayerAnimation(id: RooftopsHeroAnimationId, durationMs: number): void {
+    this.playerAnimationOverride = { id, until: Date.now() + durationMs };
+    this.playPlayerAnimation(id, true);
+  }
+
+  private playPlayerAnimation(id: RooftopsHeroAnimationId, restart = false): void {
+    const key = ROOFTOPS_HERO_ANIMATION_KEYS[id];
+    if (!this.player?.active) return;
+    if (!restart && this.currentPlayerAnimationKey === key) return;
+    this.player.play(key, !restart);
+    this.currentPlayerAnimationKey = key;
+  }
+
+  private updatePlayerAnimation(isGliding: boolean): void {
+    const now = Date.now();
+    if (this.playerAnimationOverride) {
+      if (now < this.playerAnimationOverride.until) return;
+      this.playerAnimationOverride = null;
+    }
+
+    this.playPlayerAnimation(resolveRooftopsHeroAnimation({
+      status: this.isGameOver
+        ? ('GAMEOVER' as GameStatus)
+        : this.hasWon
+          ? ('VICTORY' as GameStatus)
+          : ('PLAYING' as GameStatus),
+      isAirborne: !this.isOnGround,
+      verticalVelocity: this.player.body.velocity.y,
+      isMoving: Math.abs(this.player.body.velocity.x) > 1,
+      isGliding,
+      isHurt: false,
+      isStompingOrLanding: false,
+      isPoweringUp: false,
+    }));
+  }
+
+  private installWebGameTestHooks(): void {
+    if (typeof window === 'undefined') return;
+
+    this.renderTextHook = () => this.renderGameToText();
+    this.advanceTimeHook = (ms: number) => {
+      const frameMs = 1000 / 60;
+      const frames = Math.max(1, Math.round(ms / frameMs));
+      const loop = this.game.loop;
+      let nextTime = Math.max(window.performance.now(), loop.lastTime || 0);
+      for (let i = 0; i < frames; i++) {
+        nextTime += frameMs;
+        loop.step(nextTime);
+      }
+      return this.renderGameToText();
+    };
+
+    window.render_game_to_text = this.renderTextHook;
+    window.advanceTime = this.advanceTimeHook;
+  }
+
+  private uninstallWebGameTestHooks(): void {
+    if (typeof window === 'undefined') return;
+    if (window.render_game_to_text === this.renderTextHook) delete window.render_game_to_text;
+    if (window.advanceTime === this.advanceTimeHook) delete window.advanceTime;
+    this.renderTextHook = null;
+    this.advanceTimeHook = null;
+  }
+
+  private renderGameToText(): string {
+    const body = this.player.body;
+    const payload = {
+      coordinateSystem: 'Phaser world coordinates; origin top-left, x right, y down',
+      mode: this.isGameOver ? 'GAME_OVER' : this.hasWon ? 'VICTORY' : this.inBossArena ? 'BOSS' : 'PLAYING',
+      paused: this.scene.isPaused(),
+      route: {
+        openingRouteId: this.config.openingRoute?.id ?? null,
+        openingRouteHandoffX: this.config.openingRoute?.handoffX ?? null,
+      },
+      player: {
+        x: Math.round(this.player.x),
+        y: Math.round(this.player.y),
+        vx: Math.round(body.velocity.x),
+        vy: Math.round(body.velocity.y),
+        facing: this.facingRight ? 'right' : 'left',
+        grounded: this.isOnGround,
+        jumpsUsed: this.jumpCount,
+        maxJumps: this.maxJumps,
+      },
+      camera: {
+        scrollX: Math.round(this.cameras.main.scrollX),
+        scrollY: Math.round(this.cameras.main.scrollY),
+      },
+      score: {
+        current: this.gameScore.current,
+        coins: this.gameScore.coins,
+        lives: this.lives,
+        multiplier: this.gameScore.multiplier,
+      },
+      powerup: this.powerups.getState(),
+      visible: {
+        enemies: this.snapshotGroup(this.enemies.getGroup()),
+        hazards: [
+          ...this.snapshotGroup(this.hazards.getStaticGroup()),
+          ...this.snapshotGroup(this.hazards.getBounceGroup()),
+          ...this.snapshotGroup(this.hazards.getDamageGroup()),
+          ...this.snapshotGroup(this.hazards.getClotheslineGroup()),
+        ],
+        coins: this.snapshotGroup(this.buildingGen.getCoinGroup()),
+        powerups: this.snapshotGroup(this.powerups.getGroup()),
+      },
+      boss: this.inBossArena ? { hp: this.boss.getHP(), defeated: this.boss.isDefeated() } : null,
+    };
+    return JSON.stringify(payload);
+  }
+
+  private snapshotGroup(group: Phaser.GameObjects.Group): Array<{ key: string; x: number; y: number }> {
+    const cam = this.cameras.main;
+    const left = cam.scrollX - 120;
+    const right = cam.scrollX + this.scale.width + 120;
+    const top = cam.scrollY - 120;
+    const bottom = cam.scrollY + this.scale.height + 120;
+
+    return group.getChildren()
+      .filter((child): child is Phaser.GameObjects.Sprite => child instanceof Phaser.GameObjects.Sprite)
+      .filter(child => child.active && child.x >= left && child.x <= right && child.y >= top && child.y <= bottom)
+      .slice(0, 12)
+      .map(child => ({
+        key: child.texture.key,
+        x: Math.round(child.x),
+        y: Math.round(child.y),
+      }));
   }
 }

@@ -8,6 +8,7 @@ Use this directory for the current implementation plan that is actively driving 
 - [`level-1-runner-hero-sheet-contract.md`](./level-1-runner-hero-sheet-contract.md) — Phase 2 Beach runner hero-sheet geometry, animation states, and swap rules.
 - [`level-1-phase-4-playtest.md`](./level-1-phase-4-playtest.md) — Phase 4 Beach playtest notes, screenshot artifacts, and remaining follow-ups.
 - [`level-2-city-heights-visual-brief.md`](./level-2-city-heights-visual-brief.md) — Phase 5 City Heights platformer art direction seed.
+- [`level-2-city-heights-art-bible.md`](./level-2-city-heights-art-bible.md) — City Heights true-pixel art bible and image-generation acceptance rules.
 - [`level-2-city-heights-prompt-pack.md`](./level-2-city-heights-prompt-pack.md) — Phase 5 City Heights source-generation prompt pack seed.
 - [`level-2-city-heights-asset-inventory.md`](./level-2-city-heights-asset-inventory.md) — Phase 5 City Heights asset inventory and runtime integration targets.
 - [`level-2-platformer-hero-sheet-contract.md`](./level-2-platformer-hero-sheet-contract.md) — Phase 5 platformer hero-sheet contract seed.

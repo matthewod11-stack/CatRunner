@@ -3,6 +3,7 @@ import type { PlatformerLevelConfig } from '../../types';
 import { getZoneIndex } from './generation';
 import type { SceneManager } from './types';
 import { DEPTH } from './types';
+import { ROOFTOPS_BACKGROUND_TEXTURES } from './rooftopsAssets';
 
 interface SkylineBuilding {
   x: number;
@@ -17,6 +18,9 @@ export class CityBackground implements SceneManager {
   private skyGraphics!: Phaser.GameObjects.Graphics;
   private farGraphics!: Phaser.GameObjects.Graphics;
   private midGraphics!: Phaser.GameObjects.Graphics;
+  private skyImage: Phaser.GameObjects.Image | null = null;
+  private farTile: Phaser.GameObjects.TileSprite | null = null;
+  private midTile: Phaser.GameObjects.TileSprite | null = null;
 
   private farBuildings: SkylineBuilding[] = [];
   private midBuildings: SkylineBuilding[] = [];
@@ -30,6 +34,24 @@ export class CityBackground implements SceneManager {
 
   create(): void {
     const { width, height } = this.scene.scale;
+
+    if (this.hasPixelBackgroundAssets()) {
+      this.skyImage = this.scene.add.image(width / 2, height / 2, ROOFTOPS_BACKGROUND_TEXTURES.sky)
+        .setScrollFactor(0)
+        .setDisplaySize(width, height)
+        .setDepth(DEPTH.BG_FAR);
+      this.farTile = this.scene.add.tileSprite(
+        width / 2, height - 48, width, 96, ROOFTOPS_BACKGROUND_TEXTURES.farSkyline,
+      )
+        .setScrollFactor(0)
+        .setDepth(DEPTH.BG_FAR + 0.1);
+      this.midTile = this.scene.add.tileSprite(
+        width / 2, height - 58, width, 96, ROOFTOPS_BACKGROUND_TEXTURES.midSkyline,
+      )
+        .setScrollFactor(0)
+        .setDepth(DEPTH.BG_MID);
+      return;
+    }
 
     // Sky gradient (fixed to camera)
     this.skyGraphics = this.scene.add.graphics()
@@ -54,6 +76,13 @@ export class CityBackground implements SceneManager {
   }
 
   update(_time: number, _delta: number): void {
+    if (this.farTile && this.midTile) {
+      const cam = this.scene.cameras.main;
+      this.farTile.tilePositionX = cam.scrollX * 0.1;
+      this.midTile.tilePositionX = cam.scrollX * 0.3;
+      return;
+    }
+
     const cam = this.scene.cameras.main;
     const screenW = this.scene.scale.width;
 
@@ -73,9 +102,18 @@ export class CityBackground implements SceneManager {
   }
 
   destroy(): void {
-    this.skyGraphics.destroy();
-    this.farGraphics.destroy();
-    this.midGraphics.destroy();
+    this.skyImage?.destroy();
+    this.farTile?.destroy();
+    this.midTile?.destroy();
+    this.skyGraphics?.destroy();
+    this.farGraphics?.destroy();
+    this.midGraphics?.destroy();
+  }
+
+  private hasPixelBackgroundAssets(): boolean {
+    return this.scene.textures.exists(ROOFTOPS_BACKGROUND_TEXTURES.sky) &&
+      this.scene.textures.exists(ROOFTOPS_BACKGROUND_TEXTURES.farSkyline) &&
+      this.scene.textures.exists(ROOFTOPS_BACKGROUND_TEXTURES.midSkyline);
   }
 
   private drawSkyGradient(w: number, h: number, gradient: [string, string]): void {

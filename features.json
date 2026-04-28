@@ -2,13 +2,13 @@
   "$schema": "./features.schema.json",
   "_meta": {
     "description": "Historical feature tracking snapshot for the multi-genre campaign. Status: not-started | in-progress | pass | fail | blocked",
-    "lastUpdated": "2026-04-27",
-    "planFile": "pending ./ROADMAP_CITYHEIGHTS.md",
+    "lastUpdated": "2026-04-28",
+    "planFile": "./ROADMAP_CITYHEIGHTS.md",
     "historicalRoadmapsDir": "./docs/archive/roadmaps/",
     "activeSessionLog": "./PROGRESS.md",
     "activeDocsDir": "./docs/",
     "issueTracker": "GitHub Issues",
-    "campaignStatus": "Roadmap V4 is complete and archived after Level 1 Beach completion plus the repeatable level-art pipeline. The next active roadmap should be ROADMAP_CITYHEIGHTS.md for Level 2 City Heights."
+    "campaignStatus": "Roadmap V4 is complete and archived after Level 1 Beach completion plus the repeatable level-art pipeline. ROADMAP_CITYHEIGHTS.md is now active for the Level 2 City Heights flagship true-pixel platformer slice."
   },
   "phase-1": {
     "description": "Session Protocol Infrastructure",
@@ -281,6 +281,36 @@
       "phase-5-repeatable-level-pipeline": {
         "status": "pass",
         "notes": "Repeatable level-art pipeline doc, genre-aware scaffold script, reusable templates, and City Heights platformer pipeline seed docs are in place for the remaining levels."
+      }
+    }
+  },
+  "phase-12": {
+    "description": "City Heights Flagship Pixel Platformer Slice",
+    "status": "in-progress",
+    "tasks": {
+      "active-roadmap": {
+        "status": "pass",
+        "notes": "Created ROADMAP_CITYHEIGHTS.md as the active root roadmap."
+      },
+      "pixel-art-direction": {
+        "status": "pass",
+        "notes": "Added City Heights pixel art bible and pivoted Level 2 docs to true cozy pixel-art rules."
+      },
+      "baseline-pixel-assets": {
+        "status": "pass",
+        "notes": "Added repeatable generator and committed baseline pixel assets under assets/sprites/rooftops/."
+      },
+      "runtime-manifest-and-hero": {
+        "status": "pass",
+        "notes": "Added rooftops asset manifest, platformer hero-sheet contract/resolver, tests, and runtime loading."
+      },
+      "opening-route": {
+        "status": "pass",
+        "notes": "Seeded deterministic openingRoute geometry, enemies, hazards, coins, and power-ups before procedural generation resumes."
+      },
+      "qa-captures-and-polish": {
+        "status": "in-progress",
+        "notes": "First screenshots and browser state artifacts exist; stomp/terminal captures, route tuning, and higher-quality asset replacement remain."
       }
     }
   }

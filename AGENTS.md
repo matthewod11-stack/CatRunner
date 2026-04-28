@@ -10,7 +10,7 @@ Beach Kitty is a Phaser-based nine-level campaign built with React 19, TypeScrip
 
 ## Canonical Files
 
-- Active root roadmap — no root roadmap is active right now; next session should create `ROADMAP_CITYHEIGHTS.md`
+- Active root roadmap — `ROADMAP_CITYHEIGHTS.md`
 - `PROGRESS.md` — the root session log
 - `docs/` — supporting architecture, product, plan, and spec material
 - GitHub Issues — active bug and technical-debt tracker
@@ -58,6 +58,7 @@ npx tsc --noEmit
 - `docs/plans/level-1-runner-hero-sheet-contract.md`
 - `docs/plans/level-1-phase-4-playtest.md`
 - `docs/plans/level-2-city-heights-visual-brief.md`
+- `docs/plans/level-2-city-heights-art-bible.md`
 - `docs/plans/level-2-city-heights-prompt-pack.md`
 - `docs/plans/level-2-city-heights-asset-inventory.md`
 - `docs/plans/level-2-platformer-hero-sheet-contract.md`
@@ -77,8 +78,9 @@ Default execution model:
 
 - Roadmap V4 Level 1 (`BEACH`) completion is closed through Phase 4 polish/playtest; use `docs/plans/level-1-phase-4-playtest.md` for the latest Beach visual evidence.
 - Roadmap V4 Phase 5 is in place: use `npm run scaffold:level-art -- --level LEVEL_ID` and `docs/architecture/level-art-pipeline.md` before starting a remaining level's art pass.
-- City Heights (`ROOFTOPS`) is the first non-runner seed, with platformer-specific docs under `docs/plans/level-2-*`.
-- Next session should create `ROADMAP_CITYHEIGHTS.md` at the repo root; session tooling now discovers root `ROADMAP_*.md` files automatically.
+- City Heights (`ROOFTOPS`) is the active root roadmap and flagship true-pixel platformer slice, with platformer-specific docs under `docs/plans/level-2-*`.
+- `ROADMAP_CITYHEIGHTS.md` is active at the repo root and is discovered automatically by session tooling.
+- The first City Heights deliverable is the deterministic opening-route slice before full 15,000px polish.
 - Keep live cat generation off the gameplay critical path unless it can satisfy the same constrained sheet contract as the default hero.
 - Keep smoke coverage green and keep bundle-size follow-ups visible while asset plumbing evolves.
 

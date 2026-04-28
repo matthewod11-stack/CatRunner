@@ -2,59 +2,64 @@
 
 Source-generation notes for `ROOFTOPS` (`platformer`).
 
-The prompts here are for model-assisted or external art-tool generation only. Shipped gameplay art must still be cleaned, committed, and loaded through deterministic runtime paths.
+The prompts here are for model-assisted or external art-tool generation only. Shipped gameplay art must be cleaned, committed, and loaded through deterministic runtime paths.
+
+Related docs:
+
+- [`level-2-city-heights-art-bible.md`](./level-2-city-heights-art-bible.md)
+- [`level-2-city-heights-visual-brief.md`](./level-2-city-heights-visual-brief.md)
 
 ## Global Prompt Invariants
 
 Use these constraints for every generated candidate unless a section explicitly overrides them:
 
-- side-view platformer arcade game asset with readable collision surfaces and rooftop traversal depth
-- golden-hour city rooftop palette from `level-2-city-heights-visual-brief.md`
-- chunky clean vector style, dark consistent outline on gameplay objects
-- transparent background for sprites, enemies, hazards, boss states, props, pickups, and FX
-- opaque full-bleed or seamless tile output only for background, skyline, facade, and rooftop surface layers
-- no text labels, no UI mockups, no poster composition
-- readable at gameplay scale
+- true pixel art, cozy SNES-era side-view platformer asset
+- Beach Kitty rooftop adventure, warm and funny but readable
+- fixed pixel grid, nearest-neighbor look, no anti-aliasing, no blur
+- shared dark outline, 8-16 color sprite palette, transparent background for gameplay sprites
+- opaque pixel strip or tile output only for background, skyline, facade, and rooftop surface layers
+- no text labels, no UI mockups, no poster composition, no fake border, no frame, no box
+- readable at gameplay scale and at 4x zoom
 
 ## Environment
 
-### Golden-Hour Sky
+### Pixel Sky Strip
 
-Prompt: Side-view arcade platformer full-canvas golden-hour city sky, warm orange-to-gold-to-deep-purple gradient, simple atmospheric depth, no buildings in the foreground, no characters, no text, opaque full-bleed background, readable behind fixed HUD.
+Prompt: Cozy pixel-art golden-hour city sky for a side-view platformer, broad orange-to-gold-to-purple bands, sparse pixel dithering, no buildings in the foreground, no characters, opaque 320x180 background, readable behind HUD, no smooth gradient.
 
-Export target: `assets/sprites/rooftops/environment/sky.svg`.
+Export target: `assets/sprites/rooftops/environment/sky.png`.
 
-Acceptance: background support only; should not contain high-contrast details near the gameplay layer.
+Acceptance: background support only; no high-contrast details near the gameplay layer.
 
 ### Far Skyline
 
-Prompt: Distant city skyline silhouette for a side-view arcade platformer, deep navy-purple buildings, simple rooflines, sparse low-alpha warm windows, seamless horizontal parallax strip, opaque full-width layer, low contrast.
+Prompt: Low-contrast pixel-art distant city skyline strip, deep navy-purple buildings, simple rooflines, sparse dim warm windows, seamless horizontal parallax strip, no foreground collision edges, opaque background.
 
-Export target: `assets/sprites/rooftops/environment/far-skyline.svg`.
+Export target: `assets/sprites/rooftops/environment/far-skyline.png`.
 
-Acceptance: depth read only; never looks like a landing platform.
+Acceptance: reads as depth, never as landing platforms.
 
 ### Mid Skyline
 
-Prompt: Mid-distance city skyline layer, dark blue-purple buildings with slightly larger warm windows, simple vector shapes, horizontal parallax strip, lower contrast than gameplay buildings, no foreground collision edges.
+Prompt: Pixel-art mid-distance city skyline strip, dark blue-purple buildings, larger dim window clusters, simple rooftop silhouettes, parallax-ready, lower contrast than gameplay rooftops.
 
-Export target: `assets/sprites/rooftops/environment/mid-skyline.svg`.
+Export target: `assets/sprites/rooftops/environment/mid-skyline.png`.
 
-Acceptance: supports motion/depth without competing with rooftops.
+Acceptance: supports motion and depth without competing with roof lips.
 
-### Gameplay Building Facade Tile
+### Building Facade Tile
 
-Prompt: Side-view arcade rooftop building facade tile, dark building body, sparse warm window rectangles, subtle vertical panels, clean vector style, opaque tile, designed to sit below a separate high-contrast rooftop cap.
+Prompt: Pixel-art rooftop building facade tile, dark building body, sparse warm rectangular windows, subtle panel pixels, designed to sit below a separate high-contrast rooftop cap, opaque tile.
 
-Export target: `assets/sprites/rooftops/environment/building-facade-tile.svg`.
+Export target: `assets/sprites/rooftops/environment/building-facade-tile.png`.
 
-Acceptance: windows must not resemble coins.
+Acceptance: windows cannot resemble coins.
 
-### Rooftop Cap / Walkable Edge
+### Rooftop Cap Tile
 
-Prompt: Arcade rooftop platform cap, concrete-stone surface with warm edge highlight, strong dark top outline, side-view collision surface, seamless horizontal tile, readable as walkable at small scale.
+Prompt: Pixel-art rooftop platform cap tile, warm concrete, strong bright top edge, dark underside, side-view collision surface, seamless horizontal tile, readable as walkable at small scale.
 
-Export target: `assets/sprites/rooftops/environment/rooftop-cap.svg`.
+Export target: `assets/sprites/rooftops/environment/rooftop-cap.png`.
 
 Acceptance: strongest environmental edge contrast in the level.
 
@@ -62,25 +67,25 @@ Acceptance: strongest environmental edge contrast in the level.
 
 ### Fire Escape / Scaffold
 
-Prompt: Side-view arcade fire escape platform attached to building side, metal frame with simple railings, transparent background, strong walkable top edge, readable as a small secondary platform rather than background decoration.
+Prompt: Pixel-art side-view fire escape platform, small metal railings, transparent background, strong walkable top bar, readable as a usable secondary platform rather than decoration.
 
-Export target: `assets/sprites/rooftops/entities/fire-escape.svg`.
+Export target: `assets/sprites/rooftops/entities/fire-escape.png`.
 
-Acceptance: must read as solid/usable at 30-60px widths.
+Acceptance: usable top line remains clear at 30-60px runtime width.
 
 ### Clothesline
 
-Prompt: Arcade clothesline spanning between buildings, taut rope with a few simple cloth shapes below it, transparent background, rideable line clearly separated from decorative wires, side-view platformer prop.
+Prompt: Pixel-art clothesline spanning between rooftops, taut rideable rope line with a few tiny cloth shapes below it, transparent background, no background cable confusion.
 
-Export target: `assets/sprites/rooftops/obstacles/clothesline.svg`.
+Export target: `assets/sprites/rooftops/obstacles/clothesline.png`.
 
-Acceptance: rope contact line is visible and not confused with background cable.
+Acceptance: rope contact line is visible.
 
 ### Satellite Dish Bounce Pad
 
-Prompt: Arcade rooftop satellite dish bounce pad, gray-blue dish tilted upward with springy base, dark outline, transparent background, clearly readable as bounceable platformer object.
+Prompt: Pixel-art rooftop satellite dish bounce pad, gray-blue dish tilted upward with springy base, dark outline, transparent background, clearly readable as a bounce platform.
 
-Export target: `assets/sprites/rooftops/obstacles/satellite-dish.svg`.
+Export target: `assets/sprites/rooftops/obstacles/satellite-dish.png`.
 
 Acceptance: dish bowl points the intended bounce direction.
 
@@ -88,75 +93,75 @@ Acceptance: dish bowl points the intended bounce direction.
 
 ### Pigeon
 
-Prompt: Stompable arcade rooftop pigeon enemy, side-view body, readable wings and beak, expressive eyes, dark outline, transparent background, small patrol enemy for platformer.
+Prompt: Stompable pixel-art rooftop pigeon enemy, pompous expression, side-view body, readable wings and beak, dark outline, transparent background, small patrol enemy for platformer.
 
-Export target: `assets/sprites/rooftops/obstacles/pigeon.svg`.
+Export target: `assets/sprites/rooftops/obstacles/pigeon.png`.
 
-Acceptance: stompable top surface/body read is clear.
+Acceptance: top stomp area reads clearly.
 
 ### Rat
 
-Prompt: Fast arcade rooftop rat enemy, low side-view silhouette, pointed nose, visible tail, dark outline, transparent background, designed to dash across a platform.
+Prompt: Fast pixel-art rooftop rat enemy, low side-view silhouette, pointed nose, visible tail, caffeinated expression, dark outline, transparent background.
 
-Export target: `assets/sprites/rooftops/obstacles/rat.svg`.
+Export target: `assets/sprites/rooftops/obstacles/rat.png`.
 
-Acceptance: smaller than pigeon but not lost against dark rooftops.
+Acceptance: small but not lost against dark rooftops.
 
 ### Raccoon
 
-Prompt: Arcade rooftop raccoon enemy, chunky body, mask markings, aggressive charge pose, dark outline, transparent background, readable wind-up/charge silhouette for platformer.
+Prompt: Pixel-art rooftop raccoon enemy, chunky body, mask markings, idle and charge variants, transparent background, charge silhouette visibly different from idle.
 
-Export targets: `assets/sprites/rooftops/obstacles/raccoon-idle.svg`, `raccoon-charge.svg`.
+Export targets: `assets/sprites/rooftops/obstacles/raccoon-idle.png`, `raccoon-charge.png`.
 
-Acceptance: charge state is visibly different from idle.
+Acceptance: charge state reads without text or particles.
 
 ### AC Unit And Steam
 
-Prompt: Arcade rooftop AC unit hazard, boxy metal shape, grille detail, dark outline, transparent background, readable as a solid blocker. Separate steam puff sprite, pale gray-white cloud burst, transparent background.
+Prompt: Pixel-art rooftop AC unit hazard, boxy metal shape, grille pixels, dark outline, transparent background, solid blocker read. Separate steam puff sprite, pale gray-white pixel cloud burst, transparent background.
 
-Export targets: `assets/sprites/rooftops/obstacles/ac-unit.svg`, `assets/sprites/rooftops/fx/steam-puff.svg`.
+Export targets: `assets/sprites/rooftops/obstacles/ac-unit.png`, `assets/sprites/rooftops/fx/steam-puff.png`.
 
-Acceptance: AC body reads solid; steam reads push/unsafe without resembling cloud scenery.
+Acceptance: AC reads solid; steam reads warning/push.
 
 ### Neon Sign
 
-Prompt: Arcade rooftop neon sign hazard, magenta-red glowing sign panel with simple bolt icon but no readable text, side-mounted bracket, transparent background, include separate on and off variants.
+Prompt: Pixel-art rooftop neon sign hazard, magenta-red glowing sign panel with simple bolt icon and no readable text, side bracket, transparent background, include separate on and off variants.
 
-Export targets: `assets/sprites/rooftops/obstacles/neon-sign-on.svg`, `neon-sign-off.svg`.
+Export targets: `assets/sprites/rooftops/obstacles/neon-sign-on.png`, `neon-sign-off.png`.
 
-Acceptance: on/off state is obvious without relying only on animation timing.
+Acceptance: on/off state is obvious without subtle glow.
 
 ## Collectibles And Power-Ups
 
 ### Coin
 
-Prompt: Arcade rooftop coin collectible, golden disk with star or paw detail, bold outline, transparent background, distinct from warm building windows.
+Prompt: Pixel-art rooftop coin collectible, golden disk with simple paw or star pixels, bold outline, transparent background, distinct from warm building windows.
 
-Export target: `assets/sprites/rooftops/collectibles/coin.svg`.
+Export target: `assets/sprites/rooftops/collectibles/coin.png`.
 
 Acceptance: readable at pickup size and color-separated from facade lights.
 
 ### Triple Jump
 
-Prompt: Arcade blue power-up icon for triple jump, circular badge with three upward chevrons or paw jumps, bold outline, transparent background.
+Prompt: Pixel-art blue power-up icon for triple jump, circular badge with three upward chevrons or paw jumps, bold outline, transparent background.
 
-Export target: `assets/sprites/rooftops/fx/triple-jump-powerup.svg`.
+Export target: `assets/sprites/rooftops/fx/triple-jump-powerup.png`.
 
 Acceptance: communicates extra jump, not speed.
 
 ### Glide
 
-Prompt: Arcade green or teal glide power-up icon, circular badge with simple parachute/cape silhouette, bold outline, transparent background.
+Prompt: Pixel-art green glide power-up icon, circular badge with parachute or cape silhouette, bold outline, transparent background.
 
-Export target: `assets/sprites/rooftops/fx/glide-powerup.svg`.
+Export target: `assets/sprites/rooftops/fx/glide-powerup.png`.
 
 Acceptance: communicates slow fall/recovery.
 
 ### Shield
 
-Prompt: Arcade purple shield power-up icon, circular badge with shield bubble, bold outline, transparent background.
+Prompt: Pixel-art purple shield power-up icon, circular badge with shield bubble, bold outline, transparent background.
 
-Export target: `assets/sprites/rooftops/fx/shield-powerup.svg`.
+Export targets: `assets/sprites/rooftops/fx/shield-powerup.png`, `shield-bubble.png`.
 
 Acceptance: not confused with neon hazard.
 
@@ -164,11 +169,11 @@ Acceptance: not confused with neon hazard.
 
 ### Pigeon King
 
-Prompt: Large arcade rooftop Pigeon King boss, expressive oversized pigeon with crown-like feather tuft, dark outline, readable at boss scale, transparent background, consistent silhouette across states.
+Prompt: Large pixel-art rooftop Pigeon King boss, pompous oversized pigeon with crown-like feather tuft, theatrical expression, dark outline, transparent background, consistent silhouette across states.
 
 Required states:
 
-- idle/swoop: wings spread, moving across arena
+- idle/swoop: wings spread and moving across arena
 - landed/vulnerable: feet on rooftop, body low enough for stomp
 - attack: feather projectile drop tell
 - hit: stunned expression and feather burst
@@ -176,10 +181,18 @@ Required states:
 
 Export targets live under `assets/sprites/rooftops/boss/`.
 
+## Cleanup Rules
+
+- Inspect candidates at 4x zoom.
+- Remove fake backgrounds and semi-transparent halos.
+- Crop to content bounds, then center on the target canvas.
+- Preserve fixed frame sizes for sheets.
+- Re-run image generation instead of hand-waving major anatomy, perspective, or baseline failures.
+
 ## Rejection Rules
 
+- Reject antialiased edges, smooth gradients, fake transparency, box frames, and poster compositions.
 - Reject skyline art with bright window density that looks collectible.
 - Reject fire escapes or clotheslines that read as decoration instead of usable traversal.
 - Reject enemies without clear top/body silhouettes for stomp judging.
 - Reject neon sign states that differ only by subtle glow.
-- Reject any sprite with fake transparency, checkerboards, or baked shadows that break alpha.

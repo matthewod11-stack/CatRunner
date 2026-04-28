@@ -8,6 +8,7 @@ import {
 import type { BossPhaseState, SceneManager } from './types';
 import { DEPTH } from './types';
 import { EffectsManager } from '../shared/EffectsManager';
+import { ROOFTOPS_BOSS_TEXTURES, ROOFTOPS_ENEMY_TEXTURES, ROOFTOPS_FX_TEXTURES } from './rooftopsAssets';
 
 const BOSS_SIZE = { w: 64, h: 48 };
 const FEATHER_SIZE = { w: 12, h: 6 };
@@ -67,9 +68,10 @@ export class PigeonKingBoss implements SceneManager {
     this.bossSprite = this.scene.physics.add.sprite(
       (this.arenaLeft + this.arenaRight) / 2,
       this.swoopY,
-      'pigeon-king',
+      this.bossTexture('swoop'),
     );
     this.bossSprite.setDepth(DEPTH.ENEMIES + 1);
+    this.bossSprite.setDisplaySize(BOSS_SIZE.w, BOSS_SIZE.h);
     arcBody(this.bossSprite).setAllowGravity(false);
     arcBody(this.bossSprite).setSize(BOSS_SIZE.w - 8, BOSS_SIZE.h - 4);
     arcBody(this.bossSprite).setVelocityX(getSwoopSpeed(this.state, this.config.boss));
@@ -132,6 +134,8 @@ export class PigeonKingBoss implements SceneManager {
     if (this.state.hp <= 0) {
       this.mode = 'defeated';
       this.defeated = true;
+      this.bossSprite.setTexture(this.bossTexture('defeat'));
+      this.bossSprite.setDisplaySize(BOSS_SIZE.w, BOSS_SIZE.h);
       this.defeatSequence();
       return true;
     }
@@ -145,6 +149,8 @@ export class PigeonKingBoss implements SceneManager {
       ease: 'Power2',
       onComplete: () => {
         this.mode = 'swooping';
+        this.bossSprite.setTexture(this.bossTexture('swoop'));
+        this.bossSprite.setDisplaySize(BOSS_SIZE.w, BOSS_SIZE.h);
         this.swoopDirection = 1;
         arcBody(this.bossSprite).setVelocityX(getSwoopSpeed(this.state, this.config.boss));
       },
@@ -194,8 +200,9 @@ export class PigeonKingBoss implements SceneManager {
 
     for (let i = 1; i <= count; i++) {
       const fx = this.arenaLeft + spacing * i + Phaser.Math.Between(-20, 20);
-      const feather = this.feathers.create(fx, this.swoopY + 20, 'feather') as Phaser.Physics.Arcade.Sprite;
+      const feather = this.feathers.create(fx, this.swoopY + 20, this.featherTexture()) as Phaser.Physics.Arcade.Sprite;
       feather.setDepth(DEPTH.ENEMIES);
+      feather.setDisplaySize(FEATHER_SIZE.w, FEATHER_SIZE.h);
       arcBody(feather).setVelocity(
         Phaser.Math.Between(-FEATHER_DRIFT, FEATHER_DRIFT),
         FEATHER_FALL_SPEED,
@@ -239,6 +246,8 @@ export class PigeonKingBoss implements SceneManager {
       ease: 'Power2',
       onComplete: () => {
         this.mode = 'landed';
+        this.bossSprite.setTexture(this.bossTexture('landed'));
+        this.bossSprite.setDisplaySize(BOSS_SIZE.w, BOSS_SIZE.h);
         this.state.isLanded = true;
         this.state.landTimer = getLandDuration(this.state, this.config.boss) * 1000;
 
@@ -266,6 +275,8 @@ export class PigeonKingBoss implements SceneManager {
         ease: 'Power2',
         onComplete: () => {
           this.mode = 'swooping';
+          this.bossSprite.setTexture(this.bossTexture('swoop'));
+          this.bossSprite.setDisplaySize(BOSS_SIZE.w, BOSS_SIZE.h);
           arcBody(this.bossSprite).setVelocityX(
             getSwoopSpeed(this.state, this.config.boss) * this.swoopDirection,
           );
@@ -284,7 +295,7 @@ export class PigeonKingBoss implements SceneManager {
     const count = getMiniPigeonCount(this.state, this.config.boss);
     if (count === 0) return;
 
-    if (!this.scene.textures.exists('mini-pigeon')) {
+    if (!this.scene.textures.exists(this.miniPigeonTexture())) {
       const g = this.scene.make.graphics({}, false);
       g.fillStyle(0x8888aa);
       g.fillRoundedRect(0, 0, MINI_PIGEON_SIZE.w, MINI_PIGEON_SIZE.h, 4);
@@ -299,8 +310,9 @@ export class PigeonKingBoss implements SceneManager {
     for (let i = 1; i <= count; i++) {
       const px = this.arenaLeft + spacing * i;
       const py = this.arenaY - MINI_PIGEON_SIZE.h;
-      const mp = this.miniPigeons.create(px, py, 'mini-pigeon') as Phaser.Physics.Arcade.Sprite;
+      const mp = this.miniPigeons.create(px, py, this.miniPigeonTexture()) as Phaser.Physics.Arcade.Sprite;
       mp.setDepth(DEPTH.ENEMIES);
+      mp.setDisplaySize(MINI_PIGEON_SIZE.w, MINI_PIGEON_SIZE.h);
       arcBody(mp).setVelocityX(Phaser.Math.Between(40, 80) * (Math.random() < 0.5 ? 1 : -1));
     }
   }
@@ -329,7 +341,7 @@ export class PigeonKingBoss implements SceneManager {
   // ── Textures ──────────────────────────────────────────────────
 
   private createTextures(): void {
-    if (!this.scene.textures.exists('pigeon-king')) {
+    if (!this.scene.textures.exists(this.bossTexture('idle'))) {
       const g = this.scene.make.graphics({}, false);
       g.fillStyle(0x7777aa);
       g.fillRoundedRect(0, 0, BOSS_SIZE.w, BOSS_SIZE.h, 8);
@@ -352,13 +364,31 @@ export class PigeonKingBoss implements SceneManager {
       g.destroy();
     }
 
-    if (!this.scene.textures.exists('feather')) {
+    if (!this.scene.textures.exists(this.featherTexture())) {
       const g = this.scene.make.graphics({}, false);
       g.fillStyle(0xddddee);
       g.fillEllipse(FEATHER_SIZE.w / 2, FEATHER_SIZE.h / 2, FEATHER_SIZE.w, FEATHER_SIZE.h);
       g.generateTexture('feather', FEATHER_SIZE.w, FEATHER_SIZE.h);
       g.destroy();
     }
+  }
+
+  private bossTexture(state: keyof typeof ROOFTOPS_BOSS_TEXTURES): string {
+    return this.scene.textures.exists(ROOFTOPS_BOSS_TEXTURES[state])
+      ? ROOFTOPS_BOSS_TEXTURES[state]
+      : 'pigeon-king';
+  }
+
+  private featherTexture(): string {
+    return this.scene.textures.exists(ROOFTOPS_FX_TEXTURES.featherProjectile)
+      ? ROOFTOPS_FX_TEXTURES.featherProjectile
+      : 'feather';
+  }
+
+  private miniPigeonTexture(): string {
+    return this.scene.textures.exists(ROOFTOPS_ENEMY_TEXTURES.PIGEON)
+      ? ROOFTOPS_ENEMY_TEXTURES.PIGEON
+      : 'mini-pigeon';
   }
 
   // ── Defeat ────────────────────────────────────────────────────

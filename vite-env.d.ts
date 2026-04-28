@@ -26,5 +26,7 @@ interface BeachKittySmokeTestApi {
 declare global {
   interface Window {
     __BEACH_KITTY_TEST_API__?: BeachKittySmokeTestApi;
+    render_game_to_text?: () => string;
+    advanceTime?: (ms: number) => string;
   }
 }

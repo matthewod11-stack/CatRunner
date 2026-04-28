@@ -1,9 +1,10 @@
 import Phaser from 'phaser';
 import type { PlatformerLevelConfig } from '../../types';
-import { getZoneIndex } from './generation';
+import { getZoneIndex, isBeforeOpeningRouteHandoff } from './generation';
 import type { BuildingData, PlatformerEnemyType, SceneManager } from './types';
 import { DEPTH } from './types';
 import { EffectsManager } from '../shared/EffectsManager';
+import { ROOFTOPS_ENEMY_TEXTURES, ROOFTOPS_ENEMY_VARIANTS } from './rooftopsAssets';
 
 const MAX_ACTIVE_ENEMIES = 4;
 const STOMP_POINTS = 25;
@@ -40,6 +41,7 @@ export class EnemyManager implements SceneManager {
   private group!: Phaser.Physics.Arcade.Group;
   private enemies: ActiveEnemy[] = [];
   private spawnedBuildingIndices = new Set<number>();
+  private seededOpeningRoute = false;
 
   private getBuildingsFn: () => readonly BuildingData[];
 
@@ -57,6 +59,7 @@ export class EnemyManager implements SceneManager {
 
   create(): void {
     this.group = this.scene.physics.add.group({ allowGravity: false });
+    this.seedOpeningRouteEnemies();
   }
 
   update(_time: number, _delta: number): void {
@@ -121,6 +124,7 @@ export class EnemyManager implements SceneManager {
 
       // Only spawn on buildings that are approaching the screen
       if (b.x > viewRight + 200 || b.x + b.width < cam.scrollX) continue;
+      if (isBeforeOpeningRouteHandoff(this.config, b.x)) continue;
       if (b.width < 80) continue; // too narrow for enemies
 
       const distance = b.x;
@@ -141,11 +145,14 @@ export class EnemyManager implements SceneManager {
 
   private spawnEnemy(type: PlatformerEnemyType, building: BuildingData, _buildingIndex: number): void {
     const size = ENEMY_SIZES[type];
-    const color = ENEMY_COLORS[type];
 
     // Create texture if needed
-    const texKey = `enemy-${type}`;
-    if (!this.scene.textures.exists(texKey)) {
+    const fallbackKey = `enemy-${type}`;
+    const texKey = this.scene.textures.exists(ROOFTOPS_ENEMY_TEXTURES[type])
+      ? ROOFTOPS_ENEMY_TEXTURES[type]
+      : fallbackKey;
+    if (texKey === fallbackKey && !this.scene.textures.exists(texKey)) {
+      const color = ENEMY_COLORS[type];
       const g = this.scene.make.graphics({}, false);
       g.fillStyle(color);
       g.fillRoundedRect(0, 0, size.w, size.h, 4);
@@ -165,6 +172,7 @@ export class EnemyManager implements SceneManager {
 
     const sprite = this.group.create(x, y, texKey) as Phaser.Physics.Arcade.Sprite;
     sprite.setDepth(DEPTH.ENEMIES);
+    if (texKey !== fallbackKey) sprite.setDisplaySize(size.w, size.h);
     sprite.body!.setSize(size.w - 4, size.h - 2);
 
     const speed = type === 'PIGEON' ? 60 : type === 'RAT' ? 200 : 0;
@@ -188,6 +196,69 @@ export class EnemyManager implements SceneManager {
     // Rat dashes from left edge to right
     if (type === 'RAT') {
       sprite.setPosition(building.x + 10, y);
+      (sprite.body as Phaser.Physics.Arcade.Body).setVelocityX(speed);
+    }
+
+    this.enemies.push(enemy);
+  }
+
+  private seedOpeningRouteEnemies(): void {
+    if (this.seededOpeningRoute || !this.config.openingRoute) return;
+    this.seededOpeningRoute = true;
+
+    for (const entry of this.config.openingRoute.enemies ?? []) {
+      const platform = this.config.openingRoute.platforms[entry.platformIndex];
+      if (!platform) continue;
+      this.spawnExplicitEnemy(entry.type as PlatformerEnemyType, {
+        x: entry.x,
+        rooftopY: platform.rooftopY,
+        patrolMinX: platform.x + (entry.patrolPadding ?? 10),
+        patrolMaxX: platform.x + platform.width - (entry.patrolPadding ?? 10),
+      });
+    }
+  }
+
+  private spawnExplicitEnemy(
+    type: PlatformerEnemyType,
+    placement: { x: number; rooftopY: number; patrolMinX: number; patrolMaxX: number },
+  ): void {
+    const size = ENEMY_SIZES[type];
+    const fallbackKey = `enemy-${type}`;
+    const texKey = this.scene.textures.exists(ROOFTOPS_ENEMY_TEXTURES[type])
+      ? ROOFTOPS_ENEMY_TEXTURES[type]
+      : fallbackKey;
+
+    if (texKey === fallbackKey && !this.scene.textures.exists(texKey)) {
+      const g = this.scene.make.graphics({}, false);
+      g.fillStyle(ENEMY_COLORS[type]);
+      g.fillRoundedRect(0, 0, size.w, size.h, 4);
+      g.generateTexture(texKey, size.w, size.h);
+      g.destroy();
+    }
+
+    const y = placement.rooftopY - size.h;
+    const sprite = this.group.create(placement.x, y, texKey) as Phaser.Physics.Arcade.Sprite;
+    sprite.setDepth(DEPTH.ENEMIES);
+    if (texKey !== fallbackKey) sprite.setDisplaySize(size.w, size.h);
+    sprite.body!.setSize(size.w - 4, size.h - 2);
+
+    const speed = type === 'PIGEON' ? 60 : type === 'RAT' ? 200 : 0;
+    const enemy: ActiveEnemy = {
+      sprite,
+      type,
+      patrolMinX: placement.patrolMinX,
+      patrolMaxX: placement.patrolMaxX,
+      rooftopY: placement.rooftopY,
+      speed,
+      state: type === 'PIGEON' ? 'patrol' : type === 'RAT' ? 'dash' : 'idle',
+      windupTimer: 0,
+      triggered: false,
+    };
+
+    if (type === 'PIGEON') {
+      (sprite.body as Phaser.Physics.Arcade.Body).setVelocityX(speed);
+    }
+    if (type === 'RAT') {
       (sprite.body as Phaser.Physics.Arcade.Body).setVelocityX(speed);
     }
 
@@ -265,6 +336,11 @@ export class EnemyManager implements SceneManager {
     }
 
     if (e.state === 'charge') {
+      const chargeTexture = ROOFTOPS_ENEMY_VARIANTS.RACCOON.charge;
+      if (this.scene.textures.exists(chargeTexture) && e.sprite.texture.key !== chargeTexture) {
+        e.sprite.setTexture(chargeTexture);
+        e.sprite.setDisplaySize(ENEMY_SIZES.RACCOON.w, ENEMY_SIZES.RACCOON.h);
+      }
       const body = e.sprite.body as Phaser.Physics.Arcade.Body;
       // Turn around at building edges
       if (e.sprite.x <= e.patrolMinX) {

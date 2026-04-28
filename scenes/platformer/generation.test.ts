@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { resolveZoneParams, getZoneIndex } from './generation';
-import type { PlatformGenerationConfig, ZoneConfig } from '../../types';
+import { resolveZoneParams, getZoneIndex, isBeforeOpeningRouteHandoff, validateOpeningRouteConfig } from './generation';
+import type { PlatformGenerationConfig, PlatformerLevelConfig, ZoneConfig } from '../../types';
+import { ROOFTOPS_LEVEL_CONFIG } from '../../levels/rooftops';
 
 const BASE_GEN: PlatformGenerationConfig = {
   platformWidthRange: [120, 280],
@@ -71,5 +72,50 @@ describe('resolveZoneParams', () => {
   it('uses base values when zone has no override for a field', () => {
     const resolved = resolveZoneParams(BASE_GEN, ZONES[1]);
     expect(resolved.heightStepRange).toEqual([-60, 80]);
+  });
+});
+
+describe('opening route helpers', () => {
+  it('validates the City Heights opening route', () => {
+    expect(validateOpeningRouteConfig(ROOFTOPS_LEVEL_CONFIG.openingRoute!, ROOFTOPS_LEVEL_CONFIG)).toEqual([]);
+  });
+
+  it('reports unsafe opening-route geometry', () => {
+    const config: PlatformerLevelConfig = {
+      ...ROOFTOPS_LEVEL_CONFIG,
+      openingRoute: {
+        id: '',
+        handoffX: 100,
+        platforms: [
+          { x: 300, width: 100, rooftopY: 900 },
+          { x: 350, width: -10, rooftopY: 500 },
+        ],
+        enemies: [{ type: 'PIGEON', x: 900, platformIndex: 99 }],
+        hazards: [{ type: 'AC_UNIT', x: Number.NaN, platformIndex: 0 }],
+        coins: [{ x: Number.NaN, y: 12 }],
+        powerups: [{ type: 'GLIDE', x: 10, y: Number.NaN }],
+      },
+    };
+
+    expect(validateOpeningRouteConfig(config.openingRoute!, config)).toEqual([
+      'openingRoute.id is required',
+      'openingRoute.platforms[0].rooftopY must stay inside the playable vertical band',
+      'openingRoute.platforms[1].width must be positive',
+      'openingRoute.platforms[1] overlaps or is out of order',
+      'openingRoute first platform must support the default player start x=200',
+      'openingRoute.handoffX must be at or beyond the final opening-route platform',
+      'openingRoute.enemies[0].platformIndex must reference an existing platform',
+      'openingRoute.enemies[0].x must be finite and inside the opening slice',
+      'openingRoute.hazards[0].x must be finite and inside the opening slice',
+      'openingRoute.coins[0] must use finite x and y values',
+      'openingRoute.powerups[0] must use finite x and y values',
+    ]);
+  });
+
+  it('identifies positions still inside the hand-authored slice', () => {
+    expect(isBeforeOpeningRouteHandoff(ROOFTOPS_LEVEL_CONFIG, 0)).toBe(true);
+    expect(isBeforeOpeningRouteHandoff(ROOFTOPS_LEVEL_CONFIG, ROOFTOPS_LEVEL_CONFIG.openingRoute!.handoffX - 1)).toBe(true);
+    expect(isBeforeOpeningRouteHandoff(ROOFTOPS_LEVEL_CONFIG, ROOFTOPS_LEVEL_CONFIG.openingRoute!.handoffX)).toBe(false);
+    expect(isBeforeOpeningRouteHandoff({ ...ROOFTOPS_LEVEL_CONFIG, openingRoute: undefined }, 0)).toBe(false);
   });
 });

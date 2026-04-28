@@ -3,6 +3,7 @@ import type { PlatformerLevelConfig } from '../../types';
 import type { BuildingData, FireEscapeData, PlatformerPowerupType, SceneManager } from './types';
 import { DEPTH } from './types';
 import { EffectsManager } from '../shared/EffectsManager';
+import { ROOFTOPS_POWERUP_TEXTURES } from './rooftopsAssets';
 
 const POWERUP_SIZE = 22;
 
@@ -27,6 +28,7 @@ export class PowerupManager implements SceneManager {
   private group!: Phaser.Physics.Arcade.StaticGroup;
   private spawnedZones = new Set<number>();
   private spawnedFireEscapes = new Set<number>();
+  private seededOpeningRoute = false;
 
   /** Currently active powerup */
   private activePowerup: PlatformerPowerupType | null = null;
@@ -52,6 +54,7 @@ export class PowerupManager implements SceneManager {
   create(): void {
     this.group = this.scene.physics.add.staticGroup();
     this.createTextures();
+    this.seedOpeningRoutePowerups();
   }
 
   update(_time: number, delta: number): void {
@@ -133,7 +136,7 @@ export class PowerupManager implements SceneManager {
   private createTextures(): void {
     for (const type of ['TRIPLE_JUMP', 'GLIDE', 'SHIELD'] as PlatformerPowerupType[]) {
       const key = `powerup-${type}`;
-      if (this.scene.textures.exists(key)) continue;
+      if (this.scene.textures.exists(ROOFTOPS_POWERUP_TEXTURES[type]) || this.scene.textures.exists(key)) continue;
 
       const g = this.scene.make.graphics({}, false);
       const color = POWERUP_COLORS[type];
@@ -150,6 +153,8 @@ export class PowerupManager implements SceneManager {
   // ── Spawning ──────────────────────────────────────────────────
 
   private trySpawnPowerups(): void {
+    if (this.config.openingRoute && this.scene.cameras.main.scrollX < this.config.openingRoute.handoffX) return;
+
     const buildings = this.getBuildingsFn();
     const cam = this.scene.cameras.main;
     const viewRight = cam.scrollX + this.scene.scale.width;
@@ -199,8 +204,9 @@ export class PowerupManager implements SceneManager {
     const types: PlatformerPowerupType[] = ['TRIPLE_JUMP', 'GLIDE', 'SHIELD'];
     const type = types[Math.floor(Math.random() * types.length)];
 
-    const sprite = this.group.create(x, y, `powerup-${type}`) as Phaser.Physics.Arcade.Sprite;
+    const sprite = this.group.create(x, y, this.powerupTexture(type)) as Phaser.Physics.Arcade.Sprite;
     sprite.setDepth(DEPTH.POWERUPS);
+    sprite.setDisplaySize(POWERUP_SIZE, POWERUP_SIZE);
     sprite.setData('powerupType', type);
     sprite.refreshBody();
 
@@ -213,5 +219,32 @@ export class PowerupManager implements SceneManager {
       repeat: -1,
       ease: 'Sine.easeInOut',
     });
+  }
+
+  private seedOpeningRoutePowerups(): void {
+    if (this.seededOpeningRoute || !this.config.openingRoute) return;
+    this.seededOpeningRoute = true;
+
+    for (const entry of this.config.openingRoute.powerups ?? []) {
+      const sprite = this.group.create(entry.x, entry.y, this.powerupTexture(entry.type)) as Phaser.Physics.Arcade.Sprite;
+      sprite.setDepth(DEPTH.POWERUPS);
+      sprite.setDisplaySize(POWERUP_SIZE, POWERUP_SIZE);
+      sprite.setData('powerupType', entry.type);
+      sprite.refreshBody();
+      this.scene.tweens.add({
+        targets: sprite,
+        y: entry.y - 6,
+        duration: 900,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+    }
+  }
+
+  private powerupTexture(type: PlatformerPowerupType): string {
+    return this.scene.textures.exists(ROOFTOPS_POWERUP_TEXTURES[type])
+      ? ROOFTOPS_POWERUP_TEXTURES[type]
+      : `powerup-${type}`;
   }
 }

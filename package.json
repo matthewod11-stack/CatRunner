@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "scaffold:level-art": "node scripts/scaffold-level-art-pipeline.mjs",
+    "generate:rooftops-pixel-pack": "node scripts/generate-rooftops-pixel-pack.mjs",
     "test": "vitest",
     "test:run": "vitest run",
     "test:smoke": "playwright test"
