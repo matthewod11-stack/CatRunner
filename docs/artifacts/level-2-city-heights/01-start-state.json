@@ -18,7 +18,7 @@
   },
   "camera": {
     "scrollX": 0,
-    "scrollY": 128
+    "scrollY": 125
   },
   "score": {
     "current": 0,
@@ -36,7 +36,7 @@
     "enemies": [
       {
         "key": "rooftops-enemy-pigeon",
-        "x": 908,
+        "x": 906,
         "y": 430
       }
     ],

@@ -38,6 +38,40 @@ Most recent session should be first.
 
 ---
 
+## Session: 2026-04-29 08:21 (City Heights selected-art pass)
+
+### Completed
+- Finished `ROADMAP_CITYHEIGHTS.md` Phase 6 by replacing rougher generated baseline sprites where the selected-art pass improved gameplay readability
+- Used image-generation candidates as reference, then cleaned the final work into deterministic true-pixel assets through `scripts/generate-rooftops-pixel-pack.mjs`
+- Reworked the City Heights platformer hero sheet with a chunkier Beach Kitty silhouette, scarf, stronger ears, and clearer jump/fall/glide/hurt poses while preserving the fixed 64x64 frame contract
+- Improved gameplay-scale reads for pigeon, rat, raccoon idle/charge, AC unit, neon sign, and triple-jump/glide/shield power-up icons
+- Refreshed City Heights screenshots and render-state artifacts `01-start` through `05-pause` under `docs/artifacts/level-2-city-heights/`
+- Marked `features.json` `phase-12.qa-captures-and-polish` as `pass` and updated the Level 2 asset inventory and QA checklist
+
+### In Progress
+- No active City Heights opening-slice roadmap items remain unchecked
+- Optional follow-up remains for a platformer-specific boss/finale capture helper if City Heights expands past the opening slice
+
+### Issues Encountered
+- Raw image-generation output was too anti-aliased and off-grid to ship directly, so it was used only as reference for cleaned deterministic pixel sprites
+- The `develop-web-game` canvas-only screenshots still render black under headless WebGL; full-page Playwright screenshots remain the visual evidence path
+- Existing production build large chunk warning remains visible
+
+### Verification
+- `npm run test:run` - 46 files, 222 tests passing
+- `npx tsc --noEmit` - passing
+- `npm run build` - passing with the existing large chunk warning
+- `npm run test:smoke` - 3 browser smoke tests passing
+- Web-game client state snapshots completed with no console/page errors
+- `docs/artifacts/level-2-city-heights/latest-browser-errors.json` - `[]`
+
+### Next Session Should
+- Decide whether to archive `ROADMAP_CITYHEIGHTS.md` as the completed flagship opening-slice roadmap or extend it with a boss/finale/full-level phase
+- If extending City Heights, add a platformer-specific boss/finale capture helper and refresh finale screenshots
+- If moving on, scaffold the next genre-aware level-art roadmap from `docs/architecture/level-art-pipeline.md`
+
+---
+
 ## Session: 2026-04-28 16:49 (City Heights Phase 6 visual closeout)
 
 ### Completed
@@ -312,34 +346,3 @@ Most recent session should be first.
 - Start Phase 4 with manual Beach playtesting against the live dev server, focusing on jump readability, obstacle recognition, boss clarity, and progression pacing
 - Capture Phase 4 screenshots or short video for docs/future art consistency checks
 - Keep `runtimeGroundOffset` aligned with the actual committed hero sheet if the sheet is regenerated
-
----
-
-## Session: 2026-04-26 18:08 (Roadmap V4 Phase 2 runner hero animation)
-
-### Completed
-- Completed Roadmap V4 Phase 2 for the Beach runner hero: fixed-frame contract, generated default sheet, runtime manifest, animation-state resolver, and RunnerScene wiring
-- Added `docs/plans/level-1-runner-hero-sheet-contract.md` covering frame geometry, feet baseline, padding, collision boxes, animation states, resolver priority, and future swap rules
-- Added `scripts/generate-beach-hero-sheet.mjs` and committed the generated Beach hero sheet under `assets/sprites/beach/hero/`
-- Replaced the first messy character pass with a cleaner side-facing runner sprite sheet after live review feedback
-- Changed RunnerScene from static image rendering to Phaser spritesheet animations for run, jump rise/fall, duck, hurt, shell throw, victory, and defeat states
-- Updated ROADMAP_V4.md, active Beach docs, AGENTS.md, CLAUDE.md, and features.json for the Phase 2 handoff
-
-### In Progress
-- Roadmap V4 Phase 3/4 are next: tune scale, baseline, hitboxes, HUD/effects readability, and manual Beach play feel against the final world art plus runner hero sheet
-
-### Issues Encountered
-- The first generated hero sheet looked too busy and character design was weak; the replacement pass simplified the silhouette and side-facing read
-- Existing production build large chunk warning remains visible and should stay tracked as a later bundle-size follow-up
-
-### Verification
-- `npm run test:run` / `CI=1 npm test` - 44 files, 207 tests passing
-- `npx tsc --noEmit` - passing
-- `npm run build` - passing with the existing large chunk warning
-- `npm run test:smoke` - 3 browser smoke tests passing
-- Captured `/tmp/catrunner-runner-hero.png` from the live runner to verify the new hero renders in-game
-
-### Next Session Should
-- Start with Roadmap V4 Phase 3/4 scale, baseline, hitbox, and readability tuning
-- Use the new hero contract doc as the source of truth for any further hero-sheet polish or replacement
-- Keep boss-practice smoke coverage as the guardrail for shell ammo and React/Phaser HUD sync

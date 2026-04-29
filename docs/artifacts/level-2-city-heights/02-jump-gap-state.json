@@ -7,18 +7,18 @@
     "openingRouteHandoffX": 3900
   },
   "player": {
-    "x": 544,
-    "y": 408,
+    "x": 692,
+    "y": 487,
     "vx": 0,
-    "vy": -30,
+    "vy": 0,
     "facing": "right",
-    "grounded": false,
-    "jumpsUsed": 1,
+    "grounded": true,
+    "jumpsUsed": 0,
     "maxJumps": 2
   },
   "camera": {
-    "scrollX": 42,
-    "scrollY": 74
+    "scrollX": 202,
+    "scrollY": 96
   },
   "score": {
     "current": 0,
@@ -36,21 +36,37 @@
     "enemies": [
       {
         "key": "rooftops-enemy-pigeon",
-        "x": 963,
+        "x": 902,
         "y": 430
+      },
+      {
+        "key": "rooftops-enemy-rat",
+        "x": 1210,
+        "y": 491
       }
     ],
-    "hazards": [],
+    "hazards": [
+      {
+        "key": "rooftops-hazard-ac-unit",
+        "x": 1275,
+        "y": 493
+      }
+    ],
     "coins": [
       {
         "key": "rooftops-coin",
         "x": 590,
-        "y": 439
+        "y": 435
       },
       {
         "key": "rooftops-coin",
         "x": 860,
-        "y": 409
+        "y": 405
+      },
+      {
+        "key": "rooftops-coin",
+        "x": 1170,
+        "y": 460
       }
     ],
     "powerups": []

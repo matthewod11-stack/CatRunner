@@ -31,6 +31,7 @@ Latest Phase 6 capture pass:
 - `npm run build` - passing with existing large chunk warning
 - `npm run test:smoke` - 3 browser smoke tests passing
 - Web-game client and targeted Playwright capture loops - state snapshots produced with no browser errors; canvas-only PNG capture is black under headless WebGL, so full-page screenshots below are the visual source of truth
+- Phase 6 selected-art refresh - image-generation candidates were used as reference, then cleaned into deterministic true-pixel assets and re-captured in `01-start.png` through `05-pause.png`
 
 ## Web-Game Hooks
 
@@ -72,10 +73,10 @@ Store artifacts under `docs/artifacts/level-2-city-heights/`.
 - Top-facade windows now start lower and use deterministic alpha so the gameplay lane is less noisy and no longer flickers frame to frame.
 - `window.render_game_to_text()` now reports `lastInteraction` and `recentInteractions`; `03-stomp-vs-side-hit-state.json` confirms pigeon stomp, coin pickup, and rat side-hit in one run.
 - Damage now has a short invulnerability gate, preventing one overlap from draining multiple lives during enemy or hazard QA.
-- Pixel hero pose readability is acceptable at this scale, but jump/fall silhouettes still deserve stronger contrast in the next regenerated sheet.
+- Selected cleanup pass replaced the rougher platformer hero sheet with a chunkier Beach Kitty read: triangular ears, scarf, stronger side-view body, clearer jump/fall/glide/hurt poses, and preserved fixed 64x64 frames.
+- Pigeon, rat, raccoon, AC unit, neon sign, and power-up icons received the same cleanup pass; enemy tops, low rat silhouette, charge tell, and pickup symbols now read more clearly at gameplay scale.
 - Victory and game-over dev hooks drive the React result surfaces; screenshots `07` and `08` are captured.
 
 ## Follow-Ups
 
-- Replace generated baseline assets with selected image-generation candidates where they materially improve the slice.
 - Add a platformer-specific boss/finale capture helper after the opening-route slice is stable.

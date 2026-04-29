@@ -49,12 +49,12 @@ assets/sprites/rooftops/
 | --- | --- | --- | --- | --- |
 | Environment | sky, far skyline, mid skyline, facade tile, rooftop cap tile | generated baseline under `assets/sprites/rooftops/environment/` | integrated | True pixel PNGs; roof lip must out-read facade detail |
 | Platform/traversal props | fire escape, scaffold, clothesline, satellite dish bounce pad, rooftop props | generated baseline for fire escape, clothesline, satellite | integrated | Usable top/contact lines are mandatory |
-| Enemies/hazards | pigeon, rat, raccoon idle/charge, AC unit, steam puff, neon sign on/off | generated baseline under `obstacles/` and `fx/` | integrated | Stomp vs side-hit readability remains the main QA rule |
+| Enemies/hazards | pigeon, rat, raccoon idle/charge, AC unit, steam puff, neon sign on/off | selected cleanup pass under `obstacles/` and `fx/` | verified | Stomp vs side-hit readability remains the main QA rule |
 | Collectibles | coin | generated baseline under `collectibles/` | integrated | Coin must separate from warm facade windows |
-| Projectiles/power-ups/FX | feather projectile, triple jump, glide, shield, shield bubble, stomp/dust/steam support | generated baseline under `fx/` | integrated | Shield is external bubble; glide is a hero animation state |
+| Projectiles/power-ups/FX | feather projectile, triple jump, glide, shield, shield bubble, stomp/dust/steam support | selected cleanup pass under `fx/` | verified | Shield is external bubble; glide is a hero animation state |
 | Background entities | fire escape, antennas, vents, water tanks, distant birds | fire escape baseline; others still procedural | planned | Secondary to gameplay but useful for rooftop identity |
 | Boss/finale | Pigeon King idle/swoop, attack, landed/vulnerable, hit, defeat; mini pigeon; feather projectile | generated boss baseline | integrated | Boss vulnerability and attack tells must read without HP text |
-| Hero | idle, run, jump rise, fall, land/stomp, glide, hurt, victory, defeat, power-up | generated 64x64 platformer sheet | integrated | Must pass `level-2-platformer-hero-sheet-contract.md` |
+| Hero | idle, run, jump rise, fall, land/stomp, glide, hurt, victory, defeat, power-up | selected cleanup pass in the 64x64 platformer sheet | verified | Must pass `level-2-platformer-hero-sheet-contract.md` |
 | HUD/support | distance, lives, boss HP pips, pause/readability surfaces | existing Phaser text plus React shell | planned | HUD stays readable over moving city background |
 
 ## Runtime Integration Targets

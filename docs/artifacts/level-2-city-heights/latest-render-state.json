@@ -1,59 +1,96 @@
 {
   "coordinateSystem": "Phaser world coordinates; origin top-left, x right, y down",
   "mode": "PLAYING",
-  "paused": false,
+  "paused": true,
   "route": {
     "openingRouteId": "city-heights-opening-slice-v1",
     "openingRouteHandoffX": 3900
   },
   "player": {
-    "x": 200,
-    "y": 507,
+    "x": 1720,
+    "y": 547,
     "vx": 0,
-    "vy": 0,
+    "vy": 703,
     "facing": "right",
-    "grounded": true,
-    "jumpsUsed": 0,
+    "grounded": false,
+    "jumpsUsed": 2,
     "maxJumps": 2
   },
   "camera": {
-    "scrollX": 0,
-    "scrollY": 128
+    "scrollX": 1231,
+    "scrollY": 157
   },
   "score": {
-    "current": 0,
+    "current": 31,
     "coins": 0,
-    "lives": 9,
+    "lives": 8,
     "multiplier": 1
   },
-  "lastInteraction": null,
-  "recentInteractions": [],
+  "lastInteraction": {
+    "type": "stomp",
+    "x": 1210,
+    "y": 491,
+    "atMs": 7870,
+    "targetKey": "rooftops-enemy-rat"
+  },
+  "recentInteractions": [
+    {
+      "type": "stomp",
+      "x": 1210,
+      "y": 491,
+      "atMs": 7870,
+      "targetKey": "rooftops-enemy-rat"
+    },
+    {
+      "type": "fall",
+      "x": 1158,
+      "y": 802,
+      "atMs": 6535,
+      "targetKey": null
+    }
+  ],
   "powerup": {
     "type": null,
     "remainingMs": 0
   },
   "visible": {
-    "enemies": [
+    "enemies": [],
+    "hazards": [
       {
-        "key": "rooftops-enemy-pigeon",
-        "x": 908,
-        "y": 430
+        "key": "rooftops-hazard-ac-unit",
+        "x": 1275,
+        "y": 493
+      },
+      {
+        "key": "rooftops-hazard-satellite-dish",
+        "x": 1529,
+        "y": 452
       }
     ],
-    "hazards": [],
     "coins": [
       {
         "key": "rooftops-coin",
-        "x": 590,
-        "y": 434
+        "x": 1170,
+        "y": 464
       },
       {
         "key": "rooftops-coin",
-        "x": 860,
-        "y": 404
+        "x": 1510,
+        "y": 419
+      },
+      {
+        "key": "rooftops-coin",
+        "x": 2190,
+        "y": 434
       }
     ],
-    "powerups": []
+    "powerups": [
+      {
+        "key": "rooftops-powerup-glide",
+        "x": 1875,
+        "y": 384
+      }
+    ]
   },
   "boss": null
 }

@@ -30,13 +30,20 @@ const C = {
   roofLight: [216, 193, 152, 255],
   roofDark: [47, 37, 28, 255],
   cat: [246, 176, 109, 255],
+  catDark: [198, 117, 58, 255],
   catLight: [255, 207, 138, 255],
   cream: [254, 243, 199, 255],
   cheek: [244, 164, 164, 255],
+  scarf: [239, 68, 68, 255],
+  scarfDark: [127, 29, 29, 255],
   pigeon: [148, 163, 184, 255],
+  pigeonLight: [203, 213, 225, 255],
   pigeonDark: [71, 85, 105, 255],
   rat: [112, 89, 72, 255],
+  ratLight: [164, 124, 92, 255],
+  ratTail: [251, 113, 133, 255],
   raccoon: [86, 68, 51, 255],
+  raccoonLight: [152, 137, 117, 255],
   metal: [148, 163, 184, 255],
   metalDark: [71, 85, 105, 255],
   neon: [217, 70, 239, 255],
@@ -121,11 +128,39 @@ function ellipse(img, cx, cy, rx, ry, color) {
   }
 }
 
+function triangle(img, x1, y1, x2, y2, x3, y3, color) {
+  const minX = Math.floor(Math.min(x1, x2, x3));
+  const maxX = Math.ceil(Math.max(x1, x2, x3));
+  const minY = Math.floor(Math.min(y1, y2, y3));
+  const maxY = Math.ceil(Math.max(y1, y2, y3));
+  const area = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1);
+  if (area === 0) return;
+  for (let y = minY; y <= maxY; y++) {
+    for (let x = minX; x <= maxX; x++) {
+      const w1 = ((x2 - x1) * (y - y1) - (y2 - y1) * (x - x1)) / area;
+      const w2 = ((x3 - x2) * (y - y2) - (y3 - y2) * (x - x2)) / area;
+      const w3 = ((x1 - x3) * (y - y3) - (y1 - y3) * (x - x3)) / area;
+      if ((w1 >= 0 && w2 >= 0 && w3 >= 0) || (w1 <= 0 && w2 <= 0 && w3 <= 0)) {
+        blendPixel(img, x, y, color);
+      }
+    }
+  }
+}
+
 function line(img, x0, y0, x1, y1, color) {
   const steps = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
   for (let i = 0; i <= steps; i++) {
     const t = steps === 0 ? 0 : i / steps;
     blendPixel(img, Math.round(x0 + (x1 - x0) * t), Math.round(y0 + (y1 - y0) * t), color);
+  }
+}
+
+function thickLine(img, x0, y0, x1, y1, color, thickness = 2) {
+  const radius = Math.max(0, Math.floor((thickness - 1) / 2));
+  for (let oy = -radius; oy <= radius + (thickness % 2 === 0 ? 1 : 0); oy++) {
+    for (let ox = -radius; ox <= radius + (thickness % 2 === 0 ? 1 : 0); ox++) {
+      if (Math.abs(ox) + Math.abs(oy) <= thickness) line(img, x0 + ox, y0 + oy, x1 + ox, y1 + oy, color);
+    }
   }
 }
 
@@ -294,54 +329,74 @@ function coin() {
   return img;
 }
 
-function pigeon(w = 28, h = 22) {
-  const img = makeImage(32, 32);
-  ellipse(img, 15, 19, 12, 8, C.ink);
-  ellipse(img, 15, 18, 10, 7, C.pigeon);
-  circle(img, 22, 13, 6, C.ink);
-  circle(img, 22, 13, 5, C.pigeon);
-  rect(img, 26, 13, 5, 3, C.orange);
-  rect(img, 21, 11, 2, 2, C.white);
-  rect(img, 22, 11, 1, 1, C.ink);
-  rect(img, 6, 18, 9, 5, C.pigeonDark);
-  rect(img, 11, 26, 2, 4, C.orange);
-  rect(img, 20, 26, 2, 4, C.orange);
+function pigeon(w = 32, h = 26) {
+  const img = makeImage(36, 32);
+  ellipse(img, 16, 20, 13, 8, C.ink);
+  ellipse(img, 16, 19, 11, 7, C.pigeon);
+  rect(img, 8, 14, 12, 3, C.pigeonLight);
+  circle(img, 25, 13, 7, C.ink);
+  circle(img, 25, 13, 5, C.pigeon);
+  triangle(img, 29, 12, 35, 14, 29, 16, C.orange);
+  rect(img, 23, 10, 3, 3, C.white);
+  rect(img, 25, 10, 2, 2, C.ink);
+  rect(img, 12, 23, 3, 5, C.orange);
+  rect(img, 21, 23, 3, 5, C.orange);
+  rect(img, 4, 19, 12, 4, C.pigeonDark);
+  line(img, 5, 18, 10, 14, C.ink);
+  rect(img, 15, 27, 4, 2, C.ink);
+  rect(img, 23, 27, 4, 2, C.ink);
   return cropToCanvas(img, w, h);
 }
 
 function rat() {
-  const img = makeImage(28, 20);
-  ellipse(img, 13, 12, 11, 6, C.ink);
-  ellipse(img, 13, 11, 10, 5, C.rat);
-  rect(img, 22, 10, 5, 3, C.rat);
-  line(img, 3, 13, 0, 16, C.ink);
-  rect(img, 19, 8, 2, 2, C.white);
-  rect(img, 20, 8, 1, 1, C.ink);
+  const img = makeImage(32, 22);
+  thickLine(img, 6, 14, 0, 18, C.ratTail, 2);
+  ellipse(img, 14, 13, 11, 6, C.ink);
+  ellipse(img, 14, 12, 10, 5, C.rat);
+  ellipse(img, 19, 10, 7, 4, C.ratLight);
+  triangle(img, 23, 9, 31, 12, 23, 15, C.ink);
+  triangle(img, 23, 10, 30, 12, 23, 14, C.ratLight);
+  circle(img, 20, 6, 3, C.ink);
+  circle(img, 20, 6, 2, C.ratLight);
+  rect(img, 22, 8, 3, 3, C.white);
+  rect(img, 23, 8, 2, 2, C.ink);
+  rect(img, 12, 18, 4, 2, C.ink);
+  rect(img, 21, 18, 4, 2, C.ink);
   return img;
 }
 
 function raccoon(charging = false) {
-  const img = makeImage(36, 28);
-  ellipse(img, 18, 16, 14, 9, C.ink);
-  ellipse(img, 18, 15, 12, 8, charging ? C.danger : C.raccoon);
-  circle(img, 24, 10, 7, C.ink);
-  circle(img, 24, 10, 6, C.raccoon);
-  rect(img, 19, 8, 10, 4, C.ink2);
-  rect(img, 21, 9, 2, 2, C.white);
-  rect(img, 27, 9, 2, 2, C.white);
-  line(img, 6, 15, 0, charging ? 9 : 20, C.ink);
-  rect(img, 8, 23, 4, 3, C.ink);
-  rect(img, 24, 23, 4, 3, C.ink);
+  const img = makeImage(36, 30);
+  if (charging) {
+    triangle(img, 0, 13, 12, 6, 12, 20, C.orange);
+    triangle(img, 3, 16, 14, 10, 14, 23, C.danger);
+  }
+  ellipse(img, 18, 17, 15, 9, C.ink);
+  ellipse(img, 18, 16, 13, 8, charging ? [112, 74, 52, 255] : C.raccoon);
+  circle(img, 27, 10, 8, C.ink);
+  circle(img, 27, 10, 6, C.raccoonLight);
+  rect(img, 20, 8, 14, 5, C.ink2);
+  rect(img, 22, 9, 3, 3, C.white);
+  rect(img, 30, 9, 3, 3, C.white);
+  rect(img, 23, 10, 2, 2, C.ink);
+  rect(img, 31, 10, 2, 2, C.ink);
+  thickLine(img, 7, 16, 0, charging ? 10 : 22, C.ink, 2);
+  rect(img, 8, 24, 5, 3, C.ink);
+  rect(img, 25, 24, 5, 3, C.ink);
   return img;
 }
 
 function acUnit() {
-  const img = makeImage(36, 28);
-  outlineRect(img, 2, 3, 31, 22, C.metal, C.ink);
-  rect(img, 6, 7, 23, 3, C.metalDark);
-  rect(img, 6, 13, 23, 3, C.metalDark);
-  rect(img, 6, 19, 23, 3, C.metalDark);
-  rect(img, 28, 3, 5, 22, [203, 213, 225, 255]);
+  const img = makeImage(40, 30);
+  outlineRect(img, 2, 4, 34, 23, C.metal, C.ink);
+  rect(img, 5, 7, 24, 4, C.metalDark);
+  rect(img, 5, 14, 24, 4, C.metalDark);
+  rect(img, 5, 21, 24, 3, C.metalDark);
+  rect(img, 30, 4, 6, 23, [203, 213, 225, 255]);
+  rect(img, 33, 7, 2, 17, C.white);
+  rect(img, 7, 9, 20, 1, [226, 232, 240, 255]);
+  rect(img, 7, 16, 20, 1, [226, 232, 240, 255]);
+  rect(img, 36, 10, 2, 8, C.orange);
   return img;
 }
 
@@ -356,12 +411,14 @@ function satelliteDish() {
 }
 
 function neon(on = true) {
-  const img = makeImage(18, 36);
-  outlineRect(img, 4, 3, 10, 28, on ? C.neon : [55, 17, 34, 255], C.ink);
-  rect(img, 1, 14, 4, 3, C.metalDark);
+  const img = makeImage(20, 38);
+  outlineRect(img, 4, 3, 12, 30, on ? C.neon : [55, 17, 34, 255], C.ink);
+  rect(img, 1, 15, 4, 3, C.metalDark);
+  rect(img, 15, 5, 2, 26, on ? [255, 120, 245, 255] : C.ink2);
   if (on) {
-    rect(img, 7, 8, 4, 10, C.danger);
-    rect(img, 8, 19, 3, 8, C.cream);
+    rect(img, 7, 8, 5, 12, C.danger);
+    rect(img, 9, 20, 4, 8, C.cream);
+    rect(img, 3, 2, 14, 2, [255, 120, 245, 190]);
   }
   return img;
 }
@@ -389,17 +446,19 @@ function powerup(color, icon) {
   const img = makeImage(28, 28);
   circle(img, 14, 14, 12, C.ink);
   circle(img, 14, 14, 10, color);
+  circle(img, 11, 10, 2, [255, 255, 255, 120]);
   if (icon === 'triple') {
-    rect(img, 8, 17, 3, 3, C.white);
-    rect(img, 13, 13, 3, 7, C.white);
-    rect(img, 18, 9, 3, 11, C.white);
+    triangle(img, 8, 18, 11, 13, 14, 18, C.white);
+    triangle(img, 12, 15, 15, 10, 18, 15, C.white);
+    triangle(img, 16, 12, 19, 7, 22, 12, C.white);
   } else if (icon === 'glide') {
-    line(img, 6, 12, 14, 7, C.white);
-    line(img, 14, 7, 22, 12, C.white);
-    rect(img, 13, 8, 2, 11, C.white);
+    triangle(img, 5, 13, 14, 7, 14, 17, C.white);
+    triangle(img, 23, 13, 14, 7, 14, 17, C.white);
+    rect(img, 13, 11, 2, 10, C.ink2);
   } else {
-    outlineRect(img, 9, 7, 10, 13, C.white, C.ink2);
-    rect(img, 11, 9, 6, 7, color);
+    triangle(img, 14, 6, 21, 10, 18, 21, C.white);
+    triangle(img, 14, 6, 7, 10, 10, 21, C.white);
+    rect(img, 11, 10, 6, 8, color);
   }
   return img;
 }
@@ -480,64 +539,107 @@ function catFrame(frame) {
                     : 'power';
 
   const runPhase = frame % 4;
-  const bob = state === 'run' ? (runPhase % 2 === 0 ? 1 : -1) : state === 'jump' ? -4 : state === 'fall' ? 2 : 0;
+  const bob = state === 'run' ? (runPhase % 2 === 0 ? 1 : -1)
+    : state === 'jump' ? -5
+      : state === 'fall' ? 3
+        : state === 'defeat' ? 5
+          : 0;
   const squash = state === 'stomp';
   const cx = 32;
   const ground = 58;
+  const facing = state === 'hurt' || state === 'defeat' ? -1 : 1;
 
   if (state === 'glide') {
-    line(img, 12, 30, 30, 22, C.green);
-    line(img, 34, 22, 52, 30, C.green);
+    triangle(img, 9, 31, 32, 19, 32, 30, C.ink);
+    triangle(img, 55, 31, 32, 19, 32, 30, C.ink);
+    triangle(img, 12, 30, 32, 21, 32, 29, C.green);
+    triangle(img, 52, 30, 32, 21, 32, 29, C.green);
     rect(img, 13, 30, 38, 3, C.ink);
+    rect(img, 31, 24, 2, 19, C.ink);
   }
 
-  const bodyY = ground - (squash ? 20 : 24) + bob;
-  ellipse(img, cx, bodyY + 8, squash ? 16 : 13, squash ? 8 : 12, C.ink);
-  ellipse(img, cx, bodyY + 7, squash ? 14 : 11, squash ? 6 : 10, state === 'hurt' ? C.cheek : C.cat);
-  circle(img, cx, bodyY - 8, 13, C.ink);
-  circle(img, cx, bodyY - 8, 11, state === 'defeat' ? C.catLight : C.cat);
+  const bodyY = ground - (squash ? 17 : 22) + bob;
+  const headX = cx + (state === 'jump' ? 3 : state === 'fall' ? 1 : 2) * facing;
+  const headY = bodyY - (squash ? 13 : 17);
+  const bodyFill = state === 'hurt' ? C.cheek : state === 'defeat' ? C.catLight : C.cat;
 
-  line(img, 24, bodyY - 18, 19, bodyY - 29, C.ink);
-  line(img, 25, bodyY - 18, 21, bodyY - 27, C.cat);
-  line(img, 40, bodyY - 18, 45, bodyY - 29, C.ink);
-  line(img, 39, bodyY - 18, 43, bodyY - 27, C.cat);
+  const tailRootX = cx - 10 * facing;
+  const tailTipX = cx - (state === 'run' ? 24 : state === 'fall' ? 20 : 22) * facing;
+  const tailTipY = bodyY + (state === 'hurt' ? 8 : state === 'jump' ? -10 : state === 'defeat' ? 8 : -2);
+  thickLine(img, tailRootX, bodyY + 4, tailTipX, tailTipY, C.ink, 3);
+  thickLine(img, tailRootX, bodyY + 3, tailTipX + 2 * facing, tailTipY - 1, C.catLight, 2);
 
-  rect(img, 26, bodyY - 12, 4, 4, C.white);
-  rect(img, 38, bodyY - 12, 4, 4, C.white);
+  ellipse(img, cx - 2 * facing, bodyY + 5, squash ? 17 : 13, squash ? 8 : 13, C.ink);
+  ellipse(img, cx - 2 * facing, bodyY + 4, squash ? 14 : 11, squash ? 6 : 11, bodyFill);
+  rect(img, cx - 10, bodyY - 6, 22, 5, C.ink);
+  rect(img, cx - 9, bodyY - 5, 20, 3, C.scarf);
+  rect(img, cx + 8 * facing, bodyY - 3, 8, 5, C.scarfDark);
+
+  triangle(img, headX - 11, headY - 8, headX - 14, headY - 22, headX - 3, headY - 12, C.ink);
+  triangle(img, headX - 10, headY - 8, headX - 12, headY - 18, headX - 4, headY - 12, C.catLight);
+  triangle(img, headX + 5, headY - 9, headX + 12, headY - 21, headX + 13, headY - 5, C.ink);
+  triangle(img, headX + 5, headY - 9, headX + 11, headY - 17, headX + 11, headY - 6, C.catLight);
+  circle(img, headX, headY, 13, C.ink);
+  circle(img, headX, headY, 11, state === 'defeat' ? C.catLight : C.cat);
+  ellipse(img, headX + 4 * facing, headY + 3, 6, 5, C.cream);
+
+  rect(img, headX - 5, headY - 4, 4, 4, C.white);
+  rect(img, headX + 6, headY - 4, 4, 4, C.white);
   if (state === 'defeat') {
-    line(img, 26, bodyY - 12, 30, bodyY - 8, C.ink);
-    line(img, 30, bodyY - 12, 26, bodyY - 8, C.ink);
-    line(img, 38, bodyY - 12, 42, bodyY - 8, C.ink);
-    line(img, 42, bodyY - 12, 38, bodyY - 8, C.ink);
+    line(img, headX - 5, headY - 4, headX - 1, headY, C.ink);
+    line(img, headX - 1, headY - 4, headX - 5, headY, C.ink);
+    line(img, headX + 6, headY - 4, headX + 10, headY, C.ink);
+    line(img, headX + 10, headY - 4, headX + 6, headY, C.ink);
   } else {
-    rect(img, 28, bodyY - 11, 2, 2, C.ink);
-    rect(img, 40, bodyY - 11, 2, 2, C.ink);
+    rect(img, headX - 3, headY - 3, 2, 2, C.ink);
+    rect(img, headX + 8, headY - 3, 2, 2, C.ink);
   }
-  rect(img, 32, bodyY - 5, 2, 2, C.ink);
-  rect(img, 23, bodyY - 6, 3, 2, C.cheek);
-  rect(img, 43, bodyY - 6, 3, 2, C.cheek);
+  rect(img, headX + 3 * facing, headY + 2, 2, 2, C.ink);
+  rect(img, headX - 10, headY + 4, 4, 2, C.cheek);
+  rect(img, headX + 10, headY + 4, 3, 2, C.cheek);
 
   if (state === 'victory') {
-    line(img, 21, bodyY, 14, bodyY - 14, C.ink);
-    line(img, 43, bodyY, 52, bodyY - 15, C.ink);
+    thickLine(img, 22, bodyY - 2, 15, bodyY - 17, C.ink, 2);
+    thickLine(img, 42, bodyY - 2, 52, bodyY - 16, C.ink, 2);
+    rect(img, 13, bodyY - 20, 4, 4, C.coin);
   } else if (state === 'power') {
-    rect(img, 12, 14, 3, 3, C.coin);
-    rect(img, 50, 16, 3, 3, C.blue);
-    rect(img, 46, 44, 3, 3, C.green);
+    rect(img, 12, 14, 4, 4, C.coin);
+    rect(img, 50, 16, 4, 4, C.blue);
+    rect(img, 46, 44, 4, 4, C.green);
+    thickLine(img, 21, bodyY + 1, 14, bodyY - 8, C.ink, 2);
+    thickLine(img, 43, bodyY + 1, 51, bodyY - 7, C.ink, 2);
+  } else if (state === 'jump') {
+    thickLine(img, 22, bodyY, 15, bodyY - 12, C.ink, 2);
+    thickLine(img, 43, bodyY, 51, bodyY - 8, C.ink, 2);
+  } else if (state === 'fall') {
+    thickLine(img, 21, bodyY + 1, 12, bodyY + 3, C.ink, 2);
+    thickLine(img, 43, bodyY + 1, 53, bodyY + 4, C.ink, 2);
+  } else if (state === 'hurt') {
+    thickLine(img, 21, bodyY + 2, 12, bodyY + 10, C.ink, 2);
+    thickLine(img, 43, bodyY + 2, 51, bodyY + 8, C.ink, 2);
   } else {
-    line(img, 21, bodyY + 3, 15, bodyY + 9, C.ink);
-    line(img, 43, bodyY + 3, 49, bodyY + 8, C.ink);
+    const armSwing = state === 'run' ? (runPhase < 2 ? 4 : -4) : 0;
+    thickLine(img, 22, bodyY + 1, 16 + armSwing, bodyY + 8, C.ink, 2);
+    thickLine(img, 42, bodyY + 1, 49 - armSwing, bodyY + 7, C.ink, 2);
   }
 
   const legShift = state === 'run' ? (runPhase < 2 ? 3 : -3) : 0;
-  rect(img, 24 + legShift, ground - 8 + bob, 5, 8 - Math.max(0, bob), C.ink);
-  rect(img, 37 - legShift, ground - 8 + bob, 5, 8 - Math.max(0, bob), C.ink);
-  rect(img, 22 + legShift, ground - 2, 8, 3, C.ink);
-  rect(img, 36 - legShift, ground - 2, 8, 3, C.ink);
-
-  const tailY = bodyY + (state === 'hurt' ? 2 : -1);
-  line(img, 43, bodyY + 5, 54, tailY, C.ink);
-  line(img, 43, bodyY + 4, 53, tailY - 1, C.catLight);
+  if (state === 'jump' || state === 'fall' || state === 'glide') {
+    thickLine(img, 26, bodyY + 14, 22, ground - 6, C.ink, 3);
+    thickLine(img, 38, bodyY + 14, 43, ground - 8, C.ink, 3);
+    rect(img, 19, ground - 7, 8, 3, C.ink);
+    rect(img, 41, ground - 9, 8, 3, C.ink);
+  } else if (state === 'defeat') {
+    rect(img, 19, ground - 4, 13, 4, C.ink);
+    rect(img, 36, ground - 5, 13, 4, C.ink);
+  } else {
+    rect(img, 24 + legShift, ground - 9 + bob, 5, 9 - Math.max(0, bob), C.ink);
+    rect(img, 37 - legShift, ground - 9 + bob, 5, 9 - Math.max(0, bob), C.ink);
+    rect(img, 21 + legShift, ground - 3, 10, 4, C.ink);
+    rect(img, 35 - legShift, ground - 3, 10, 4, C.ink);
+    rect(img, 24 + legShift, ground - 2, 5, 2, C.catDark);
+    rect(img, 38 - legShift, ground - 2, 5, 2, C.catDark);
+  }
 
   return img;
 }

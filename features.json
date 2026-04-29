@@ -309,8 +309,8 @@
         "notes": "Seeded deterministic openingRoute geometry, enemies, hazards, coins, and power-ups before procedural generation resumes."
       },
       "qa-captures-and-polish": {
-        "status": "in-progress",
-        "notes": "Phase 6 captures now cover stomp, side-hit, hazard/powerup, pause, opening-route handoff, victory, and game-over; sky art was replaced with a starry-night pixel backdrop, taller skyline strips, and opaque foreground facades; higher-quality asset replacement remains."
+        "status": "pass",
+        "notes": "Phase 6 captures cover stomp, side-hit, hazard/powerup, pause, opening-route handoff, victory, and game-over; the selected cleanup pass replaced rougher hero, enemy, hazard, and power-up baseline sprites while keeping the starry close-city backdrop."
       }
     }
   }

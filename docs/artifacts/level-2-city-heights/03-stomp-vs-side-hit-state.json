@@ -7,53 +7,39 @@
     "openingRouteHandoffX": 3900
   },
   "player": {
-    "x": 1246,
-    "y": 512,
+    "x": 1220,
+    "y": 469,
     "vx": 0,
-    "vy": 0,
+    "vy": 150,
     "facing": "right",
-    "grounded": true,
+    "grounded": false,
     "jumpsUsed": 0,
     "maxJumps": 2
   },
   "camera": {
-    "scrollX": 737,
-    "scrollY": 142
+    "scrollX": 704,
+    "scrollY": 167
   },
   "score": {
-    "current": 35,
-    "coins": 1,
+    "current": 6,
+    "coins": 0,
     "lives": 8,
     "multiplier": 1
   },
   "lastInteraction": {
-    "type": "side-hit",
-    "x": 1210,
-    "y": 491,
-    "atMs": 7532,
-    "targetKey": "rooftops-enemy-rat"
+    "type": "fall",
+    "x": 1158,
+    "y": 802,
+    "atMs": 6535,
+    "targetKey": null
   },
   "recentInteractions": [
     {
-      "type": "side-hit",
-      "x": 1210,
-      "y": 491,
-      "atMs": 7532,
-      "targetKey": "rooftops-enemy-rat"
-    },
-    {
-      "type": "coin",
-      "x": 1170,
-      "y": 465,
-      "atMs": 7365,
-      "targetKey": "rooftops-coin"
-    },
-    {
-      "type": "stomp",
-      "x": 913,
-      "y": 430,
-      "atMs": 6448,
-      "targetKey": "rooftops-enemy-pigeon"
+      "type": "fall",
+      "x": 1158,
+      "y": 802,
+      "atMs": 6535,
+      "targetKey": null
     }
   ],
   "powerup": {
@@ -62,6 +48,11 @@
   },
   "visible": {
     "enemies": [
+      {
+        "key": "rooftops-enemy-pigeon",
+        "x": 813,
+        "y": 430
+      },
       {
         "key": "rooftops-enemy-rat",
         "x": 1210,
@@ -83,13 +74,23 @@
     "coins": [
       {
         "key": "rooftops-coin",
+        "x": 590,
+        "y": 435
+      },
+      {
+        "key": "rooftops-coin",
         "x": 860,
-        "y": 402
+        "y": 405
+      },
+      {
+        "key": "rooftops-coin",
+        "x": 1170,
+        "y": 460
       },
       {
         "key": "rooftops-coin",
         "x": 1510,
-        "y": 412
+        "y": 415
       }
     ],
     "powerups": []
