@@ -476,6 +476,17 @@ export interface PlatformerOpeningRoutePowerup {
   y: number;
 }
 
+export interface PlatformerOpeningRouteBossArena {
+  /** World x where boss mode begins. */
+  triggerX: number;
+  /** World x of the left edge of the authored arena. */
+  arenaX: number;
+  /** Rooftop y used as the arena floor. */
+  arenaY: number;
+  /** Width of the authored arena floor and boss patrol lane. */
+  width: number;
+}
+
 export interface PlatformerOpeningRouteConfig {
   id: string;
   handoffX: number;
@@ -484,6 +495,7 @@ export interface PlatformerOpeningRouteConfig {
   enemies?: PlatformerOpeningRouteEnemy[];
   hazards?: PlatformerOpeningRouteHazard[];
   powerups?: PlatformerOpeningRoutePowerup[];
+  bossArena?: PlatformerOpeningRouteBossArena;
   notes?: string[];
 }
 

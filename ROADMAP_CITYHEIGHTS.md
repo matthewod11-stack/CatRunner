@@ -60,6 +60,22 @@ Turn City Heights into a true cozy pixel-art Beach Kitty platformer slice: a pol
 - [x] Verify final screenshots against the art bible
 - [x] Run `npm run test:run`, `npx tsc --noEmit`, `npm run build`, and `npm run test:smoke`
 
+## Phase 7 — Pigeon King Boss Slice
+
+- [x] Move the Pigeon King into the deterministic opening-route slice
+- [x] Add an authored `bossArena` route contract with trigger, floor, and patrol width
+- [x] Extend the opening route with a platform-backed boss arena
+- [x] Scale Kitty, enemies, obstacles, pickups, and the Pigeon King up for stronger gameplay readability
+- [x] Tune first-phase boss timing for a readable swoop, feather drop, and stomp window
+- [x] Add a player-controlled yarn throw on `X` / `ArrowDown` as the primary boss damage route
+- [x] Allow valid top-stomps to damage the Pigeon King without immediately converting into side-hit damage
+- [x] Defeat the Pigeon King after three successful boss hits and route to victory
+- [x] Emit platformer `BOSS_FIGHT` status and boss victory payloads
+- [x] Add boss mode, arena, HP, and threat details to `window.render_game_to_text()`
+- [x] Add narrow boss-entry and boss-stomp QA hooks for deterministic web-game capture
+- [x] Capture boss-entry, landed/vulnerable, throw-hit, stomp-hit, and defeat screenshots under `docs/artifacts/level-2-city-heights/`
+- [x] Run `npm run test:run`, `npx tsc --noEmit`, `npm run build`, and `npm run test:smoke`
+
 ## Guardrails
 
 - Runtime image generation is not part of shipped gameplay.

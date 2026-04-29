@@ -5,9 +5,9 @@ import type { BuildingData, PlatformerHazardType, SceneManager } from './types';
 import { DEPTH } from './types';
 import { ROOFTOPS_HAZARD_TEXTURES, ROOFTOPS_NEON_TEXTURES } from './rooftopsAssets';
 
-const AC_UNIT_SIZE = { w: 30, h: 25 };
-const SATELLITE_SIZE = { w: 28, h: 20 };
-const NEON_SIZE = { w: 10, h: 30 };
+const AC_UNIT_SIZE = { w: 46, h: 38 };
+const SATELLITE_SIZE = { w: 44, h: 32 };
+const NEON_SIZE = { w: 18, h: 52 };
 const NEON_CYCLE_MS = 1500;
 
 interface ActiveHazard {

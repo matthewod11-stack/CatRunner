@@ -10,9 +10,9 @@ const MAX_ACTIVE_ENEMIES = 4;
 const STOMP_POINTS = 25;
 
 const ENEMY_SIZES: Record<PlatformerEnemyType, { w: number; h: number }> = {
-  PIGEON: { w: 24, h: 20 },
-  RAT: { w: 20, h: 14 },
-  RACCOON: { w: 30, h: 26 },
+  PIGEON: { w: 38, h: 32 },
+  RAT: { w: 36, h: 26 },
+  RACCOON: { w: 48, h: 40 },
 };
 
 const ENEMY_COLORS: Record<PlatformerEnemyType, number> = {
@@ -92,7 +92,7 @@ export class EnemyManager implements SceneManager {
     const enemyTop = enemySprite.body!.y;
     const playerFalling = player.body.velocity.y > 0;
 
-    if (playerFalling && playerBottom - enemyTop < 15) {
+    if (playerFalling && playerBottom - enemyTop < 24) {
       // Stomp!
       const enemy = this.enemies.find(e => e.sprite === enemySprite);
       if (enemy) {

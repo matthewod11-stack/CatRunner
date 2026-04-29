@@ -12,8 +12,8 @@ export const ROOFTOPS_HERO_SHEET = {
   feetBaselineY: 58,
   bottomPadding: 6,
   renderSize: {
-    width: 56,
-    height: 56,
+    width: 72,
+    height: 72,
   },
   collisionBoxes: {
     normal: { x: 12, y: 10, width: 40, height: 48 },

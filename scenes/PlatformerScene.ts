@@ -22,10 +22,14 @@ import { ROOFTOPS_IMAGE_LOADS, ROOFTOPS_PIXELATED_TEXTURE_KEYS } from './platfor
 
 // ─── Constants ──────────────────────────────────────────────────────
 
-const PLAYER_WIDTH = 40;
-const PLAYER_HEIGHT = 48;
+const PLAYER_WIDTH = 52;
+const PLAYER_HEIGHT = 62;
 const BOUNCE_MULTIPLIER = 1.8;
 const DAMAGE_INVULNERABILITY_MS = 900;
+const BOSS_PROJECTILE_SIZE = 28;
+const BOSS_PROJECTILE_SPEED = 680;
+const BOSS_THROW_COOLDOWN_MS = 420;
+const BOSS_STOMP_TOP_TOLERANCE = 42;
 
 type PlatformerInteractionType =
   | 'stomp'
@@ -35,7 +39,12 @@ type PlatformerInteractionType =
   | 'bounce'
   | 'coin'
   | 'powerup'
-  | 'fall';
+  | 'fall'
+  | 'boss-stomp'
+  | 'boss-projectile'
+  | 'boss-hit'
+  | 'feather-hit'
+  | 'mini-pigeon-hit';
 
 interface PlatformerInteractionSnapshot {
   type: PlatformerInteractionType;
@@ -67,6 +76,8 @@ export default class PlatformerScene extends SceneBridge {
   private playerAnimationOverride: { id: RooftopsHeroAnimationId; until: number } | null = null;
   private renderTextHook: (() => string) | null = null;
   private advanceTimeHook: ((ms: number) => string) | null = null;
+  private enterBossForQaHook: (() => string) | null = null;
+  private dropOnBossForQaHook: (() => string) | null = null;
 
   // Game state
   private lives = 3;
@@ -86,6 +97,7 @@ export default class PlatformerScene extends SceneBridge {
   // Input
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private spaceKey!: Phaser.Input.Keyboard.Key;
+  private attackKey!: Phaser.Input.Keyboard.Key;
   private jumpHeld = false;
 
   // Managers
@@ -97,6 +109,8 @@ export default class PlatformerScene extends SceneBridge {
   private hazards!: HazardManager;
   private powerups!: PowerupManager;
   private boss!: PigeonKingBoss;
+  private bossProjectiles!: Phaser.Physics.Arcade.Group;
+  private bossThrowCooldownUntilMs = 0;
 
   // HUD
   private distanceText!: Phaser.GameObjects.Text;
@@ -167,6 +181,8 @@ export default class PlatformerScene extends SceneBridge {
 
     this.boss = new PigeonKingBoss(this, this.config, this.effects);
     this.boss.create(); // deferred — arena set up on boss entry
+    this.bossProjectiles = this.physics.add.group({ allowGravity: false });
+    this.createBossProjectileTexture();
 
     // ── Player ──────────────────────────────────────────────────
 
@@ -228,6 +244,7 @@ export default class PlatformerScene extends SceneBridge {
 
     this.cursors = this.input.keyboard!.createCursorKeys();
     this.spaceKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.attackKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.X);
 
     // ── HUD ─────────────────────────────────────────────────────
 
@@ -267,6 +284,7 @@ export default class PlatformerScene extends SceneBridge {
 
     // Boss phase
     if (this.inBossArena) {
+      this.updateBossProjectiles();
       this.boss.update(time, delta);
       if (this.boss.isDefeated() && !this.hasWon) {
         this.handleVictory();
@@ -354,6 +372,11 @@ export default class PlatformerScene extends SceneBridge {
         this.effects.spawnDust(this.player.x, this.player.y + PLAYER_HEIGHT / 2, 1);
       }
     }
+
+    const attackJustPressed =
+      Phaser.Input.Keyboard.JustDown(this.attackKey) ||
+      Phaser.Input.Keyboard.JustDown(this.cursors.down);
+    if (attackJustPressed) this.throwBossProjectile();
 
     // Glide (reduce gravity while holding jump + falling + has glide powerup)
     const isGliding = this.powerups.hasGlide() && this.jumpHeld && body.velocity.y > 0;
@@ -489,25 +512,37 @@ export default class PlatformerScene extends SceneBridge {
 
   private checkBossEntry(): void {
     if (this.inBossArena) return;
-    if (this.distanceTraveled >= this.config.victoryDistance - 1000) {
+    const routeBossArena = this.config.openingRoute?.bossArena;
+    const shouldEnterBoss = routeBossArena
+      ? this.player.x >= routeBossArena.triggerX
+      : this.distanceTraveled >= this.config.victoryDistance - 1000;
+
+    if (shouldEnterBoss) {
       this.inBossArena = true;
       this.audio.playSfx('boss_alert');
       this.audio.setBossMode(true);
+      this.emitStatusChange('BOSS_FIGHT' as GameStatus);
 
-      // Set up boss arena at the end of the level
-      const arenaX = this.startX + this.config.victoryDistance - 500;
-      const arenaY = this.lastKnownRooftopY();
-      this.boss.createArena(arenaX, arenaY);
+      const arenaX = routeBossArena?.arenaX ?? this.startX + this.config.victoryDistance - 500;
+      const arenaY = routeBossArena?.arenaY ?? this.lastKnownRooftopY();
+      const arenaWidth = routeBossArena?.width ?? this.config.boss.arenaWidth;
+      this.boss.createArena(arenaX, arenaY, arenaWidth);
 
       // Wire up boss collisions (deferred until arena exists)
-      this.physics.add.overlap(this.player, this.boss.getBossSprite(), () => {
-        if (this.boss.handleStomp()) {
-          this.audio.playSfx('boss_hit');
+      this.physics.add.overlap(this.player, this.boss.getBossSprite(), (_player, bossSprite) => {
+        const boss = bossSprite as Phaser.Physics.Arcade.Sprite;
+        const bossMode = this.boss.getMode();
+        if (this.isBossStomp(boss)) {
+          this.applyBossDamage('boss-stomp', boss, bossMode);
+          this.separatePlayerAboveBoss(boss);
+          this.invulnerableUntilMs = Math.max(this.invulnerableUntilMs, this.time.now + 520);
           this.player.body.setVelocityY(-this.config.playerConfig.jumpForce * 0.7);
           this.jumpCount = 0;
           this.queuePlayerAnimation('landStomp', 260);
-          this.gameScore.current += 100;
-          this.emitScoreUpdate({ ...this.gameScore });
+          return;
+        }
+        if (!this.boss.isDefeated()) {
+          this.handleDamage('boss-hit', boss);
         }
       });
       this.physics.add.overlap(
@@ -515,13 +550,103 @@ export default class PlatformerScene extends SceneBridge {
         (_p, feather) => {
           const featherSprite = feather as Phaser.Physics.Arcade.Sprite;
           featherSprite.destroy();
-          this.handleDamage('neon-hit', featherSprite);
+          this.handleDamage('feather-hit', featherSprite);
         },
       );
       this.physics.add.overlap(
         this.player, this.boss.getMiniPigeonGroup(),
-        (_p, miniPigeon) => this.handleDamage('side-hit', miniPigeon as PlatformerInteractionSource),
+        (_p, miniPigeon) => this.handleDamage('mini-pigeon-hit', miniPigeon as PlatformerInteractionSource),
       );
+    }
+  }
+
+  private isBossStomp(bossSprite: Phaser.Physics.Arcade.Sprite): boolean {
+    if (this.boss.isDefeated()) return false;
+    const playerBody = this.player.body;
+    const bossBody = bossSprite.body as Phaser.Physics.Arcade.Body | null;
+    const playerBottom = playerBody.y + playerBody.height;
+    const bossTop = bossBody ? bossBody.y : bossSprite.y - bossSprite.displayHeight / 2;
+    return playerBody.velocity.y > 40 && playerBottom <= bossTop + BOSS_STOMP_TOP_TOLERANCE;
+  }
+
+  private separatePlayerAboveBoss(bossSprite: Phaser.Physics.Arcade.Sprite): void {
+    const playerBody = this.player.body;
+    const bossBody = bossSprite.body as Phaser.Physics.Arcade.Body | null;
+    const bossTop = bossBody ? bossBody.y : bossSprite.y - bossSprite.displayHeight / 2;
+    const desiredBodyTop = bossTop - playerBody.height - 8;
+    this.player.setY(this.player.y + desiredBodyTop - playerBody.y);
+  }
+
+  private applyBossDamage(
+    type: 'boss-stomp' | 'boss-projectile',
+    bossSprite: Phaser.Physics.Arcade.Sprite,
+    detail: string,
+  ): boolean {
+    const damaged = type === 'boss-projectile'
+      ? this.boss.handleProjectileHit()
+      : this.boss.handleStomp();
+    if (!damaged) return false;
+
+    this.recordInteraction(type, bossSprite, detail);
+    this.audio.playSfx('boss_hit');
+    this.gameScore.current += 100;
+    this.gameScore.streak += 1;
+    this.emitScoreUpdate({ ...this.gameScore });
+    return true;
+  }
+
+  private createBossProjectileTexture(): void {
+    if (this.textures.exists('rooftops-boss-yarn-shot')) return;
+    const g = this.make.graphics({}, false);
+    g.fillStyle(0xffd86b);
+    g.fillCircle(BOSS_PROJECTILE_SIZE / 2, BOSS_PROJECTILE_SIZE / 2, BOSS_PROJECTILE_SIZE / 2);
+    g.fillStyle(0x7b4a2a);
+    g.fillCircle(BOSS_PROJECTILE_SIZE / 2 + 3, BOSS_PROJECTILE_SIZE / 2 - 2, 3);
+    g.generateTexture('rooftops-boss-yarn-shot', BOSS_PROJECTILE_SIZE, BOSS_PROJECTILE_SIZE);
+    g.destroy();
+  }
+
+  private throwBossProjectile(): void {
+    if (!this.inBossArena || this.boss.isDefeated()) return;
+    if (this.time.now < this.bossThrowCooldownUntilMs) return;
+    this.bossThrowCooldownUntilMs = this.time.now + BOSS_THROW_COOLDOWN_MS;
+
+    const bossSprite = this.boss.getBossSprite();
+    const direction = bossSprite.x >= this.player.x ? 1 : -1;
+    const spawnX = this.player.x + direction * 28;
+    const spawnY = this.player.y - PLAYER_HEIGHT * 0.55;
+    const projectile = this.bossProjectiles.create(
+      spawnX,
+      spawnY,
+      'rooftops-boss-yarn-shot',
+    ) as Phaser.Physics.Arcade.Sprite;
+    projectile.setDepth(DEPTH.EFFECTS);
+    projectile.setDisplaySize(BOSS_PROJECTILE_SIZE, BOSS_PROJECTILE_SIZE);
+    const body = projectile.body as Phaser.Physics.Arcade.Body;
+    body.setSize(BOSS_PROJECTILE_SIZE, BOSS_PROJECTILE_SIZE);
+    body.setAllowGravity(false);
+    const angle = Phaser.Math.Angle.Between(spawnX, spawnY, bossSprite.x, bossSprite.y);
+    body.setVelocity(Math.cos(angle) * BOSS_PROJECTILE_SPEED, Math.sin(angle) * BOSS_PROJECTILE_SPEED);
+    projectile.setData('projectileType', 'yarn-shot');
+    this.audio.playSfx('boing');
+  }
+
+  private updateBossProjectiles(): void {
+    const bossSprite = this.boss.getBossSprite();
+    const bossBounds = bossSprite.getBounds();
+    const arena = this.boss.getSnapshot().arena;
+    const left = arena.left - 220;
+    const right = arena.right + 220;
+    for (const child of [...this.bossProjectiles.getChildren()]) {
+      const projectile = child as Phaser.Physics.Arcade.Sprite;
+      if (projectile.active && Phaser.Geom.Rectangle.Overlaps(projectile.getBounds(), bossBounds)) {
+        projectile.destroy();
+        this.applyBossDamage('boss-projectile', bossSprite, 'thrown');
+        continue;
+      }
+      if (!projectile.active || projectile.x < left || projectile.x > right) {
+        projectile.destroy();
+      }
     }
   }
 
@@ -539,7 +664,7 @@ export default class PlatformerScene extends SceneBridge {
     this.emitLevelComplete({
       finalScore: this.gameScore.current,
       gameScore: { ...this.gameScore },
-      victoryType: 'goal',
+      victoryType: this.config.victoryCondition.type,
     });
   }
 
@@ -699,17 +824,50 @@ export default class PlatformerScene extends SceneBridge {
       }
       return this.renderGameToText();
     };
+    this.enterBossForQaHook = () => {
+      const bossArena = this.config.openingRoute?.bossArena;
+      if (!bossArena || !this.player?.body) return this.renderGameToText();
+      this.player.setPosition(bossArena.arenaX + 70, bossArena.arenaY - PLAYER_HEIGHT - 10);
+      this.player.body.setVelocity(0, 0);
+      this.jumpCount = 0;
+      this.distanceTraveled = Math.max(this.distanceTraveled, bossArena.triggerX - this.startX);
+      this.checkBossEntry();
+      this.cameras.main.centerOn(bossArena.arenaX + 360, bossArena.arenaY - 110);
+      this.updateHud();
+      return this.renderGameToText();
+    };
+    this.dropOnBossForQaHook = () => {
+      if (!this.inBossArena || !this.player?.body) return this.renderGameToText();
+      const bossSprite = this.boss.getBossSprite();
+      const bossBody = bossSprite.body as Phaser.Physics.Arcade.Body | null;
+      const bossTop = bossBody ? bossBody.y : bossSprite.y - bossSprite.displayHeight / 2;
+      this.player.setPosition(bossSprite.x, bossTop - 8);
+      this.player.body.setVelocity(0, 420);
+      this.jumpCount = 1;
+      this.cameras.main.centerOn(bossSprite.x, bossSprite.y);
+      return this.renderGameToText();
+    };
 
     window.render_game_to_text = this.renderTextHook;
     window.advanceTime = this.advanceTimeHook;
+    window.enter_platformer_boss_for_qa = this.enterBossForQaHook;
+    window.drop_on_platformer_boss_for_qa = this.dropOnBossForQaHook;
   }
 
   private uninstallWebGameTestHooks(): void {
     if (typeof window === 'undefined') return;
     if (window.render_game_to_text === this.renderTextHook) delete window.render_game_to_text;
     if (window.advanceTime === this.advanceTimeHook) delete window.advanceTime;
+    if (window.enter_platformer_boss_for_qa === this.enterBossForQaHook) {
+      delete window.enter_platformer_boss_for_qa;
+    }
+    if (window.drop_on_platformer_boss_for_qa === this.dropOnBossForQaHook) {
+      delete window.drop_on_platformer_boss_for_qa;
+    }
     this.renderTextHook = null;
     this.advanceTimeHook = null;
+    this.enterBossForQaHook = null;
+    this.dropOnBossForQaHook = null;
   }
 
   private renderGameToText(): string {
@@ -720,6 +878,7 @@ export default class PlatformerScene extends SceneBridge {
         route: {
           openingRouteId: this.config.openingRoute?.id ?? null,
           openingRouteHandoffX: this.config.openingRoute?.handoffX ?? null,
+          bossArena: this.config.openingRoute?.bossArena ?? null,
         },
         player: null,
         score: {
@@ -741,6 +900,7 @@ export default class PlatformerScene extends SceneBridge {
       route: {
         openingRouteId: this.config.openingRoute?.id ?? null,
         openingRouteHandoffX: this.config.openingRoute?.handoffX ?? null,
+        bossArena: this.config.openingRoute?.bossArena ?? null,
       },
       player: {
         x: Math.round(this.player.x),
@@ -775,8 +935,15 @@ export default class PlatformerScene extends SceneBridge {
         ],
         coins: this.snapshotGroup(this.buildingGen.getCoinGroup()),
         powerups: this.snapshotGroup(this.powerups.getGroup()),
+        bossProjectiles: this.snapshotGroup(this.bossProjectiles),
       },
-      boss: this.inBossArena ? { hp: this.boss.getHP(), defeated: this.boss.isDefeated() } : null,
+      bossCombat: this.inBossArena
+        ? {
+            throwReady: this.time.now >= this.bossThrowCooldownUntilMs,
+            throwCooldownMs: Math.max(0, Math.round(this.bossThrowCooldownUntilMs - this.time.now)),
+          }
+        : null,
+      boss: this.inBossArena ? this.boss.getSnapshot() : null,
     };
     return JSON.stringify(payload);
   }

@@ -37,7 +37,7 @@ export const CAMPAIGN_LEVEL_META: CampaignLevelMeta[] = [
     genre: 'platformer',
     description: 'Jump across rooftops and dodge pigeons above the city!',
     catPose: 'platformer',
-    victoryCondition: { type: 'goal', description: 'Reach the penthouse' },
+    victoryCondition: { type: 'boss', bossId: 'pigeonKing' },
     starThresholds: [150, 400, 700],
   },
   {

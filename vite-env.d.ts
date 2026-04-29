@@ -28,5 +28,7 @@ declare global {
     __BEACH_KITTY_TEST_API__?: BeachKittySmokeTestApi;
     render_game_to_text?: () => string;
     advanceTime?: (ms: number) => string;
+    enter_platformer_boss_for_qa?: () => string;
+    drop_on_platformer_boss_for_qa?: () => string;
   }
 }

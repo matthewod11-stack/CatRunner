@@ -1,0 +1,91 @@
+{
+  "coordinateSystem": "Phaser world coordinates; origin top-left, x right, y down",
+  "mode": "BOSS",
+  "paused": false,
+  "route": {
+    "openingRouteId": "city-heights-opening-boss-slice-v1",
+    "openingRouteHandoffX": 5520,
+    "bossArena": {
+      "triggerX": 4100,
+      "arenaX": 4140,
+      "arenaY": 500,
+      "width": 1180
+    }
+  },
+  "player": {
+    "x": 4210,
+    "y": 501,
+    "vx": 0,
+    "vy": 0,
+    "facing": "right",
+    "grounded": true,
+    "jumpsUsed": 0,
+    "maxJumps": 2
+  },
+  "camera": {
+    "scrollX": 3730,
+    "scrollY": 132
+  },
+  "score": {
+    "current": 111,
+    "coins": 0,
+    "lives": 9,
+    "multiplier": 1
+  },
+  "lastInteraction": {
+    "type": "boss-projectile",
+    "x": 4557,
+    "y": 420,
+    "atMs": 4646,
+    "targetKey": "rooftops-boss-pigeon-king-hit",
+    "detail": "thrown"
+  },
+  "recentInteractions": [
+    {
+      "type": "boss-projectile",
+      "x": 4557,
+      "y": 420,
+      "atMs": 4646,
+      "targetKey": "rooftops-boss-pigeon-king-hit",
+      "detail": "thrown"
+    }
+  ],
+  "powerup": {
+    "type": null,
+    "remainingMs": 0
+  },
+  "visible": {
+    "enemies": [],
+    "hazards": [],
+    "coins": [],
+    "powerups": [],
+    "bossProjectiles": []
+  },
+  "bossCombat": {
+    "throwReady": true,
+    "throwCooldownMs": 0
+  },
+  "boss": {
+    "hp": 2,
+    "phase": 2,
+    "mode": "swooping",
+    "defeated": false,
+    "arena": {
+      "left": 4140,
+      "right": 5320,
+      "y": 500,
+      "width": 1180
+    },
+    "boss": {
+      "x": 4636,
+      "y": 300,
+      "vx": 250,
+      "vy": 0,
+      "textureKey": "rooftops-boss-pigeon-king-swoop"
+    },
+    "threats": {
+      "feathers": 0,
+      "miniPigeons": 0
+    }
+  }
+}

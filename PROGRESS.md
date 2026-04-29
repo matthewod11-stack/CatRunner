@@ -38,6 +38,70 @@ Most recent session should be first.
 
 ---
 
+## Session: 2026-04-29 09:22 (City Heights boss session-end closeout)
+
+### Completed
+- Re-ran session-end validation after the City Heights boss readability/combat pass
+- Confirmed the larger Kitty/enemy/hazard/pickup reads, yarn-throw boss damage, top-stomp boss damage, and three-hit victory artifacts are documented
+- Updated `ROADMAP_CITYHEIGHTS.md`, `features.json`, the Level 2 QA checklist, and the Level 2 asset inventory for the final boss-combat contract
+- Archived the oldest active progress entries into `PROGRESS_ARCHIVE.md` so the root log stays focused on the 10 most recent sessions
+
+### In Progress
+- No active blocker from this pass
+- Commit/stage scope still needs explicit user confirmation if the session should be committed immediately
+
+### Issues Encountered
+- Existing production build large chunk warning remains visible
+- The `develop-web-game` client still produces black canvas-only PNGs under headless WebGL; full-page Playwright captures remain the visual source of truth
+
+### Verification
+- `npm run test:run` - 46 files, 223 tests passing
+- `npx tsc --noEmit` - passing
+- `npm run build` - passing with the existing large chunk warning
+- `npm run test:smoke` - 3 browser smoke tests passing
+- Test baseline comparison: 222 passing at session start, 223 passing now, 0 failures unchanged
+
+### Next Session Should
+- Hands-on tune boss difficulty if needed: yarn cooldown, feather pressure, boss speed, and stomp windows are now isolated knobs
+- Decide whether to commit the current City Heights boss slice changes or continue tuning before a commit
+
+---
+
+## Session: 2026-04-29 08:57 (City Heights boss readability pass)
+
+### Completed
+- Started the post-boss feedback pass from the user request: bigger Kitty/enemy/obstacle reads and a boss that can actually be defeated
+- Increased platformer hero render size, enemy sizes, obstacle sizes, and pickup size for stronger gameplay-scale readability
+- Enlarged the Pigeon King substantially and adjusted boss floor/landing math around the larger sprite
+- Added two boss damage channels: top-side stomps and boss-phase yarn shots from `X` or `ArrowDown`
+- Relaxed boss top-stomp detection so jumping on the boss from above counts even when the boss is moving, while side/swoop contact still hurts
+- Tuned yarn-shot speed, size, and cleanup bounds so shots survive across the full authored boss arena
+- Added post-stomp separation/invulnerability so a valid boss stomp no longer becomes an immediate accidental side-hit
+- Captured `11-boss-throw-hit.png`, `12-boss-stomp-hit.png`, and `13-boss-defeat.png` plus matching JSON state artifacts under `docs/artifacts/level-2-city-heights/`
+
+### In Progress
+- No active blocker from this pass; City Heights boss readability/combat is ready for hands-on review at `http://127.0.0.1:3000/?unlock_all=1&level=ROOFTOPS`
+
+### Issues Encountered
+- Initial TypeScript check caught `Body | StaticBody` narrowing on yarn-shot physics; fixed by casting the projectile body to `Phaser.Physics.Arcade.Body`
+- First stomp capture exposed a real post-stomp overlap bug: the stomp damaged the boss but then immediately recorded `boss-hit` and spent a life. Fixed with player separation plus a short invulnerability window after valid boss stomps.
+- The `develop-web-game` client still produces black canvas-only PNGs under headless WebGL in this repo; full-page Playwright screenshots remain the visual source of truth.
+- Existing production build large chunk warning remains visible.
+
+### Verification
+- Focused `npm run test:run -- scenes/platformer/heroSheet.test.ts scenes/platformer/generation.test.ts scenes/platformer/bossPhases.test.ts` - 3 files, 21 tests passing
+- `npm run test:run` - 46 files, 223 tests passing
+- `npx tsc --noEmit` - passing
+- `npm run build` - passing with the existing large chunk warning
+- `npm run test:smoke` - 3 browser smoke tests passing
+- `git diff --check` - passing
+- Targeted boss Playwright loop - throw hit, stomp hit without life loss, and three-hit victory all passed with `latest-browser-errors.json` set to `[]`
+
+### Next Session Should
+- Hands-on tune boss difficulty if needed: yarn cooldown, feather pressure, boss speed, and stomp windows are now isolated enough to adjust without changing the combat contract
+
+---
+
 ## Session: 2026-04-29 08:21 (City Heights selected-art pass)
 
 ### Completed
@@ -280,69 +344,3 @@ Most recent session should be first.
 - Decide which next genre should receive the Beach-style hero-sheet contract approach first
 
 ---
-
-## Session: 2026-04-27 15:22 (Roadmap V4 Phase 4 polish and playtest)
-
-### Completed
-- Completed Roadmap V4 Phase 4 for Level 1 Beach polish and playtest
-- Added keyboard-focus hardening for Phaser canvas boot/resume so `P`/`Escape` pause controls work reliably from browser playtests and smoke automation
-- Replaced Phaser keyboard-key ownership in `RunnerScene` with native window keyboard handlers for jump, duck/shell fire, and pause, avoiding the earlier space-key lifecycle issue
-- Made React terminal run states authoritative for score display so late Phaser score packets cannot overwrite victory/game-over final scores
-- Added Playwright smoke coverage for focused-canvas keyboard pause/resume
-- Captured Phase 4 screenshot artifacts under `docs/artifacts/level-1-phase-4/` and documented findings in `docs/plans/level-1-phase-4-playtest.md`
-- Marked Roadmap V4 Phase 4 and `features.json` phase 11 complete, and updated AGENTS/CLAUDE handoff focus
-
-### In Progress
-- No Phase 4 blockers remain for Level 1 Beach completion
-
-### Issues Encountered
-- In-app browser screenshot capture timed out on the WebGL canvas, so Phase 4 visual evidence was captured with full-page Playwright screenshots against the same localhost target
-- The first smoke assertion pressed `P` before explicitly focusing the canvas; the test now focuses and asserts the canvas before checking keyboard pause
-- Existing production build large chunk warning remains visible and should stay tracked as a later bundle-size follow-up
-
-### Verification
-- `npm run test:run` - 44 files, 210 tests passing
-- `npx tsc --noEmit` - passing
-- `npm run test:smoke` - 3 browser smoke tests passing
-- `npm run build` - passing with the existing large chunk warning
-- Phase 4 capture metadata reports no console/page errors in `docs/artifacts/level-1-phase-4/phase4-capture.json`
-- Local dev server remains available at `http://127.0.0.1:3000/?unlock_all=1`
-
-### Next Session Should
-- Start Roadmap V4 Phase 5 now that Level 1 Beach completion is closed through Phase 4
-- Keep the Phase 4 screenshot set updated if the Beach hero sheet, world-art pack, or HUD frame changes
-- Consider a bundle-size pass for the remaining production chunk warning
-
----
-
-## Session: 2026-04-27 14:56 (Roadmap V4 Phase 3 runtime integration cleanup)
-
-### Completed
-- Completed Roadmap V4 Phase 3 for Beach runtime integration cleanup
-- Centralized Beach hero render scale, ground-contact anchoring, display size, and collision-box helpers in `scenes/runner/heroSheet.ts`
-- Rewired `RunnerScene` to use the hero-sheet runtime helpers for sprite placement, collision, pass/streak checks, shell throw origin, and scaled feedback effects
-- Added scrolling tile parallax for the Beach sand, foam, and ocean layers so final world art moves against gameplay instead of remaining static
-- Added tests that guard deterministic committed Beach asset loading and the hero geometry contract
-- Fixed the Phaser space-key handler surfaced by browser gameplay capture so automated keyboard input no longer throws
-- Marked Phase 3 complete in `ROADMAP_V4.md`, `features.json`, and active Beach plan docs
-
-### In Progress
-- Roadmap V4 Phase 4 is next: targeted Beach manual playtests for jump readability, obstacle recognition, boss clarity, HUD/effects polish, screenshots/video, and victory/game-over/replay coherence
-
-### Issues Encountered
-- The current committed hero sheet contains foot/shadow pixels down to the frame bottom despite the intended transparent bottom-padding contract; runtime now records `runtimeGroundOffset: 0` for the shipped sheet, and the contract doc notes that future regenerated sheets must update this together with screenshots/tests
-- The `develop-web-game` canvas-only screenshots render black in this headless WebGL setup, but the same run completed with no console errors; full-page Playwright screenshots verified the actual canvas visuals
-- Existing production build large chunk warning remains visible and should stay tracked as a later bundle-size follow-up
-
-### Verification
-- `npm run test:run` - 44 files, 210 tests passing
-- `npx tsc --noEmit` - passing
-- `npm run build` - passing with the existing large chunk warning
-- `npm run test:smoke` - 3 browser smoke tests passing
-- Browser gameplay capture against `http://127.0.0.1:3000/?unlock_all=1` completed without console/page errors after the space-key fix
-- Inspected `/tmp/catrunner-phase3-grounded.png` and `/tmp/catrunner-phase3-obstacles-late.png` for hero ground contact, HUD/canvas readability, and final-art layering
-
-### Next Session Should
-- Start Phase 4 with manual Beach playtesting against the live dev server, focusing on jump readability, obstacle recognition, boss clarity, and progression pacing
-- Capture Phase 4 screenshots or short video for docs/future art consistency checks
-- Keep `runtimeGroundOffset` aligned with the actual committed hero sheet if the sheet is regenerated

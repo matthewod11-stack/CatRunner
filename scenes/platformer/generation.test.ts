@@ -112,6 +112,31 @@ describe('opening route helpers', () => {
     ]);
   });
 
+  it('validates authored boss arena coverage', () => {
+    const config: PlatformerLevelConfig = {
+      ...ROOFTOPS_LEVEL_CONFIG,
+      openingRoute: {
+        id: 'bad-boss-arena',
+        handoffX: 1200,
+        platforms: [
+          { x: 100, width: 320, rooftopY: 500 },
+          { x: 500, width: 220, rooftopY: 480 },
+        ],
+        bossArena: {
+          triggerX: 1300,
+          arenaX: 700,
+          arenaY: 500,
+          width: 400,
+        },
+      },
+    };
+
+    expect(validateOpeningRouteConfig(config.openingRoute!, config)).toEqual([
+      'openingRoute.bossArena.triggerX must be positive and inside the opening slice',
+      'openingRoute.bossArena must be backed by one authored platform at arenaY',
+    ]);
+  });
+
   it('identifies positions still inside the hand-authored slice', () => {
     expect(isBeforeOpeningRouteHandoff(ROOFTOPS_LEVEL_CONFIG, 0)).toBe(true);
     expect(isBeforeOpeningRouteHandoff(ROOFTOPS_LEVEL_CONFIG, ROOFTOPS_LEVEL_CONFIG.openingRoute!.handoffX - 1)).toBe(true);

@@ -6,7 +6,7 @@ export const ROOFTOPS_LEVEL_CONFIG: PlatformerLevelConfig = {
   genre: 'platformer',
   description: 'Jump across rooftops and dodge pigeons above the city!',
   catPose: 'platformer',
-  victoryCondition: { type: 'goal', description: 'Reach the penthouse' },
+  victoryCondition: { type: 'boss', bossId: 'pigeonKing' },
   starThresholds: [500, 1500, 3500],
 
   theme: {
@@ -63,7 +63,7 @@ export const ROOFTOPS_LEVEL_CONFIG: PlatformerLevelConfig = {
     },
   ],
 
-  victoryDistance: 15_000,
+  victoryDistance: 5_500,
 
   playerConfig: {
     moveSpeed: 250,
@@ -75,11 +75,11 @@ export const ROOFTOPS_LEVEL_CONFIG: PlatformerLevelConfig = {
   startLives: 3,
 
   boss: {
-    arenaWidth: 1200,
+    arenaWidth: 1180,
     phases: [
-      { swoopSpeed: 200, feathersPerPass: 2, swoopsBeforeLand: 2, landDuration: 3, miniPigeonCount: 0, hasDiveBomb: false },
-      { swoopSpeed: 280, feathersPerPass: 3, swoopsBeforeLand: 2, landDuration: 2, miniPigeonCount: 2, hasDiveBomb: false },
-      { swoopSpeed: 350, feathersPerPass: 4, swoopsBeforeLand: 3, landDuration: 1.5, miniPigeonCount: 3, hasDiveBomb: true },
+      { swoopSpeed: 190, feathersPerPass: 1, swoopsBeforeLand: 1, landDuration: 4, miniPigeonCount: 0, hasDiveBomb: false },
+      { swoopSpeed: 250, feathersPerPass: 2, swoopsBeforeLand: 2, landDuration: 3, miniPigeonCount: 1, hasDiveBomb: false },
+      { swoopSpeed: 315, feathersPerPass: 3, swoopsBeforeLand: 2, landDuration: 2.2, miniPigeonCount: 2, hasDiveBomb: true },
     ],
   },
 
@@ -92,8 +92,8 @@ export const ROOFTOPS_LEVEL_CONFIG: PlatformerLevelConfig = {
   },
 
   openingRoute: {
-    id: 'city-heights-opening-slice-v1',
-    handoffX: 3900,
+    id: 'city-heights-opening-boss-slice-v1',
+    handoffX: 5520,
     platforms: [
       { x: 100, width: 320, rooftopY: 500 },
       { x: 500, width: 220, rooftopY: 480 },
@@ -105,6 +105,8 @@ export const ROOFTOPS_LEVEL_CONFIG: PlatformerLevelConfig = {
       { x: 2390, width: 280, rooftopY: 445 },
       { x: 2810, width: 320, rooftopY: 500 },
       { x: 3270, width: 420, rooftopY: 480 },
+      { x: 3840, width: 260, rooftopY: 468 },
+      { x: 4140, width: 1180, rooftopY: 500 },
     ],
     coins: [
       { x: 590, y: 440 },
@@ -128,9 +130,15 @@ export const ROOFTOPS_LEVEL_CONFIG: PlatformerLevelConfig = {
       { type: 'GLIDE', x: 1875, y: 390 },
       { type: 'SHIELD', x: 2985, y: 456 },
     ],
+    bossArena: {
+      triggerX: 4100,
+      arenaX: 4140,
+      arenaY: 500,
+      width: 1180,
+    },
     notes: [
-      'Hand-authored flagship slice before procedural generation resumes.',
-      'Covers spawn, coin pickup, stomp, side-hit risk, blocker hazard, bounce pad, glide pickup, neon hazard, shield pickup, and a calm handoff platform.',
+      'Hand-authored flagship slice through the first Pigeon King arena before procedural generation resumes.',
+      'Covers spawn, coin pickup, stomp, side-hit risk, blocker hazard, bounce pad, glide pickup, neon hazard, shield pickup, boss entry, boss stomp windows, and victory.',
     ],
   },
 };

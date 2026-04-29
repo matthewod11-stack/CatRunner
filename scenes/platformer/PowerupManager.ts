@@ -5,7 +5,7 @@ import { DEPTH } from './types';
 import { EffectsManager } from '../shared/EffectsManager';
 import { ROOFTOPS_POWERUP_TEXTURES } from './rooftopsAssets';
 
-const POWERUP_SIZE = 22;
+const POWERUP_SIZE = 28;
 
 const POWERUP_COLORS: Record<PlatformerPowerupType, number> = {
   TRIPLE_JUMP: 0x44ddff,

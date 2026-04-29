@@ -93,5 +93,39 @@ export function validateOpeningRouteConfig(
     }
   }
 
+  if (route.bossArena) {
+    const { triggerX, arenaX, arenaY, width } = route.bossArena;
+    if (
+      !Number.isFinite(triggerX) ||
+      !Number.isFinite(arenaX) ||
+      !Number.isFinite(arenaY) ||
+      !Number.isFinite(width)
+    ) {
+      errors.push('openingRoute.bossArena must use finite triggerX, arenaX, arenaY, and width values');
+    } else {
+      if (triggerX <= 0 || triggerX > route.handoffX) {
+        errors.push('openingRoute.bossArena.triggerX must be positive and inside the opening slice');
+      }
+      if (width <= 0) {
+        errors.push('openingRoute.bossArena.width must be positive');
+      }
+      if (arenaX < 0 || arenaX + width > route.handoffX + 200) {
+        errors.push('openingRoute.bossArena must fit inside the opening slice');
+      }
+      if (arenaY < 80 || arenaY > config.generation.deathY - 80) {
+        errors.push('openingRoute.bossArena.arenaY must stay inside the playable vertical band');
+      }
+
+      const hasArenaFloor = route.platforms.some(platform =>
+        platform.x <= arenaX &&
+        platform.x + platform.width >= arenaX + width &&
+        Math.abs(platform.rooftopY - arenaY) < 1,
+      );
+      if (!hasArenaFloor) {
+        errors.push('openingRoute.bossArena must be backed by one authored platform at arenaY');
+      }
+    }
+  }
+
   return errors;
 }

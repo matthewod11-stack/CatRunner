@@ -53,9 +53,9 @@ assets/sprites/rooftops/
 | Collectibles | coin | generated baseline under `collectibles/` | integrated | Coin must separate from warm facade windows |
 | Projectiles/power-ups/FX | feather projectile, triple jump, glide, shield, shield bubble, stomp/dust/steam support | selected cleanup pass under `fx/` | verified | Shield is external bubble; glide is a hero animation state |
 | Background entities | fire escape, antennas, vents, water tanks, distant birds | fire escape baseline; others still procedural | planned | Secondary to gameplay but useful for rooftop identity |
-| Boss/finale | Pigeon King idle/swoop, attack, landed/vulnerable, hit, defeat; mini pigeon; feather projectile | generated boss baseline | integrated | Boss vulnerability and attack tells must read without HP text |
+| Boss/finale | Pigeon King idle/swoop, attack, landed/vulnerable, hit, defeat; mini pigeon; feather projectile; yarn-shot boss projectile | generated boss baseline plus runtime yarn-shot texture in the authored boss slice | verified | Larger boss scale, throw-hit, stomp-hit, and three-hit defeat are captured in the Phase 7 artifact set |
 | Hero | idle, run, jump rise, fall, land/stomp, glide, hurt, victory, defeat, power-up | selected cleanup pass in the 64x64 platformer sheet | verified | Must pass `level-2-platformer-hero-sheet-contract.md` |
-| HUD/support | distance, lives, boss HP pips, pause/readability surfaces | existing Phaser text plus React shell | planned | HUD stays readable over moving city background |
+| HUD/support | distance, lives, boss HP text, pause/readability surfaces | existing Phaser text plus React shell | integrated | HUD stays readable over moving city background and switches to boss HP during `BOSS_FIGHT` |
 
 ## Runtime Integration Targets
 

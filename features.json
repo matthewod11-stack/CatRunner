@@ -2,7 +2,7 @@
   "$schema": "./features.schema.json",
   "_meta": {
     "description": "Historical feature tracking snapshot for the multi-genre campaign. Status: not-started | in-progress | pass | fail | blocked",
-    "lastUpdated": "2026-04-28",
+    "lastUpdated": "2026-04-29",
     "planFile": "./ROADMAP_CITYHEIGHTS.md",
     "historicalRoadmapsDir": "./docs/archive/roadmaps/",
     "activeSessionLog": "./PROGRESS.md",
@@ -286,7 +286,7 @@
   },
   "phase-12": {
     "description": "City Heights Flagship Pixel Platformer Slice",
-    "status": "in-progress",
+    "status": "pass",
     "tasks": {
       "active-roadmap": {
         "status": "pass",
@@ -311,6 +311,10 @@
       "qa-captures-and-polish": {
         "status": "pass",
         "notes": "Phase 6 captures cover stomp, side-hit, hazard/powerup, pause, opening-route handoff, victory, and game-over; the selected cleanup pass replaced rougher hero, enemy, hazard, and power-up baseline sprites while keeping the starry close-city backdrop."
+      },
+      "boss-finale-slice": {
+        "status": "pass",
+        "notes": "Moved the Pigeon King into the deterministic opening route with an authored bossArena contract, BOSS_FIGHT status, boss snapshots in render_game_to_text, tuned first-phase timing, larger boss/actor reads, X/ArrowDown yarn throws, valid top-stomp damage without life loss, and throw/stomp/defeat capture artifacts."
       }
     }
   }
