@@ -1,19 +1,21 @@
 # Beach Kitty Multi-Level System — Session Progress Log
 
 > **Purpose:** Track progress across development sessions. Each session adds an entry at the TOP.
-> **Related Docs:** [Archived ROADMAP_V4](./docs/archive/roadmaps/ROADMAP_V4_2026-04-27_beach-completion-pipeline.md) | [docs/archive/roadmaps/ROADMAP_V3_2026-04-23_phaser-runtime-cleanup.md](./docs/archive/roadmaps/ROADMAP_V3_2026-04-23_phaser-runtime-cleanup.md)
+> **Related Docs:** [Archived ROADMAP_CITYHEIGHTS](./docs/archive/roadmaps/ROADMAP_CITYHEIGHTS_2026-04-29_flagship-platformer-slice.md) | [Archived ROADMAP_V4](./docs/archive/roadmaps/ROADMAP_V4_2026-04-27_beach-completion-pipeline.md) | [docs/archive/roadmaps/ROADMAP_V3_2026-04-23_phaser-runtime-cleanup.md](./docs/archive/roadmaps/ROADMAP_V3_2026-04-23_phaser-runtime-cleanup.md)
 
 ---
 
 ## **ACTIVE ROADMAP**
 
 ```
-ROADMAP_CITYHEIGHTS.md
+none — next expected: ROADMAP_COUNTERTOP_CHAOS.md
 ```
 
 `ROADMAP_V4.md` is complete and archived at `docs/archive/roadmaps/ROADMAP_V4_2026-04-27_beach-completion-pipeline.md`.
 
-`ROADMAP_CITYHEIGHTS.md` is active at the repo root. `./scripts/dev-init.sh` and the session-start workflow discover root `ROADMAP_*.md` files automatically.
+`ROADMAP_CITYHEIGHTS.md` is complete and archived at `docs/archive/roadmaps/ROADMAP_CITYHEIGHTS_2026-04-29_flagship-platformer-slice.md`.
+
+No root roadmap is active right now. The next session should create `ROADMAP_COUNTERTOP_CHAOS.md` for Level 3 `KITCHEN` / Countertop Chaos. `./scripts/dev-init.sh` and the session-start workflow discover root `ROADMAP_*.md` files automatically.
 
 ---
 
@@ -23,8 +25,8 @@ ROADMAP_CITYHEIGHTS.md
 # 1. Run session init
 ./scripts/dev-init.sh
 
-# 2. Read the active roadmap:
-ROADMAP_CITYHEIGHTS.md
+# 2. Create/read the next active roadmap:
+ROADMAP_COUNTERTOP_CHAOS.md
 
 # 3. Check the latest session entry below for handoff notes
 ```
@@ -35,6 +37,34 @@ ROADMAP_CITYHEIGHTS.md
 === ADD NEW SESSIONS AT THE TOP ===
 Most recent session should be first.
 -->
+
+---
+
+## Session: 2026-04-29 13:17 (City Heights roadmap archive)
+
+### Completed
+- Archived completed `ROADMAP_CITYHEIGHTS.md` to `docs/archive/roadmaps/ROADMAP_CITYHEIGHTS_2026-04-29_flagship-platformer-slice.md`
+- Updated root handoff docs so there is no active root roadmap until the next session creates `ROADMAP_COUNTERTOP_CHAOS.md`
+- Updated `AGENTS.md`, `CLAUDE.md`, `docs/README.md`, `features.json`, and `scripts/dev-init.sh` to route the next level-art pass to `KITCHEN` / Countertop Chaos
+- Archived the oldest active progress entry into `PROGRESS_ARCHIVE.md` so `PROGRESS.md` stays focused on the 10 most recent sessions
+
+### In Progress
+- `ROADMAP_COUNTERTOP_CHAOS.md` has not been created yet; that is the next session's first task
+
+### Issues Encountered
+- No blockers; this was a docs/handoff archive pass
+
+### Verification
+- `npm run test:run` - 46 files, 223 tests passing
+- `npx tsc --noEmit` - passing
+- `npm run build` - passing with the existing large chunk warning
+- `git diff --check` - passing
+- `./scripts/dev-init.sh` - passes and reports no active roadmap; next expected `ROADMAP_COUNTERTOP_CHAOS.md`
+
+### Next Session Should
+- Create `ROADMAP_COUNTERTOP_CHAOS.md` at the repo root for the Level 3 `KITCHEN` launcher/art/runtime pass
+- Start from `docs/archive/specs/2026-04-05-countertop-chaos-launcher-design.md` and `docs/archive/plans/2026-04-05-countertop-chaos-implementation.md`
+- Use `npm run scaffold:level-art -- --level KITCHEN` and `docs/architecture/level-art-pipeline.md` for the first Countertop Chaos art pipeline docs
 
 ---
 
@@ -319,28 +349,5 @@ Most recent session should be first.
 - Start the City Heights art pass from `docs/plans/level-2-city-heights-visual-brief.md` and `docs/plans/level-2-city-heights-asset-inventory.md`
 - Build or generate the first `assets/sprites/rooftops/` world-art pack and add a `scenes/platformer/rooftopsAssets.ts` manifest
 - Begin the platformer hero sheet from `docs/plans/level-2-platformer-hero-sheet-contract.md`
-
----
-
-## Session: 2026-04-27 15:50 (session end checkpoint)
-
-### Completed
-- Re-ran the session-end verification suite after the Phase 4 docs and smoke-test updates
-- Confirmed Roadmap V4 Phase 4 is a clean stopping point before Phase 5
-- Compared the session-start baseline against the final Vitest run: 66 passing tests at baseline, 210 passing tests now, with no failures
-- Updated the handoff target to Roadmap V4 Phase 5: make the Beach art and hero-sheet process repeatable for later levels
-- Archived the oldest root progress entries into `PROGRESS_ARCHIVE.md` so the active log stays focused on recent sessions
-
-### In Progress
-- Roadmap V4 Phase 5 has not started yet
-
-### Issues Encountered
-- No new blockers during session closeout
-- Existing production build large chunk warning remains visible and should stay tracked as a later bundle-size follow-up
-
-### Next Session Should
-- Start Roadmap V4 Phase 5: turn the Beach process into reusable templates for future levels
-- Create or consolidate templates for the art brief, prompt pack, asset manifest, and QA checklist
-- Decide which next genre should receive the Beach-style hero-sheet contract approach first
 
 ---

@@ -3,12 +3,12 @@
   "_meta": {
     "description": "Historical feature tracking snapshot for the multi-genre campaign. Status: not-started | in-progress | pass | fail | blocked",
     "lastUpdated": "2026-04-29",
-    "planFile": "./ROADMAP_CITYHEIGHTS.md",
+    "planFile": null,
     "historicalRoadmapsDir": "./docs/archive/roadmaps/",
     "activeSessionLog": "./PROGRESS.md",
     "activeDocsDir": "./docs/",
     "issueTracker": "GitHub Issues",
-    "campaignStatus": "Roadmap V4 is complete and archived after Level 1 Beach completion plus the repeatable level-art pipeline. ROADMAP_CITYHEIGHTS.md is now active for the Level 2 City Heights flagship true-pixel platformer slice."
+    "campaignStatus": "Roadmap V4 and ROADMAP_CITYHEIGHTS.md are complete and archived. No root roadmap is active right now; the next session should create ROADMAP_COUNTERTOP_CHAOS.md for Level 3 KITCHEN / Countertop Chaos."
   },
   "phase-1": {
     "description": "Session Protocol Infrastructure",
@@ -16,7 +16,7 @@
     "tasks": {
       "docs-roadmap": {
         "status": "pass",
-        "notes": "Completed roadmaps are archived under docs/archive/roadmaps/; the next active root roadmap should be ROADMAP_CITYHEIGHTS.md."
+        "notes": "Completed roadmaps are archived under docs/archive/roadmaps/; the next active root roadmap should be ROADMAP_COUNTERTOP_CHAOS.md."
       },
       "docs-progress": {
         "status": "pass",
@@ -315,6 +315,24 @@
       "boss-finale-slice": {
         "status": "pass",
         "notes": "Moved the Pigeon King into the deterministic opening route with an authored bossArena contract, BOSS_FIGHT status, boss snapshots in render_game_to_text, tuned first-phase timing, larger boss/actor reads, X/ArrowDown yarn throws, valid top-stomp damage without life loss, and throw/stomp/defeat capture artifacts."
+      }
+    }
+  },
+  "phase-13": {
+    "description": "Countertop Chaos Level 3 Kickoff",
+    "status": "not-started",
+    "tasks": {
+      "active-roadmap": {
+        "status": "not-started",
+        "notes": "Next session should create ROADMAP_COUNTERTOP_CHAOS.md for KITCHEN / Countertop Chaos."
+      },
+      "source-doc-refresh": {
+        "status": "not-started",
+        "notes": "Start from docs/archive/specs/2026-04-05-countertop-chaos-launcher-design.md and docs/archive/plans/2026-04-05-countertop-chaos-implementation.md."
+      },
+      "level-art-scaffold": {
+        "status": "not-started",
+        "notes": "Use npm run scaffold:level-art -- --level KITCHEN and docs/architecture/level-art-pipeline.md before runtime changes."
       }
     }
   }

@@ -1,6 +1,8 @@
 # Roadmap City Heights — Flagship Pixel Platformer Slice
 
-Active roadmap for the Level 2 `ROOFTOPS` art/runtime pass.
+> Archived 2026-04-29 after completing the Level 2 `ROOFTOPS` flagship pixel platformer slice through the Pigeon King boss combat pass. This is no longer the active root roadmap. The next root roadmap should be `ROADMAP_COUNTERTOP_CHAOS.md`.
+
+Historical roadmap for the Level 2 `ROOFTOPS` art/runtime pass.
 
 ## Goal
 

@@ -2,6 +2,31 @@
 
 ---
 
+## Archived From PROGRESS.md On 2026-04-29 City Heights Roadmap Archive
+
+### Session: 2026-04-27 15:50 (session end checkpoint)
+
+#### Completed
+- Re-ran the session-end verification suite after the Phase 4 docs and smoke-test updates
+- Confirmed Roadmap V4 Phase 4 is a clean stopping point before Phase 5
+- Compared the session-start baseline against the final Vitest run: 66 passing tests at baseline, 210 passing tests now, with no failures
+- Updated the handoff target to Roadmap V4 Phase 5: make the Beach art and hero-sheet process repeatable for later levels
+- Archived the oldest root progress entries into `PROGRESS_ARCHIVE.md` so the active log stays focused on recent sessions
+
+#### In Progress
+- Roadmap V4 Phase 5 has not started yet
+
+#### Issues Encountered
+- No new blockers during session closeout
+- Existing production build large chunk warning remains visible and should stay tracked as a later bundle-size follow-up
+
+#### Next Session Should
+- Start Roadmap V4 Phase 5: turn the Beach process into reusable templates for future levels
+- Create or consolidate templates for the art brief, prompt pack, asset manifest, and QA checklist
+- Decide which next genre should receive the Beach-style hero-sheet contract approach first
+
+---
+
 ## Archived From PROGRESS.md On 2026-04-29 Session-End Closeout
 
 ### Session: 2026-04-27 15:22 (Roadmap V4 Phase 4 polish and playtest)

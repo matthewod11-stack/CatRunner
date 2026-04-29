@@ -19,7 +19,7 @@
 - active root roadmap when present (`ROADMAP_*.md` or `ROADMAP.md`)
 - `PROGRESS.md`
 
-No root roadmap is active right now. Completed `ROADMAP_V4.md` is archived at `docs/archive/roadmaps/ROADMAP_V4_2026-04-27_beach-completion-pipeline.md`; the next session should create `ROADMAP_CITYHEIGHTS.md`.
+No root roadmap is active right now. Completed `ROADMAP_V4.md` is archived at `docs/archive/roadmaps/ROADMAP_V4_2026-04-27_beach-completion-pipeline.md`; completed `ROADMAP_CITYHEIGHTS.md` is archived at `docs/archive/roadmaps/ROADMAP_CITYHEIGHTS_2026-04-29_flagship-platformer-slice.md`. The next session should create `ROADMAP_COUNTERTOP_CHAOS.md`.
 
 ## Runtime Truth
 

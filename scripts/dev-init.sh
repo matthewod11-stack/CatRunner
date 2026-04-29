@@ -124,14 +124,14 @@ if [ -n "$ACTIVE_ROADMAP" ]; then
         echo -e "${YELLOW}○${NC} $(echo "$line" | cut -d']' -f2-)"
     done
 else
-    echo -e "${YELLOW}○${NC} Create the next root roadmap, expected: ROADMAP_CITYHEIGHTS.md"
+    echo -e "${YELLOW}○${NC} Create the next root roadmap, expected: ROADMAP_COUNTERTOP_CHAOS.md"
 fi
 
 echo ""
 echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
 echo -e "${GREEN}Ready to develop!${NC}"
 echo ""
-echo -e "${YELLOW}▶ ACTIVE ROADMAP:${NC} ${ACTIVE_ROADMAP:-none found - create ROADMAP_CITYHEIGHTS.md next}"
+echo -e "${YELLOW}▶ ACTIVE ROADMAP:${NC} ${ACTIVE_ROADMAP:-none found - create ROADMAP_COUNTERTOP_CHAOS.md next}"
 echo ""
 echo -e "Quick commands:"
 if [ -n "$ACTIVE_ROADMAP" ]; then
